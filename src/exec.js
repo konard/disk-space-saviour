@@ -36,7 +36,8 @@ export function trace(...parts) {
 /**
  * Spawns argv and captures its output.
  * @param {string[]} argv
- * @param {{input?: string, timeoutMs?: number, cwd?: string, env?: object}} [options]
+ * @param {{input?: string, stdin?: import('node:stream').Readable,
+ *   timeoutMs?: number, cwd?: string, env?: object}} [options]
  * @returns {Promise<{code: number, stdout: string, stderr: string, error?: Error}>}
  */
 export function runProcess(argv, options = {}) {
@@ -94,12 +95,40 @@ export function runProcess(argv, options = {}) {
       });
     });
     child.stdin.on('error', () => {});
-    if (input !== undefined) {
+    if (options.stdin) {
+      options.stdin.pipe(child.stdin);
+    } else if (input !== undefined) {
       child.stdin.end(input);
     } else {
       child.stdin.end();
     }
   });
+}
+
+/**
+ * Pipes the stdout of an already spawned `source` process into `argv`.
+ * The result fails when either side fails.
+ * @param {import('node:child_process').ChildProcess} source
+ * @param {string[]} argv
+ * @param {{timeoutMs?: number, cwd?: string}} [options]
+ */
+export async function pipeInto(source, argv, options = {}) {
+  const sourceErr = [];
+  source.stderr?.on('data', (chunk) => sourceErr.push(chunk));
+  const sourceDone = new Promise((resolve) => {
+    source.on('error', (error) => resolve({ code: 127, error }));
+    source.on('close', (code) => resolve({ code: code ?? 1 }));
+  });
+  const result = await runProcess(argv, { ...options, stdin: source.stdout });
+  const upstream = await sourceDone;
+  if (upstream.code !== 0) {
+    return {
+      ...result,
+      code: upstream.code,
+      stderr: `${Buffer.concat(sourceErr).toString('utf8')}${upstream.error ?? ''}${result.stderr}`,
+    };
+  }
+  return result;
 }
 
 /**

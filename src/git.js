@@ -22,6 +22,30 @@ function plural(count, word, many = `${word}s`) {
   return `${count} ${count === 1 ? word : many}`;
 }
 
+/**
+ * Reasons a repository with `state` (see `GitInspector#repoState`) must not
+ * be deleted, naming it `label`.
+ * @returns {string[]}
+ */
+export function stateBlockers(label, state) {
+  if (state.error) {
+    return [`${label}: ${state.error}`];
+  }
+  const problems = [];
+  if (state.dirty > 0) {
+    problems.push(plural(state.dirty, 'uncommitted change'));
+  }
+  if (state.unpushed > 0) {
+    problems.push(plural(state.unpushed, 'unpushed commit'));
+  }
+  if (state.stashes > 0) {
+    problems.push(plural(state.stashes, 'stash entry', 'stash entries'));
+  }
+  return problems.length > 0
+    ? [`Git repository ${label} has ${problems.join(', ')}`]
+    : [];
+}
+
 export class GitInspector {
   /**
    * @param {object} env environment adapter
@@ -137,23 +161,7 @@ export class GitInspector {
    * @returns {Promise<string[]>}
    */
   async repoBlockers(root) {
-    const state = await this.repoState(root);
-    if (state.error) {
-      return [`${root}: ${state.error}`];
-    }
-    const problems = [];
-    if (state.dirty > 0) {
-      problems.push(plural(state.dirty, 'uncommitted change'));
-    }
-    if (state.unpushed > 0) {
-      problems.push(plural(state.unpushed, 'unpushed commit'));
-    }
-    if (state.stashes > 0) {
-      problems.push(plural(state.stashes, 'stash entry', 'stash entries'));
-    }
-    return problems.length > 0
-      ? [`Git repository ${root} has ${problems.join(', ')}`]
-      : [];
+    return stateBlockers(root, await this.repoState(root));
   }
 
   /**
