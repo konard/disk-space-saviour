@@ -29,10 +29,14 @@ for f in "$@"; do
 done
 true`;
 
-const USAGE_SCRIPT = `[ -e "$1" ] || [ -L "$1" ] || exit 3
-du -sk -- "$1" 2>/dev/null | cut -f1
-find "$1" ! -type d -exec stat -c %Y {} + 2>/dev/null | awk 'BEGIN{m=0;n=0}{n++; if ($1>m) m=$1} END{print n, m}'
-stat -c %Y -- "$1"`;
+const USAGE_MANY_SCRIPT = `for t in "$@"; do
+  [ -e "$t" ] || [ -L "$t" ] || continue
+  printf '${RECORD}%s\\n' "$t"
+  du -sk -- "$t" 2>/dev/null | cut -f1
+  find "$t" ! -type d -exec stat -c %Y {} + 2>/dev/null | awk 'BEGIN{m=0;n=0}{n++; if ($1>m) m=$1} END{print n, m}'
+  stat -c %Y -- "$t"
+done
+true`;
 
 const PROCESS_SCRIPT = `echo "$$"
 for p in /proc/[0-9]*; do
@@ -101,6 +105,20 @@ function splitRecords(output) {
     records.set(key, newline === -1 ? '' : chunk.slice(newline + 1));
   }
   return records;
+}
+
+function parseUsage(body) {
+  const [kib, counts = '', rootMtime] = body.trim().split('\n');
+  const [files, newest] = counts.trim().split(/\s+/).map(Number);
+  const bytes = Number(kib) * 1024;
+  const newestSeconds = files > 0 ? newest : Number(rootMtime);
+  return {
+    bytes: Number.isFinite(bytes) ? bytes : 0,
+    apparentBytes: Number.isFinite(bytes) ? bytes : 0,
+    files: Number.isFinite(files) ? files : 0,
+    errors: Number.isFinite(bytes) ? 0 : 1,
+    newestMtimeMs: Number.isFinite(newestSeconds) ? newestSeconds * 1000 : 0,
+  };
 }
 
 function batches(items, size = ARG_BATCH) {
@@ -233,21 +251,36 @@ export class ShellEnv {
   }
 
   async usage(target) {
-    const result = await this.sh(USAGE_SCRIPT, [target]);
-    if (result.code === 3) {
-      return null;
+    return (await this.usageMany([target])).get(target) ?? null;
+  }
+
+  /**
+   * Measures many paths with one round trip per batch.
+   * @param {string[]} targets
+   * @returns {Promise<Map<string, object>>}
+   */
+  async usageMany(targets) {
+    const usages = new Map();
+    for (const batch of batches(targets)) {
+      const result = await this.sh(USAGE_MANY_SCRIPT, batch);
+      for (const [target, body] of splitRecords(result.stdout)) {
+        usages.set(target, parseUsage(body));
+      }
     }
-    const [kib, counts = '', rootMtime] = result.stdout.trim().split('\n');
-    const [files, newest] = counts.trim().split(/\s+/).map(Number);
-    const bytes = Number(kib) * 1024;
-    const newestSeconds = files > 0 ? newest : Number(rootMtime);
-    return {
-      bytes: Number.isFinite(bytes) ? bytes : 0,
-      apparentBytes: Number.isFinite(bytes) ? bytes : 0,
-      files: Number.isFinite(files) ? files : 0,
-      errors: result.code === 0 ? 0 : 1,
-      newestMtimeMs: Number.isFinite(newestSeconds) ? newestSeconds * 1000 : 0,
-    };
+    return usages;
+  }
+
+  async readLink(target) {
+    const result = await this.executor.run(['readlink', '--', target]);
+    return result.code === 0 ? result.stdout.trim() : null;
+  }
+
+  async isRoot() {
+    if (this.root === undefined) {
+      const result = await this.executor.run(['id', '-u']);
+      this.root = result.stdout.trim() === '0';
+    }
+    return this.root;
   }
 
   async findDirs(roots, { globs, maxDepth = 6, skipNames } = {}) {

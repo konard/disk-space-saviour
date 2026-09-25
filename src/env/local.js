@@ -375,6 +375,26 @@ export class LocalEnv {
     }
   }
 
+  async usageMany(targets) {
+    const usages = new Map();
+    for (const target of targets) {
+      usages.set(target, await this.usage(target));
+    }
+    return usages;
+  }
+
+  async readLink(target) {
+    try {
+      return await fsp.readlink(target);
+    } catch {
+      return null;
+    }
+  }
+
+  isRoot() {
+    return Promise.resolve(process.getuid?.() === 0);
+  }
+
   async remove(targets) {
     for (const target of targets) {
       try {
