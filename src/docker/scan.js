@@ -375,7 +375,7 @@ class DockerScan {
       return;
     }
     if (depth > this.options.dockerDepth) {
-      entry.note = `deeper than --docker-depth ${this.options.dockerDepth}`;
+      entry.note = `deeper than the Docker depth limit ${this.options.dockerDepth} (--depth)`;
       return;
     }
     await this.running(record, depth, ps, entry);

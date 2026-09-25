@@ -1,12 +1,13 @@
 {
-  "name": "@link-foundation/example-package-name",
+  "name": "disk-space-saviour",
   "version": "0.11.30",
-  "description": "A JavaScript/TypeScript package template for AI-driven development",
+  "description": "Safely reclaims disk space: caches and build outputs of 20+ ecosystems, forgotten projects, and Docker (running, stopped and nested containers), with an emergency mode",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "bin": {
-    "example-package-name": "./bin/example-package-name.js"
+    "dss": "./bin/dss.js",
+    "disk-space-saviour": "./bin/dss.js"
   },
   "files": [
     "bin/",
@@ -44,10 +45,15 @@
     "changeset:status": "changeset status --since=origin/main"
   },
   "keywords": [
-    "template",
-    "javascript",
-    "typescript",
-    "ai-driven"
+    "disk-space",
+    "cleanup",
+    "cache",
+    "docker",
+    "docker-in-docker",
+    "node_modules",
+    "cargo",
+    "emergency",
+    "cli"
   ],
   "author": "",
   "license": "Unlicense",
@@ -61,7 +67,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/link-foundation/js-ai-driven-development-pipeline-template.git"
+    "url": "git+https://github.com/konard/disk-space-saviour.git"
   },
   "engines": {
     "node": ">=20.0.0"

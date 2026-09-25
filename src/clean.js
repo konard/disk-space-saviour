@@ -353,6 +353,7 @@ export function environmentTotals(report, entries) {
       freedBytes: 0,
       leftBytes: 0,
       removed: 0,
+      planned: 0,
       skipped: 0,
       failed: 0,
     };
@@ -361,13 +362,7 @@ export function environmentTotals(report, entries) {
   for (const entry of entries) {
     const env = bucket(entry.env, entry.envLabel);
     env.freedBytes += entry.freedBytes;
-    if (entry.status === 'removed') {
-      env.removed++;
-    } else if (entry.status === 'failed') {
-      env.failed++;
-    } else {
-      env.skipped++;
-    }
+    env[entry.status]++;
   }
   const left = dropNested(report.items.filter((item) => !removed.has(item.id)));
   for (const item of left) {
@@ -432,6 +427,9 @@ export async function clean(report, input = {}) {
 export async function finishAudit(audit, report, options) {
   audit.finishedAt = new Date().toISOString();
   audit.freedBytes = audit.entries.reduce((sum, e) => sum + e.freedBytes, 0);
+  audit.plannedBytes = audit.entries
+    .filter((e) => e.status === 'planned')
+    .reduce((sum, e) => sum + e.plannedBytes, 0);
   audit.environments = environmentTotals(report, audit.entries);
   if (options.audit !== false) {
     await writeAudit(audit, options);

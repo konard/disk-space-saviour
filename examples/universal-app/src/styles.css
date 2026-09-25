@@ -207,3 +207,36 @@ h2 {
     max-width: 10ch;
   }
 }
+
+.result-tile-amber {
+  background: #fff1d6;
+}
+
+.result-tile-grey {
+  background: #e8ebe7;
+}
+
+.result-tile strong {
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+}
+
+.report-field textarea {
+  width: 100%;
+  border: 1px solid #c9d0c5;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #16201c;
+  background: #ffffff;
+  font-family: ui-monospace, monospace;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.report-error {
+  color: #a3341f;
+}
+
+.target-list code {
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}

@@ -1,5 +1,5 @@
 ---
-'@link-foundation/example-package-name': patch
+'disk-space-saviour': patch
 ---
 
 Make protected-branch release fallbacks wait for real pull-request checks with

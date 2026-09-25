@@ -10,7 +10,7 @@ import { GitInspector } from './git.js';
 import { tierTotals } from './items.js';
 import { LivenessProbe } from './liveness.js';
 import { resolveOptions } from './options.js';
-import { isWithin, matchesGlob } from './paths.js';
+import { existingPaths, isWithin, matchesGlob } from './paths.js';
 import { scanAgents } from './scanners/agents.js';
 import { scanGlobal } from './scanners/global.js';
 import { scanProjects } from './scanners/projects.js';
@@ -41,11 +41,8 @@ export const CONTAINER_ROOTS = [
 async function defaultRoots(env, homes, tmpDirs) {
   const roots = [...homes, ...tmpDirs];
   if (env.kind === 'container') {
-    for (const root of CONTAINER_ROOTS) {
-      if (await env.exists(root)) {
-        roots.push(root);
-      }
-    }
+    const present = await existingPaths(env, CONTAINER_ROOTS);
+    roots.push(...CONTAINER_ROOTS.filter((root) => present.has(root)));
   }
   return [...new Set(roots)];
 }
@@ -215,8 +212,9 @@ async function dockerSection(env, options, errors) {
 
 /**
  * Scans and returns a report. Nothing is modified.
- * @param {object} [input] options, see ./options.js; `env` injects the host
- *   environment adapter (tests).
+ * @param {object} [input] options, see ./options.js; `host: false` skips the
+ *   host file system (Docker only); `env` injects the host environment
+ *   adapter (tests).
  * @returns {Promise<object>} report
  */
 export async function scan(input = {}) {
@@ -224,10 +222,10 @@ export async function scan(input = {}) {
   const env = input.env ?? new LocalEnv();
   const startedAt = options.now();
   const errors = [];
-  const hostItems = await scanEnvironment(env, options, {
-    roots: options.roots,
-    errors,
-  });
+  const hostItems =
+    options.host === false
+      ? []
+      : await scanEnvironment(env, options, { roots: options.roots, errors });
   const docker = await dockerSection(env, options, errors);
   const items = filterItems(
     [...hostItems, ...(docker?.items ?? [])],

@@ -12,6 +12,7 @@ export const DEFAULTS = {
   staleAge: '1h',
   inactive: '30d',
   minSize: '1M',
+  host: true,
   docker: null,
   dockerDepth: 3,
   containers: [],
