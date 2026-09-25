@@ -296,23 +296,15 @@ export class LocalEnv {
    *   siblings: Array<{name: string, type: string, mtimeMs: number}>}>>}
    */
   async findDirs(roots, { globs, maxDepth = 6, skipNames } = {}) {
-    const skip = skipNames ? new Set(skipNames) : this.skipNames;
     const results = [];
-    const visited = new Set();
-    const queue = roots.map((root) => [root, 0]);
-    while (queue.length > 0) {
-      const [dir, depth] = queue.shift();
-      if (visited.has(dir)) {
-        continue;
-      }
-      visited.add(dir);
-      const entries = await this.list(dir);
+    await this.#walk(roots, maxDepth, skipNames, (dir, entries) => {
+      const matched = new Set();
       let siblings = null;
       for (const entry of entries) {
-        if (entry.type !== 'dir') {
-          continue;
-        }
-        if (globs.some((glob) => matchesGlob(entry.name, glob))) {
+        if (
+          entry.type === 'dir' &&
+          globs.some((glob) => matchesGlob(entry.name, glob))
+        ) {
           siblings ??= entries.map(({ name, type, mtimeMs }) => ({
             name,
             type,
@@ -324,14 +316,63 @@ export class LocalEnv {
             parent: dir,
             siblings,
           });
-          continue;
+          matched.add(entry.name);
         }
-        if (!skip.has(entry.name) && depth + 1 < maxDepth) {
+      }
+      return matched;
+    });
+    return results;
+  }
+
+  /**
+   * Finds regular files whose basename matches one of `names`.
+   * @returns {Promise<string[]>}
+   */
+  async findFiles(roots, { names, maxDepth = 6, skipNames } = {}) {
+    const results = [];
+    await this.#walk(roots, maxDepth, skipNames, (_dir, entries) => {
+      for (const entry of entries) {
+        if (
+          entry.type === 'file' &&
+          names.some((glob) => matchesGlob(entry.name, glob))
+        ) {
+          results.push(entry.path);
+        }
+      }
+      return null;
+    });
+    return results;
+  }
+
+  /**
+   * Breadth-first directory walk. `visit(dir, entries)` may return a set of
+   * child names that must not be descended into.
+   */
+  async #walk(roots, maxDepth, skipNames, visit) {
+    const skip = skipNames ? new Set(skipNames) : this.skipNames;
+    const visited = new Set();
+    const queue = roots.map((root) => [root, 0]);
+    while (queue.length > 0) {
+      const [dir, depth] = queue.shift();
+      if (visited.has(dir)) {
+        continue;
+      }
+      visited.add(dir);
+      const entries = await this.list(dir);
+      const pruned = visit(dir, entries) ?? new Set();
+      if (depth + 1 >= maxDepth) {
+        continue;
+      }
+      for (const entry of entries) {
+        if (
+          entry.type === 'dir' &&
+          !pruned.has(entry.name) &&
+          !skip.has(entry.name)
+        ) {
           queue.push([entry.path, depth + 1]);
         }
       }
     }
-    return results;
   }
 
   async remove(targets) {
