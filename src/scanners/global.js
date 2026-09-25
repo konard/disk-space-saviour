@@ -7,7 +7,7 @@
 import { CACHE_RULES } from '../rules/ecosystems.js';
 import { OTHER_RULES } from '../rules/other.js';
 import { block, makeItem } from '../items.js';
-import { expandGlobPath, expandRulePath } from '../paths.js';
+import { expandGlobPaths, expandRulePath } from '../paths.js';
 import { olderThan, scanTimeBusy } from './common.js';
 
 export const GLOBAL_RULES = [...CACHE_RULES, ...OTHER_RULES];
@@ -23,8 +23,8 @@ function scopeBases(rule, homes, tmpDirs) {
   return homes.map((home) => ({ home, tmp: null }));
 }
 
-async function expandRule(env, rule, base) {
-  const matches = [];
+function rulePatterns(env, rule, base) {
+  const patterns = [];
   for (const pattern of rule.paths) {
     const usesVars = /\{(?!TMP\})[A-Z_]+\}/.test(pattern);
     if (usesVars && base.home !== env.currentHome) {
@@ -36,10 +36,10 @@ async function expandRule(env, rule, base) {
       pathApi: env.path,
     });
     if (expanded) {
-      matches.push(...(await expandGlobPath(env, expanded)));
+      patterns.push(expanded);
     }
   }
-  return [...new Set(matches)];
+  return patterns;
 }
 
 /**
@@ -147,17 +147,26 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
   const { env, options } = context;
   const homes = options.homes ?? (await env.homeDirs());
   const tmpDirs = options.tmpDirs ?? (await env.tmpDirs());
+  const planned = rules.flatMap((rule) =>
+    scopeBases(rule, homes, tmpDirs).map((base) => ({
+      rule,
+      base,
+      patterns: rulePatterns(env, rule, base),
+    }))
+  );
+  const matches = await expandGlobPaths(
+    env,
+    planned.flatMap((entry) => entry.patterns)
+  );
   const found = [];
   const seen = new Set();
-  for (const rule of rules) {
-    for (const base of scopeBases(rule, homes, tmpDirs)) {
-      const paths = (await expandRule(env, rule, base)).filter(
-        (target) => !seen.has(target)
-      );
-      paths.forEach((target) => seen.add(target));
-      if (paths.length > 0) {
-        found.push({ rule, base, paths });
-      }
+  for (const { rule, base, patterns } of planned) {
+    const paths = [
+      ...new Set(patterns.flatMap((pattern) => matches.get(pattern) ?? [])),
+    ].filter((target) => !seen.has(target));
+    paths.forEach((target) => seen.add(target));
+    if (paths.length > 0) {
+      found.push({ rule, base, paths });
     }
   }
   const usages = await env.usageMany(found.flatMap((entry) => entry.paths));

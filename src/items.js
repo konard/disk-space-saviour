@@ -85,6 +85,39 @@ export function tierTotals(items) {
   return totals;
 }
 
+function parentPath(target) {
+  const trimmed = target.replace(/[\\/]+$/, '');
+  const index = Math.max(trimmed.lastIndexOf('/'), trimmed.lastIndexOf('\\'));
+  return index > 0 ? trimmed.slice(0, index) : null;
+}
+
+/**
+ * Drops items contained in another item of the same environment: by
+ * `parentId`, or because every path lies below another item's path.
+ * @param {object[]} items
+ */
+export function dropNested(items) {
+  const ids = new Set(items.map((item) => item.id));
+  const paths = new Set(
+    items
+      .filter((item) => item.action?.type === 'remove')
+      .flatMap((item) => item.paths.map((p) => `${item.env}\0${p}`))
+  );
+  const inside = (item, target) => {
+    for (let dir = parentPath(target); dir; dir = parentPath(dir)) {
+      if (paths.has(`${item.env}\0${dir}`)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  return items.filter(
+    (item) =>
+      !(item.parentId && ids.has(item.parentId)) &&
+      !(item.paths.length > 0 && item.paths.every((p) => inside(item, p)))
+  );
+}
+
 /**
  * Items at or below `maxTier` without blockers, dropping items nested in
  * another selected item.
@@ -94,10 +127,12 @@ export function tierTotals(items) {
  */
 export function selectByTier(items, maxTier, accept = () => true) {
   const rank = tierRank(maxTier);
-  const eligible = items.filter(
-    (item) =>
-      tierRank(item.tier) <= rank && item.blockers.length === 0 && accept(item)
+  return dropNested(
+    items.filter(
+      (item) =>
+        tierRank(item.tier) <= rank &&
+        item.blockers.length === 0 &&
+        accept(item)
+    )
   );
-  const ids = new Set(eligible.map((item) => item.id));
-  return eligible.filter((item) => !item.parentId || !ids.has(item.parentId));
 }

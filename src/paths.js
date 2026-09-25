@@ -93,40 +93,90 @@ export function expandRulePath(pattern, { home, vars = {}, pathApi }) {
  * @returns {Promise<string[]>}
  */
 export async function expandGlobPath(env, pattern) {
-  const pathApi = env.path;
-  if (!/[*?[]/.test(pattern)) {
-    return (await env.exists(pattern)) ? [pattern] : [];
+  return (await expandGlobPaths(env, [pattern])).get(pattern) ?? [];
+}
+
+const GLOB_CHARS = /[*?[]/;
+
+async function listDirs(env, dirs) {
+  if (typeof env.listMany === 'function') {
+    return env.listMany(dirs);
+  }
+  const listings = await Promise.all(dirs.map((dir) => env.list(dir)));
+  return new Map(dirs.map((dir, index) => [dir, listings[index]]));
+}
+
+/**
+ * Paths among `targets` that exist, checked in one batch when the
+ * environment supports it.
+ * @returns {Promise<Set<string>>}
+ */
+export async function existingPaths(env, targets) {
+  if (typeof env.existsMany === 'function') {
+    return env.existsMany(targets);
+  }
+  const flags = await Promise.all(targets.map((target) => env.exists(target)));
+  return new Set(targets.filter((_, index) => flags[index]));
+}
+
+function globState(pathApi, pattern) {
+  if (!GLOB_CHARS.test(pattern)) {
+    return { pattern, segments: [], current: [pattern] };
   }
   const root = pathApi.parse(pattern).root;
   const segments = pattern
     .slice(root.length)
     .split(/[\\/]+/)
     .filter(Boolean);
-  let current = [root];
-  for (const segment of segments) {
-    const next = [];
-    for (const base of current) {
-      if (/[*?[]/.test(segment)) {
-        const entries = await env.list(base);
-        for (const entry of entries) {
-          if (matchesGlob(entry.name, segment)) {
-            next.push(pathApi.join(base, entry.name));
-          }
-        }
-      } else {
-        next.push(pathApi.join(base, segment));
-      }
+  return { pattern, segments, current: [root] };
+}
+
+function advance(state, segment, listings, pathApi) {
+  if (!GLOB_CHARS.test(segment)) {
+    return state.current.map((base) => pathApi.join(base, segment));
+  }
+  return state.current.flatMap((base) =>
+    (listings.get(base) ?? [])
+      .filter((entry) => matchesGlob(entry.name, segment))
+      .map((entry) => pathApi.join(base, entry.name))
+  );
+}
+
+/**
+ * Expands many absolute path patterns (glob segments allowed) with one
+ * listing round per path depth and one existence check.
+ * @param {object} env environment adapter
+ * @param {string[]} patterns
+ * @returns {Promise<Map<string, string[]>>} existing matches per pattern
+ */
+export async function expandGlobPaths(env, patterns) {
+  const pathApi = env.path;
+  const states = [...new Set(patterns)].map((p) => globState(pathApi, p));
+  for (let step = 0; ; step++) {
+    const active = states.filter(
+      (state) => step < state.segments.length && state.current.length > 0
+    );
+    if (active.length === 0) {
+      break;
     }
-    current = next;
-    if (current.length === 0) {
-      return [];
+    const toList = new Set(
+      active
+        .filter((state) => GLOB_CHARS.test(state.segments[step]))
+        .flatMap((state) => state.current)
+    );
+    const listings =
+      toList.size > 0 ? await listDirs(env, [...toList]) : new Map();
+    for (const state of active) {
+      state.current = advance(state, state.segments[step], listings, pathApi);
     }
   }
-  const existing = [];
-  for (const candidate of current) {
-    if (await env.exists(candidate)) {
-      existing.push(candidate);
-    }
-  }
-  return existing;
+  const existing = await existingPaths(env, [
+    ...new Set(states.flatMap((state) => state.current)),
+  ]);
+  return new Map(
+    states.map((state) => [
+      state.pattern,
+      state.current.filter((target) => existing.has(target)),
+    ])
+  );
 }

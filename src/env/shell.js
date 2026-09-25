@@ -54,6 +54,10 @@ const REMOVE_SCRIPT = `rm -rf -- "$@" 2>/dev/null && exit 0
 chmod -R u+w -- "$@" 2>/dev/null
 rm -rf -- "$@"`;
 
+const EXISTS_SCRIPT = `for p in "$@"; do
+  if [ -e "$p" ] || [ -L "$p" ]; then printf '%s\\n' "$p"; fi
+done`;
+
 const HOMES_SCRIPT = `echo "$HOME"
 while IFS=: read -r name pw uid gid gecos home shell; do
   case "$uid" in ''|*[!0-9]*) continue ;; esac
@@ -175,6 +179,22 @@ export class ShellEnv {
   async exists(target) {
     const result = await this.sh('[ -e "$1" ] || [ -L "$1" ]', [target]);
     return result.code === 0;
+  }
+
+  /**
+   * Existing paths among `targets`, one round trip per batch.
+   * @returns {Promise<Set<string>>}
+   */
+  async existsMany(targets) {
+    const existing = new Set();
+    for (const batch of batches(targets)) {
+      const result = await this.sh(EXISTS_SCRIPT, batch);
+      result.stdout
+        .split('\n')
+        .filter(Boolean)
+        .forEach((line) => existing.add(line));
+    }
+    return existing;
   }
 
   async stat(target) {
