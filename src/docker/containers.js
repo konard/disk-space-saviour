@@ -116,8 +116,12 @@ export async function containerGitState(docker, id, options = {}) {
       `${roots.length} repositories changed, only ${maxRepos} were verified`
     );
   }
-  const git = new GitInspector(options.env ?? new LocalEnv());
   const repos = [];
+  if (checked.length === 0) {
+    return { repos, blockers };
+  }
+  // `docker cp` copies to this machine, so Git always runs locally.
+  const git = new GitInspector(options.env ?? new LocalEnv());
   for (const root of checked) {
     const state = await copyAndCheck(docker, id, root, git);
     repos.push(state);

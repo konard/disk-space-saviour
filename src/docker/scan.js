@@ -245,9 +245,7 @@ async function stoppedItem(daemon, ps, inspected, options) {
     },
     checks: { busy: [], cwd: null, mtime: false },
   });
-  const git = await containerGitState(daemon.docker, ps.ID, {
-    env: options.hostEnv,
-  });
+  const git = await containerGitState(daemon.docker, ps.ID);
   item.container.repos = git.repos;
   if (!options.allowDirtyRepos) {
     git.blockers.forEach((reason) => block(item, reason));

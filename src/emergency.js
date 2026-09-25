@@ -12,7 +12,7 @@
  */
 
 import { startAudit } from './audit.js';
-import { Cleaner, cleanOrder, finishAudit } from './clean.js';
+import { Cleaner, cleanOrder, finishAudit, wantedItems } from './clean.js';
 import { LocalEnv } from './env/local.js';
 import { TIERS, selectByTier, tierRank } from './items.js';
 import { resolveGoal, resolveOptions } from './options.js';
@@ -100,11 +100,12 @@ export async function emergency(input = {}) {
 async function escalate({ report, options, env, target, goal, audit }) {
   const cleaner = new Cleaner(report, { ...options, env });
   const done = new Set();
+  const wanted = wantedItems(report, options);
   let disk = audit.diskBefore;
   let freed = 0;
   for (const tier of TIERS.slice(0, tierRank(options.tier) + 1)) {
     audit.reachedTier = tier;
-    const items = selectByTier(report.items, tier)
+    const items = selectByTier(wanted, tier)
       .filter((item) => !done.has(item.id))
       .sort(cleanOrder);
     for (const item of items) {

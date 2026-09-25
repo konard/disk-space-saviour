@@ -23,6 +23,7 @@ import { GitInspector } from './git.js';
 import { dropNested, selectByTier, tierRank } from './items.js';
 import { LivenessProbe } from './liveness.js';
 import { resolveOptions } from './options.js';
+import { filterItems } from './scan.js';
 import { analyzeRustProfile } from './scanners/rust.js';
 
 const STOPPED = new Set(['exited', 'created', 'dead']);
@@ -372,10 +373,20 @@ export function environmentTotals(report, entries) {
 }
 
 /**
+ * Report items that pass `only` and `exclude`, which also apply to a report
+ * scanned earlier with other options.
+ */
+export function wantedItems(report, options) {
+  return filterItems(report.items, { ...options, minSizeBytes: 0 }, [], path);
+}
+
+/**
  * Items `clean()` acts on for the chosen tier, in cleaning order.
  */
 export function planItems(report, options) {
-  return selectByTier(report.items, options.tier).sort(cleanOrder);
+  return selectByTier(wantedItems(report, options), options.tier).sort(
+    cleanOrder
+  );
 }
 
 /** Options that only the cleaning run itself may grant. */
