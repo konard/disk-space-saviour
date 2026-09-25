@@ -12,6 +12,9 @@ import path from 'node:path';
 import { hostExecutor } from '../exec.js';
 import { matchesGlob } from '../paths.js';
 
+// Directories read concurrently while measuring usage.
+const WALK_BATCH = 64;
+
 export const DEFAULT_SKIP_NAMES = [
   '.git',
   '.hg',
@@ -256,15 +259,13 @@ export class LocalEnv {
       }
     };
     account(root);
-    const stack = root.isDirectory() ? [target] : [];
-    while (stack.length > 0) {
-      const dir = stack.pop();
+    const visit = async (dir) => {
       let names;
       try {
         names = await fsp.readdir(dir);
       } catch {
         errors++;
-        continue;
+        return [];
       }
       const children = await Promise.all(
         names.map(async (name) => {
@@ -272,6 +273,7 @@ export class LocalEnv {
           return [full, await safeLstat(full)];
         })
       );
+      const subdirs = [];
       for (const [full, stats] of children) {
         if (!stats) {
           errors++;
@@ -279,9 +281,21 @@ export class LocalEnv {
         }
         account(stats);
         if (stats.isDirectory()) {
-          stack.push(full);
+          subdirs.push(full);
         }
       }
+      return subdirs;
+    };
+    let frontier = root.isDirectory() ? [target] : [];
+    while (frontier.length > 0) {
+      const next = [];
+      for (let index = 0; index < frontier.length; index += WALK_BATCH) {
+        const found = await Promise.all(
+          frontier.slice(index, index + WALK_BATCH).map(visit)
+        );
+        next.push(...found.flat());
+      }
+      frontier = next;
     }
     if (files === 0) {
       newestMtimeMs = root.mtimeMs;
