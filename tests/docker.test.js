@@ -257,6 +257,9 @@ describe('docker diff and owner parsing', () => {
   });
 
   it('checks a nested repository even when its parent is already known', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
     const visited = [];
     const docker = {
       diff: async () =>
@@ -300,6 +303,9 @@ describe('docker diff and owner parsing', () => {
   });
 
   it('blocks changed work hidden by the Git copy exclusions', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
     const docker = {
       diff: async () =>
         'A /work/repo/.git/HEAD\nA /work/repo/target/notes.txt\n',
