@@ -43,7 +43,7 @@ export function parseSize(value) {
   if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
     return Math.round(value);
   }
-  const match = /^\s*(\d+(?:\.\d+)?)\s*([a-z]*)\s*$/i.exec(String(value));
+  const match = /^(\d+(?:\.\d+)?)\s*([a-z]*)$/i.exec(String(value).trim());
   const unit = match && SIZE_UNITS[match[2].toLowerCase()];
   if (!match || unit === undefined) {
     throw new Error(`Invalid size: ${value} (expected e.g. 20G, 512M, 1024)`);
@@ -61,7 +61,7 @@ export function parseDuration(value) {
   if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
     return value * 1000;
   }
-  const match = /^\s*(\d+(?:\.\d+)?)\s*([a-z]*)\s*$/i.exec(String(value));
+  const match = /^(\d+(?:\.\d+)?)\s*([a-z]*)$/i.exec(String(value).trim());
   const unitName = match ? match[2].toLowerCase() || 's' : '';
   const unit = DURATION_UNITS[unitName];
   if (!match || unit === undefined) {
@@ -76,7 +76,7 @@ export function parseDuration(value) {
  * @returns {number} percentage in the range 0..100
  */
 export function parsePercent(value) {
-  const match = /^\s*(\d+(?:\.\d+)?)\s*%?\s*$/.exec(String(value));
+  const match = /^(\d+(?:\.\d+)?)\s*%?$/.exec(String(value).trim());
   const percent = match ? Number(match[1]) : NaN;
   if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
     throw new Error(`Invalid percentage: ${value} (expected e.g. 80%)`);

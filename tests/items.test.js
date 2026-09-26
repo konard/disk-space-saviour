@@ -48,6 +48,15 @@ describe('tier selection', () => {
     expect(ids('aggressive')).toEqual([cache.path, modules.path, recent.path]);
   });
 
+  it('finds parents of paths with long runs of separators quickly', () => {
+    const slashes = '/'.repeat(50000);
+    const started = Date.now();
+    const parent = item(`/w${slashes}x`, 'safe', 1);
+    const child = item(`/w${slashes}x/deps${slashes}`, 'safe', 1);
+    expect(dropNested([parent, child]).length).toBe(1);
+    expect(Date.now() - started < 1000).toBe(true);
+  });
+
   it('drops items inside another item of the same environment', () => {
     const elsewhere = makeItem(INNER, {
       rule: 'r',
@@ -91,6 +100,17 @@ describe('units', () => {
     expect(() => parseDuration('soon')).toThrow();
     expect(parsePercent('80%')).toBe(80);
     expect(() => parsePercent('120%')).toThrow();
+  });
+
+  it('rejects long runs of spaces quickly', () => {
+    const spaces = `9${' '.repeat(50000)}x!`;
+    const started = Date.now();
+    expect(() => parseSize(spaces)).toThrow();
+    expect(() => parseDuration(spaces)).toThrow();
+    expect(() => parsePercent(spaces)).toThrow();
+    expect(parseSize(' 20 G ')).toBe(20 * 1024 ** 3);
+    expect(parsePercent(' 80 % ')).toBe(80);
+    expect(Date.now() - started < 1000).toBe(true);
   });
 
   it('formats bytes and durations', () => {

@@ -6,7 +6,7 @@ import { scan } from '../src/scan.js';
 import { LocalEnv } from '../src/env/local.js';
 import { PROJECT_RULES } from '../src/rules/ecosystems.js';
 
-const concrete = (name) => name.replace('*', 'app');
+const concrete = (name) => name.replaceAll('*', 'app');
 const root = mkdtempSync(join(tmpdir(), 'dss-fixtures-'));
 for (const rule of PROJECT_RULES) {
   const project = join(root, rule.id);

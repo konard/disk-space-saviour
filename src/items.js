@@ -86,7 +86,11 @@ export function tierTotals(items) {
 }
 
 function parentPath(target) {
-  const trimmed = target.replace(/[\\/]+$/, '');
+  let end = target.length;
+  while (end > 0 && (target[end - 1] === '/' || target[end - 1] === '\\')) {
+    end--;
+  }
+  const trimmed = target.slice(0, end);
   const index = Math.max(trimmed.lastIndexOf('/'), trimmed.lastIndexOf('\\'));
   return index > 0 ? trimmed.slice(0, index) : null;
 }
