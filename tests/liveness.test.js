@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'test-anywhere';
 import path from 'node:path';
 
-import { processAliases } from '../src/env/local.js';
+import { parseLsofCwds, processAliases } from '../src/env/local.js';
 import { LivenessProbe } from '../src/liveness.js';
 
 const NOW = 1_000_000_000_000;
@@ -37,6 +37,14 @@ describe('process aliases', () => {
       'npm',
     ]);
     expect(processAliases('', '')).toEqual([]);
+  });
+
+  it('reads working directories from lsof field output on macOS', () => {
+    const output = 'p12\nfcwd\nn/Users/me/app\np40\nfcwd\nn/\np41\nfcwd\n';
+    expect([...parseLsofCwds(output)]).toEqual([
+      [12, '/Users/me/app'],
+      [40, '/'],
+    ]);
   });
 });
 

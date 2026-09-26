@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import {
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   readdirSync,
   rmSync,
   utimesSync,
@@ -100,19 +101,22 @@ class FixtureEnv extends LocalEnv {
       tmpDirs: [],
       vars: {},
     });
-    this.root = root;
+    // Processes report paths with symlinks resolved (macOS: /private/var).
+    this.roots = [root, realpathSync(root)];
+  }
+
+  #inside(target) {
+    return this.roots.some((root) => target?.startsWith(root));
   }
 
   async processes() {
-    return (await super.processes()).filter((proc) =>
-      proc.cwd?.startsWith(this.root)
-    );
+    return (await super.processes()).filter((proc) => this.#inside(proc.cwd));
   }
 
   async openPaths() {
     const paths = await super.openPaths();
     return paths
-      ? new Set([...paths].filter((open) => open.startsWith(this.root)))
+      ? new Set([...paths].filter((open) => this.#inside(open)))
       : null;
   }
 }

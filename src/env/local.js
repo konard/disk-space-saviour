@@ -13,6 +13,25 @@ export function processAliases(exe, argv0) {
 }
 
 /**
+ * Working directories by pid from `lsof -F pn -d cwd` field output
+ * (`p<pid>` starts a process, `n<path>` names its file).
+ * @param {string} output
+ * @returns {Map<number, string>}
+ */
+export function parseLsofCwds(output) {
+  const cwds = new Map();
+  let pid = null;
+  for (const line of output.split('\n')) {
+    if (line.startsWith('p')) {
+      pid = Number(line.slice(1));
+    } else if (line.startsWith('n/') && pid !== null) {
+      cwds.set(pid, line.slice(1));
+    }
+  }
+  return cwds;
+}
+
+/**
  * Environment adapter for the machine running dss, backed by node:fs.
  *
  * Scanners only talk to environment adapters, so the same rules run on the
@@ -419,6 +438,14 @@ export class LocalEnv {
     }
   }
 
+  async realPath(target) {
+    try {
+      return await fsp.realpath(target);
+    } catch {
+      return null;
+    }
+  }
+
   isRoot() {
     return Promise.resolve(process.getuid?.() === 0);
   }
@@ -456,11 +483,25 @@ export class LocalEnv {
         .filter((proc) => !selfPids.has(proc.pid));
     }
     const result = await this.run(['ps', '-axo', 'pid=,comm=']);
+    const cwds =
+      this.platform === 'darwin'
+        ? parseLsofCwds(
+            (
+              await this.run(['lsof', '-a', '-d', 'cwd', '-n', '-F', 'pn'], {
+                timeoutMs: 30000,
+              })
+            ).stdout
+          )
+        : new Map();
     return result.stdout
       .split('\n')
       .map((line) => /^\s*(\d+)\s+(.+)$/.exec(line))
       .filter(Boolean)
-      .map((m) => ({ pid: Number(m[1]), name: path.basename(m[2].trim()) }))
+      .map((m) => ({
+        pid: Number(m[1]),
+        name: path.basename(m[2].trim()),
+        cwd: cwds.get(Number(m[1])) ?? null,
+      }))
       .filter((proc) => !selfPids.has(proc.pid));
   }
 

@@ -201,6 +201,7 @@ export class Cleaner {
       action: type === 'remove' ? { ...item.action, paths } : item.action,
     };
     await ctx.liveness.refresh();
+    await ctx.liveness.resolve(fresh.paths);
     const busy = ctx.liveness.busyReason(fresh);
     if (busy) {
       return { reason: `busy: ${busy}` };

@@ -297,6 +297,11 @@ export class ShellEnv {
     return result.code === 0 ? result.stdout.trim() : null;
   }
 
+  async realPath(target) {
+    const result = await this.executor.run(['readlink', '-f', '--', target]);
+    return result.code === 0 ? result.stdout.trim() || null : null;
+  }
+
   async isRoot() {
     if (this.root === undefined) {
       const result = await this.executor.run(['id', '-u']);

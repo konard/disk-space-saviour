@@ -54,6 +54,7 @@ export class LivenessProbe {
     this.refreshedAt = -Infinity;
     this.processes = [];
     this.openPaths = null;
+    this.realPaths = new Map();
   }
 
   async refresh(force = false) {
@@ -63,6 +64,23 @@ export class LivenessProbe {
     this.processes = (await this.env.processes()) ?? [];
     this.openPaths = await this.env.openPaths();
     this.refreshedAt = this.now();
+  }
+
+  /**
+   * Resolves symlinks in `paths` (cached), because processes report the
+   * paths they hold open with symlinks resolved: a scan of `/var/folders`
+   * on macOS must match `lsof` output under `/private/var/folders`.
+   * @param {string[]} paths
+   */
+  async resolve(paths) {
+    if (typeof this.env.realPath !== 'function') {
+      return;
+    }
+    for (const target of paths) {
+      if (!this.realPaths.has(target)) {
+        this.realPaths.set(target, await this.env.realPath(target));
+      }
+    }
   }
 
   recentWrite(newestMtimeMs) {
@@ -104,8 +122,12 @@ export class LivenessProbe {
       return null;
     }
     const pathApi = this.env.path;
+    const targets = paths.flatMap((target) => {
+      const real = this.realPaths.get(target);
+      return real && real !== target ? [target, real] : [target];
+    });
     for (const open of this.openPaths) {
-      for (const target of paths) {
+      for (const target of targets) {
         if (isWithin(open, target, pathApi)) {
           return `in use: ${open}`;
         }

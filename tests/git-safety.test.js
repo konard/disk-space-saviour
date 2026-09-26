@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'test-anywhere';
 import { spawn } from 'node:child_process';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { clean } from '../src/clean.js';
@@ -159,22 +159,15 @@ describe('re-checks right before deleting', () => {
     removeRoot(root);
   });
 
-  it('keeps it while a process holds a file inside open', async () => {
-    const liveness =
-      process.platform === 'linux' || process.platform === 'darwin';
-    if (readOnlyRuntime() || !liveness) {
-      return;
-    }
-    const root = tempRoot('dss-git-open-');
+  /**
+   * Holds a file inside `node_modules` open while cleaning a report made
+   * from `scanRoot`, which may be a symlink to the repository's parent.
+   */
+  async function cleanWhileOpen(root, scanRoot) {
     const { modules } = repoWithModules(root);
-    const { env, report } = await scanRepo(root);
-    const holder = spawn(
-      'tail',
-      ['-f', join(modules, 'left-pad', 'index.js')],
-      {
-        stdio: 'ignore',
-      }
-    );
+    const { env, report } = await scanRepo(scanRoot);
+    const held = join(scanRoot, 'app', 'node_modules', 'left-pad', 'index.js');
+    const holder = spawn('tail', ['-f', held], { stdio: 'ignore' });
     try {
       await new Promise((resolve) => setTimeout(resolve, 300));
       const audit = await clean(report, {
@@ -186,8 +179,32 @@ describe('re-checks right before deleting', () => {
       expect(existsSync(modules)).toBe(true);
     } finally {
       holder.kill();
-      removeRoot(root);
     }
+  }
+
+  const liveness =
+    process.platform === 'linux' || process.platform === 'darwin';
+
+  it('keeps it while a process holds a file inside open', async () => {
+    if (readOnlyRuntime() || !liveness) {
+      return;
+    }
+    const root = tempRoot('dss-git-open-');
+    await cleanWhileOpen(root, root);
+    removeRoot(root);
+  });
+
+  it('sees open files when the scanned path is a symlink', async () => {
+    if (readOnlyRuntime() || !liveness) {
+      return;
+    }
+    const root = tempRoot('dss-git-real-');
+    const links = tempRoot('dss-git-link-');
+    const link = join(links, 'work');
+    symlinkSync(root, link);
+    await cleanWhileOpen(root, link);
+    removeRoot(links);
+    removeRoot(root);
   });
 
   it('keeps it while the package manager runs inside the project', async () => {

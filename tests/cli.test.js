@@ -203,11 +203,14 @@ describe('dss on real files', () => {
     if (readOnlyRuntime()) {
       return;
     }
+    // A PHP project: no composer or php runs on CI runners, where other
+    // test workers are node processes whose working directory is unknown
+    // on Windows and would keep a Node.js project busy.
     const root = tempRoot('dss-cli-');
     const project = join(root, 'app');
-    const modules = join(project, 'node_modules');
-    writeBlob(join(modules, 'dep', 'index.js'), 256 * 1024);
-    writeFileSync(join(project, 'package.json'), '{}');
+    const vendor = join(project, 'vendor');
+    writeBlob(join(vendor, 'autoload.php'), 256 * 1024);
+    writeFileSync(join(project, 'composer.json'), '{}');
     age(root, 40 * DAY_MS);
     const auditDir = join(root, 'audit');
     const common = [
@@ -226,12 +229,12 @@ describe('dss on real files', () => {
     expect(await runCli(['scan', ...common], { io: scanned })).toBe(0);
     expect(scanned.out[0]).toMatch(/nothing was deleted/);
     expect(scanned.out[0]).toMatch(/MODERATE {2}1 item/);
-    expect(scanned.out[0]).toContain(modules);
+    expect(scanned.out[0]).toContain(vendor);
 
     const planned = fakeIo();
     const cleanArgs = ['clean', ...common, '--tier', 'moderate'];
     expect(await runCli(cleanArgs, { io: planned })).toBe(0);
-    expect(existsSync(modules)).toBe(true);
+    expect(existsSync(vendor)).toBe(true);
 
     const cleaned = fakeIo();
     expect(
@@ -239,7 +242,7 @@ describe('dss on real files', () => {
     ).toBe(0);
     const audit = JSON.parse(cleaned.out[0]);
     expect(audit.entries.map((e) => e.status)).toEqual(['removed']);
-    expect(existsSync(modules)).toBe(false);
+    expect(existsSync(vendor)).toBe(false);
 
     const logs = readdirSync(auditDir).map((name) => name.split('-')[1]);
     expect(logs.sort()).toEqual(['clean', 'clean', 'scan']);
