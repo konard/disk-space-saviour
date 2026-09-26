@@ -24,6 +24,7 @@
   },
   "scripts": {
     "test": "node --test --test-timeout=30000 tests/*.test.js",
+    "test:dind": "node tests/integration/dind.mjs",
     "lint": "node scripts/lint.mjs",
     "lint:all": "eslint .",
     "lint:fix": "eslint . --fix",

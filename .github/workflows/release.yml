@@ -423,6 +423,37 @@ jobs:
           cache-from: type=gha,scope=docker-image
           cache-to: type=gha,mode=max,scope=docker-image
 
+  # === DOCKER-IN-DOCKER INTEGRATION ===
+  # Runs dss against host -> l1 -> l2 nested Docker daemons: recursive scan
+  # two daemons deep, a cache cleaned inside a running container without
+  # stopping it, and a stopped container removed only when approved, with
+  # its logs backed up first (tests/integration/dind.mjs).
+  dind:
+    name: Docker-in-Docker Integration
+    runs-on: ubuntu-24.04
+    # Typical run: about 5 minutes (two nested daemons, five dss runs).
+    timeout-minutes: 20
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-dind
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.any-code-changed == 'true'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Run the nested Docker integration test
+        shell: bash
+        run: bash scripts/run-with-budget-warning.sh 780 "Docker-in-Docker integration" npm run test:dind
+
   # === DOCUMENTATION VALIDATION ===
   # Validate documentation files when docs change (hive-mind principle #12)
   validate-docs:
@@ -997,6 +1028,7 @@ jobs:
       - lint
       - test
       - docker-build
+      - dind
       - docker-publish-config
       - docker-publish-build
       - validate-docs

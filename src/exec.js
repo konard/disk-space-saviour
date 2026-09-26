@@ -60,10 +60,12 @@ export function runProcess(argv, options = {}) {
     const stderr = [];
     let captured = 0;
     let settled = false;
+    const startedAt = Date.now();
     const finish = (result) => {
       if (!settled) {
         settled = true;
         clearTimeout(timer);
+        trace(`exit ${result.code} after ${Date.now() - startedAt}ms`);
         resolve(result);
       }
     };
