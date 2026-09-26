@@ -23,3 +23,8 @@ Open files are matched through symlinks (a scan of `/var/...` sees files that
 `lsof` reports under `/private/var/...` on macOS), and process working
 directories are read with `lsof` on macOS, so a tool running elsewhere does not
 block a project it is not using.
+
+The Security workflow checks that the repository's dependency graph is enabled
+before the dependency review. When it is disabled, the review is skipped with a
+warning that links to the setting, and `npm audit` still fails on high-severity
+advisories in every lock. Before, every pull request failed on this setting.

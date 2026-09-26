@@ -1,8 +1,23 @@
 import { describe, it, expect } from 'test-anywhere';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 
 const workflowPath = '.github/workflows/security.yml';
+const probePath = 'scripts/check-dependency-graph.sh';
+const canRunBash =
+  typeof Deno === 'undefined' &&
+  typeof process !== 'undefined' &&
+  process.platform !== 'win32';
 const workflow = existsSync(workflowPath)
   ? readFileSync(workflowPath, 'utf8').replaceAll('\r\n', '\n')
   : '';
@@ -39,6 +54,48 @@ function listPackageLocks(directory = '.') {
   }
 
   return locks.sort();
+}
+
+/**
+ * Run the dependency graph probe against a curl stub that answers with the
+ * given HTTP status and body, and return what the step would report.
+ * @param {{status: string, body: string}} response
+ */
+function runProbe({ status, body }) {
+  const dir = mkdtempSync(join(tmpdir(), 'dependency-graph-'));
+  try {
+    const stub = join(dir, 'curl');
+    writeFileSync(join(dir, 'body'), body);
+    writeFileSync(
+      stub,
+      `#!/usr/bin/env bash\nprintf '%s' "$*" > "${dir}/args"\ncat "${dir}/body"\nprintf '\\n${status}'\n`
+    );
+    chmodSync(stub, 0o755);
+    const output = join(dir, 'output');
+    writeFileSync(output, '');
+    const result = spawnSync('bash', [probePath], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        PATH: `${dir}:${process.env.PATH}`,
+        GITHUB_TOKEN: 'stub-token',
+        GITHUB_API_URL: 'https://api.example.test',
+        GITHUB_SERVER_URL: 'https://example.test',
+        GITHUB_OUTPUT: output,
+        REPOSITORY: 'acme/widget',
+        BASE_SHA: 'base123',
+        HEAD_SHA: 'head456',
+      },
+    });
+    return {
+      code: result.status,
+      stdout: result.stdout,
+      output: readFileSync(output, 'utf8'),
+      args: readFileSync(join(dir, 'args'), 'utf8'),
+    };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 describe('security workflow', () => {
@@ -89,6 +146,27 @@ describe('security workflow', () => {
     );
   });
 
+  it('runs the dependency review only when the dependency graph answers', () => {
+    const dependencyReview = getJobBlock('dependency-review');
+    const probe = dependencyReview.indexOf(`run: bash ${probePath}`);
+    const review = dependencyReview.indexOf(
+      'uses: actions/dependency-review-action@v5'
+    );
+
+    expect(probe).toBeGreaterThan(-1);
+    expect(review).toBeGreaterThan(probe);
+    expect(dependencyReview).toContain('        id: dependency-graph');
+    expect(dependencyReview).toContain(
+      "        if: steps.dependency-graph.outputs.available == 'true'"
+    );
+    expect(dependencyReview).toContain(
+      '          BASE_SHA: ${{ github.event.pull_request.base.sha }}'
+    );
+    expect(dependencyReview).toContain(
+      '          HEAD_SHA: ${{ github.event.pull_request.head.sha }}'
+    );
+  });
+
   it('fails closed on high-severity advisories in every npm lock', () => {
     const audit = getJobBlock('npm-audit');
     const directoryList = audit.match(/directory: \[([^\]]+)\]/)?.[1] ?? '';
@@ -111,5 +189,72 @@ describe('security workflow', () => {
     expect(audit).toContain(
       'run: npm audit --package-lock-only --audit-level=high'
     );
+  });
+});
+
+describe('dependency graph probe', () => {
+  if (!canRunBash) {
+    it('is skipped where bash is unavailable', () => {});
+    return;
+  }
+
+  it('asks the compare API for the pull request range', () => {
+    const { args } = runProbe({ status: '200', body: '[]' });
+
+    expect(args).toContain(
+      'https://api.example.test/repos/acme/widget/dependency-graph/compare/base123...head456'
+    );
+    expect(args).toContain('Authorization: Bearer stub-token');
+  });
+
+  it('enables the review when the dependency graph answers', () => {
+    const result = runProbe({ status: '200', body: '[]' });
+
+    expect(result.code).toBe(0);
+    expect(result.output).toBe('available=true\n');
+  });
+
+  it('skips the review with a warning when the dependency graph is disabled', () => {
+    const result = runProbe({
+      status: '403',
+      body: '{"message":"Forbidden","status":"403"}',
+    });
+
+    expect(result.code).toBe(0);
+    expect(result.output).toBe('available=false\n');
+    expect(result.stdout).toContain(
+      '::warning title=Dependency review skipped::'
+    );
+    expect(result.stdout).toContain(
+      'https://example.test/acme/widget/settings/security_analysis'
+    );
+  });
+
+  it('fails on a rate-limited 403, which says nothing about the setting', () => {
+    const result = runProbe({
+      status: '403',
+      body: '{"message":"API rate limit exceeded for installation."}',
+    });
+
+    expect(result.code).toBe(1);
+    expect(result.output).toBe('');
+    expect(result.stdout).toContain(
+      '::error title=Dependency graph probe failed::'
+    );
+  });
+
+  it('fails on any other answer, on one annotation line', () => {
+    for (const status of ['404', '500', '000']) {
+      const result = runProbe({
+        status,
+        body: '{\n  "message": "Not Found"\n}\n',
+      });
+
+      expect(result.code).toBe(1);
+      expect(result.output).toBe('');
+      const [annotation] = result.stdout.split('\n');
+      expect(annotation).toContain(`answered HTTP ${status}:`);
+      expect(annotation).toContain('"message": "Not Found"');
+    }
   });
 });
