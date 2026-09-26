@@ -45,14 +45,15 @@ describe('universal React example app', () => {
     expect(packageJson.scripts['mobile:ios:run']).toContain('cap run ios');
   });
 
-  it('renders a visual UI using the package add and multiply functions', () => {
+  it('renders a scan report viewer using browser-safe package modules', () => {
     const appSource = readText(appSourcePath);
 
-    expect(appSource).toContain("from '../../../src/index.js'");
-    expect(appSource).toContain('add(parsedLeft, parsedRight)');
-    expect(appSource).toContain('multiply(parsedLeft, parsedRight)');
-    expect(appSource).toContain('Addition');
-    expect(appSource).toContain('Multiplication');
+    expect(appSource).toContain("from '../../../src/items.js'");
+    expect(appSource).toContain("from '../../../src/units.js'");
+    expect(appSource).not.toContain("from '../../../src/index.js'");
+    expect(appSource).toContain('tierTotals(report.items)');
+    expect(appSource).toContain('Scan report viewer');
+    expect(appSource).toContain('dss scan --json');
   });
 
   it('shares the Vite build output with Capacitor and GitHub Pages', () => {

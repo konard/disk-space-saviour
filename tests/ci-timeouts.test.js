@@ -280,6 +280,7 @@ describe('CI timeout policy', () => {
       release: 30,
       'instant-release': 30,
       'docker-build': 30,
+      dind: 20,
       'docker-publish-config': 10,
       'docker-publish-build': 30,
       'docker-publish': 30,
@@ -353,6 +354,7 @@ describe('CI execution budgets', () => {
       .filter((job) => job.budgets.length > 0);
 
     expect(jobsWithBudgets.map((job) => job.jobName).sort()).toEqual([
+      'dind',
       'docker-build',
       'docker-publish-build',
       'release',

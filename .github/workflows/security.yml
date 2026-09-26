@@ -68,7 +68,20 @@ jobs:
         with:
           persist-credentials: false
 
+      # The review needs the repository's dependency graph setting; without
+      # it the action fails every pull request whatever it changes. The
+      # probe skips the review with a warning in that case only.
+      - name: Check that the dependency graph is enabled
+        id: dependency-graph
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash scripts/check-dependency-graph.sh
+
       - name: Review dependency changes
+        if: steps.dependency-graph.outputs.available == 'true'
         uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: high

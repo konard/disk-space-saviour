@@ -1,5 +1,5 @@
 ---
-'@link-foundation/example-package-name': patch
+'disk-space-saviour': patch
 ---
 
 Harden CI verdicts, Docker manifest publication, timeout cleanup, broken-link

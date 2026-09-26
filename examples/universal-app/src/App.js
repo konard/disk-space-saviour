@@ -1,43 +1,50 @@
 import { createElement as h, useMemo, useState } from 'react';
-import { add, multiply } from '../../../src/index.js';
+import { TIERS, tierTotals } from '../../../src/items.js';
+import { formatBytes } from '../../../src/units.js';
+import { sampleReport } from './sample-report.js';
 
 const repositoryUrl =
   import.meta.env.VITE_REPOSITORY_URL ??
-  'https://github.com/link-foundation/js-ai-driven-development-pipeline-template';
+  'https://github.com/konard/disk-space-saviour';
 
-const desktopTargets = [
+const TONES = {
+  safe: 'green',
+  moderate: 'blue',
+  aggressive: 'amber',
+  blocked: 'grey',
+};
+
+const commands = [
   {
-    label: 'Windows',
-    detail: 'Installer or portable package from the latest desktop build.',
+    label: 'Report',
+    detail: 'npx disk-space-saviour scan --json > report.json',
   },
   {
-    label: 'macOS',
-    detail: 'Signed archive when Apple credentials are configured.',
+    label: 'Clean caches',
+    detail: 'dss clean --tier safe --yes',
   },
   {
-    label: 'Linux',
-    detail: 'Zip, deb, or rpm output from Electron Forge.',
+    label: 'Emergency',
+    detail: 'dss emergency --free 20G --yes',
   },
 ];
 
-function parseInput(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
-}
-
-function NumberField({ id, label, value, onChange }) {
-  return h(
-    'label',
-    { className: 'number-field', htmlFor: id },
-    h('span', null, label),
-    h('input', {
-      id,
-      inputMode: 'decimal',
-      type: 'number',
-      value,
-      onChange: (event) => onChange(event.target.value),
-    })
-  );
+/**
+ * Parses pasted `dss scan --json` output; falls back to the sample.
+ */
+export function readReport(text) {
+  if (text.trim() === '') {
+    return { report: sampleReport, error: null };
+  }
+  try {
+    const report = JSON.parse(text);
+    if (!Array.isArray(report.items)) {
+      return { report: sampleReport, error: 'No items array in this JSON.' };
+    }
+    return { report, error: null };
+  } catch (error) {
+    return { report: sampleReport, error: error.message };
+  }
 }
 
 function ResultTile({ label, value, tone }) {
@@ -45,26 +52,37 @@ function ResultTile({ label, value, tone }) {
     'div',
     { className: `result-tile result-tile-${tone}` },
     h('span', { className: 'result-label' }, label),
-    h('strong', null, String(value))
+    h('strong', null, value)
   );
 }
 
-function DownloadTarget({ label, detail }) {
-  return h('li', null, h('span', null, label), h('small', null, detail));
+function ItemRow({ item }) {
+  const blocked = item.blockers.length > 0;
+  return h(
+    'li',
+    null,
+    h('span', null, `${formatBytes(item.bytes)} · ${item.rule}`),
+    h(
+      'small',
+      null,
+      blocked
+        ? `kept: ${item.blockers[0]}`
+        : `${item.tier}: ${item.path ?? item.description}`
+    )
+  );
+}
+
+function CommandRow({ label, detail }) {
+  return h('li', null, h('span', null, label), h('code', null, detail));
 }
 
 export function App() {
-  const [left, setLeft] = useState('2');
-  const [right, setRight] = useState('3');
-  const parsedLeft = parseInput(left);
-  const parsedRight = parseInput(right);
-  const addition = useMemo(
-    () => add(parsedLeft, parsedRight),
-    [parsedLeft, parsedRight]
-  );
-  const multiplication = useMemo(
-    () => multiply(parsedLeft, parsedRight),
-    [parsedLeft, parsedRight]
+  const [text, setText] = useState('');
+  const { report, error } = useMemo(() => readReport(text), [text]);
+  const totals = useMemo(() => tierTotals(report.items), [report]);
+  const largest = useMemo(
+    () => [...report.items].sort((a, b) => b.bytes - a.bytes).slice(0, 6),
+    [report]
   );
 
   return h(
@@ -72,68 +90,71 @@ export function App() {
     { className: 'app-shell' },
     h(
       'section',
-      { className: 'workspace', 'aria-labelledby': 'calculator-title' },
+      { className: 'workspace', 'aria-labelledby': 'report-title' },
       h(
         'div',
         { className: 'calculator-panel' },
-        h('p', { className: 'eyebrow' }, 'Package function UI'),
-        h('h1', { id: 'calculator-title' }, 'Universal Example App'),
+        h('p', { className: 'eyebrow' }, 'Scan report viewer'),
+        h('h1', { id: 'report-title' }, 'Reclaimable disk space'),
         h(
-          'div',
-          { className: 'input-grid' },
-          h(NumberField, {
-            id: 'left-number',
-            label: 'First value',
-            value: left,
-            onChange: setLeft,
-          }),
-          h(NumberField, {
-            id: 'right-number',
-            label: 'Second value',
-            value: right,
-            onChange: setRight,
+          'label',
+          { className: 'number-field report-field', htmlFor: 'report-json' },
+          h('span', null, 'Paste `dss scan --json` output (sample shown)'),
+          h('textarea', {
+            id: 'report-json',
+            rows: 3,
+            value: text,
+            placeholder: '{"schema": 1, "items": [...]}',
+            onChange: (event) => setText(event.target.value),
           })
         ),
+        error ? h('p', { className: 'report-error' }, error) : null,
         h(
           'div',
           { className: 'results-grid', 'aria-live': 'polite' },
-          h(ResultTile, {
-            label: 'Addition',
-            value: addition,
-            tone: 'green',
-          }),
-          h(ResultTile, {
-            label: 'Multiplication',
-            value: multiplication,
-            tone: 'blue',
-          })
-        )
-      ),
-      h(
-        'aside',
-        { className: 'distribution-panel', 'aria-labelledby': 'desktop-title' },
-        h('h2', { id: 'desktop-title' }, 'Desktop builds'),
-        h(
-          'p',
-          null,
-          'The same React bundle is used by GitHub Pages, Electron, Android, and iOS.'
+          [...TIERS, 'blocked'].map((tier) =>
+            h(ResultTile, {
+              key: tier,
+              label: tier === 'blocked' ? 'Blocked (kept)' : `Up to ${tier}`,
+              value: formatBytes(totals[tier].bytes),
+              tone: TONES[tier],
+            })
+          )
         ),
         h(
           'ul',
           { className: 'target-list' },
-          desktopTargets.map((target) =>
-            h(DownloadTarget, { key: target.label, ...target })
+          largest.map((item) => h(ItemRow, { key: item.id, item }))
+        )
+      ),
+      h(
+        'aside',
+        {
+          className: 'distribution-panel',
+          'aria-labelledby': 'commands-title',
+        },
+        h('h2', { id: 'commands-title' }, 'Run it'),
+        h(
+          'p',
+          null,
+          'Scans never delete. Cleaning re-checks liveness and Git state before every item.'
+        ),
+        h(
+          'ul',
+          { className: 'target-list' },
+          commands.map((command) =>
+            h(CommandRow, { key: command.label, ...command })
           )
         ),
         h(
           'a',
           {
             className: 'download-link',
-            href: `${repositoryUrl}/releases/latest`,
+            href: repositoryUrl,
             target: '_blank',
             rel: 'noreferrer',
           },
-          'Open desktop downloads'
+          'Open the repository'
         )
       )
     )

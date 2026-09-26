@@ -10,40 +10,38 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-import { runCli } from '../bin/example-package-name.js';
+import { runCli } from '../src/cli.js';
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 const lockJson = JSON.parse(readFileSync('package-lock.json', 'utf8'));
 
 describe('publishable package metadata', () => {
-  it('uses the real link-foundation example package name', () => {
-    expect(packageJson.name).toBe('@link-foundation/example-package-name');
+  it('uses the disk-space-saviour package name', () => {
+    expect(packageJson.name).toBe('disk-space-saviour');
     expect(packageJson.publishConfig).toEqual({ access: 'public' });
-    expect(lockJson.name).toBe('@link-foundation/example-package-name');
-    expect(lockJson.packages[''].name).toBe(
-      '@link-foundation/example-package-name'
-    );
+    expect(lockJson.name).toBe('disk-space-saviour');
+    expect(lockJson.packages[''].name).toBe('disk-space-saviour');
   });
 
-  it('defines a globally installable CLI command', () => {
+  it('defines globally installable dss and disk-space-saviour commands', () => {
     expect(packageJson.bin).toEqual({
-      'example-package-name': './bin/example-package-name.js',
+      dss: './bin/dss.js',
+      'disk-space-saviour': './bin/dss.js',
     });
-    expect(existsSync('bin/example-package-name.js')).toBe(true);
+    expect(existsSync('bin/dss.js')).toBe(true);
   });
 
-  it('runs package functions through the CLI command', () => {
+  it('prints the package version through the CLI', async () => {
     const stdout = [];
     const stderr = [];
+    const io = {
+      stdout: (line) => stdout.push(line),
+      stderr: (line) => stderr.push(line),
+      interactive: false,
+    };
 
-    expect(
-      runCli(['add', '2', '3'], {
-        stderr: (line) => stderr.push(line),
-        stdout: (line) => stdout.push(line),
-      })
-    ).toBe(0);
-
-    expect(stdout).toEqual(['5']);
+    expect(await runCli(['--version'], { io })).toBe(0);
+    expect(stdout).toEqual([packageJson.version]);
     expect(stderr).toEqual([]);
   });
 
@@ -52,11 +50,11 @@ describe('publishable package metadata', () => {
       return;
     }
 
-    const tempRoot = mkdtempSync(join(tmpdir(), 'example-package-name-'));
-    const linkPath = join(tempRoot, 'example-package-name');
+    const tempRoot = mkdtempSync(join(tmpdir(), 'dss-bin-'));
+    const linkPath = join(tempRoot, 'dss');
 
     try {
-      symlinkSync(resolve('bin/example-package-name.js'), linkPath);
+      symlinkSync(resolve('bin/dss.js'), linkPath);
     } catch (error) {
       rmSync(tempRoot, { force: true, recursive: true });
 
@@ -69,14 +67,12 @@ describe('publishable package metadata', () => {
     }
 
     try {
-      const result = spawnSync(
-        process.execPath,
-        [linkPath, 'multiply', '6', '7'],
-        { encoding: 'utf8' }
-      );
+      const result = spawnSync(process.execPath, [linkPath, '--help'], {
+        encoding: 'utf8',
+      });
 
       expect(result.status).toBe(0);
-      expect(result.stdout.trim()).toBe('42');
+      expect(result.stdout.startsWith('Usage: dss')).toBe(true);
       expect(result.stderr).toBe('');
     } finally {
       rmSync(tempRoot, { force: true, recursive: true });

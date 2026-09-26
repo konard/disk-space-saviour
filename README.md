@@ -1,64 +1,259 @@
-# js-ai-driven-development-pipeline-template
+# disk-space-saviour
 
-A comprehensive template for AI-driven JavaScript/TypeScript development with full CI/CD pipeline support.
+`dss` finds and safely deletes regenerable disk usage: package manager
+caches, build outputs, forgotten dependency folders, old toolchain versions,
+agent and browser caches, system logs, and Docker data. That includes caches
+inside running containers and in nested Docker-in-Docker daemons. It is a
+command line tool and a JavaScript library (`scan()` → report,
+`clean(report)` → audit log).
 
-This repository publishes the real test package
-`@link-foundation/example-package-name` so the template release pipeline is
-validated end to end with npm trusted publishing.
+## Why
 
-## Features
-
-- **Multi-runtime support**: Works with Bun, Node.js, and Deno
-- **Universal testing**: Uses [test-anywhere](https://github.com/link-foundation/test-anywhere) for cross-runtime tests
-- **Automated releases**: Changesets-based versioning with GitHub Actions
-- **Optional Docker Hub publishing**: Docker images can be published after the matching npm version is visible
-- **Universal app example**: React UI for the package API with GitHub Pages, Electron, and Capacitor build paths
-- **Code quality**: ESLint + Prettier with pre-commit hooks via Husky
-- **Package manager agnostic**: Works with bun, npm, yarn, pnpm, and deno
-- **Broken link checks**: Automated link validation with [lychee](https://github.com/lycheeverse/lychee-action) and Web Archive fallback suggestions
+Build machines and AI agent hosts fill their disks with data that can be
+rebuilt: `node_modules`, `target/`, `~/.cache`, Docker layers and caches left
+inside long-lived containers. Deleting this data by hand is risky, because
+the same folder may belong to a build that is running right now or to a
+container holding unpushed work. `dss` only touches regenerable data. It
+checks liveness and Git state again right before each deletion, and it never
+deletes anything unless you ask it to.
 
 ## Quick Start
 
-### Using This Template
-
-1. Click "Use this template" on GitHub to create a new repository
-2. Clone your new repository
-3. Update `package.json` with your package name and description
-4. Install dependencies: `bun install`
-5. Start developing!
-
-### Development
-
 ```bash
-# Install dependencies
-bun install
+npm install -g disk-space-saviour   # or: npx disk-space-saviour scan
 
-# Run tests
-bun test --timeout 30000
-
-# Or with other runtimes:
-npm test
-deno test --allow-read
-
-# Lint code
-bun run lint
-
-# Format code
-bun run format
-
-# Check all (lint + format + file size)
-bun run check
-
-# Build the universal React example app
-npm install --prefix examples/universal-app
-npm run example:web:build
-npm run example:desktop:package
-
-# Try the CLI locally
-node bin/example-package-name.js add 2 3
+dss scan                 # report only, never deletes
+dss clean                # plan for the safe tier (dry run)
+dss clean --yes          # delete the safe tier
+dss clean --tier moderate --yes
+dss emergency --free 20G --yes      # escalate tiers until 20 GiB is free
+dss docker scan --recursive         # containers and nested daemons
 ```
 
-## Project Structure
+Example (`dss scan ~/work` on two projects untouched for 40 days):
+
+```
+disk-space-saviour scan of host (build-01) in 3.7s (report only, nothing was deleted)
+/: 75.8 GiB free of 193 GiB (61% used)
+
+MODERATE  2 items, 7.6 MiB
+     4.8 MiB  cargo-target  /home/me/work/api/target
+     2.9 MiB  node-modules  /home/me/work/web/node_modules
+
+Reclaimable (cumulative): safe 0 B · moderate 7.6 MiB · aggressive 7.6 MiB; blocked 0 B
+Audit log: /home/me/.local/state/disk-space-saviour/audit/dss-scan-2026-09-26T00-31-05-432Z-232874.json
+Run `dss clean --tier safe` to see the plan, add --yes to delete.
+```
+
+`dss clean` without `--yes` asks on a terminal. When nobody can answer
+(CI, agents, pipes), it prints the plan, deletes nothing, and says
+`Dry run: pass --yes to delete non-interactively.` Add `--json` to any
+command to get the report or audit log as JSON (`dss scan --json`).
+
+## Commands
+
+```
+dss scan [paths...] [--docker] [--depth N] [--json]      # report only
+dss clean [paths...] --tier safe|moderate|aggressive [--yes] [--older-than 1h]
+dss emergency --free 20G | --until 80% [--path /] [--yes]
+dss docker scan|clean [--container ID] [--recursive]
+```
+
+| Exit code | Meaning                                  |
+| --------- | ---------------------------------------- |
+| 0         | success (a dry run counts as success)    |
+| 1         | error, or at least one deletion failed   |
+| 2         | usage error                              |
+| 3         | `dss emergency` could not reach its goal |
+
+Run `dss --help` for every option. The most useful ones:
+
+- `--only NAME` limits a run to an ecosystem, rule or kind (`--only rust`,
+  `--only npm-cache`, `--only docker-stopped-container`).
+- `--exclude PATH|GLOB` makes paths untouchable.
+- `--scanner NAME` restricts scanning to `projects`, `global`, `versions`,
+  `agents` or `system`.
+- `--report FILE` makes `dss clean` start from a saved `dss scan --json`
+  report. Every item is still re-checked before it is deleted.
+
+## Tiers
+
+Tiers are cumulative: `moderate` includes `safe`, and `aggressive` includes
+both.
+
+| Tier         | What it removes                                                                                                                                                                                                                                                                     |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `safe`       | Download caches (npm, pnpm, yarn, pip, uv, Cargo registry, Gradle, Maven, Go, NuGet, and 40+ more), incremental and superseded build artifacts (old Rust hashes), dangling Docker images and build cache. Includes these caches inside running containers.                          |
+| `moderate`   | Whole `node_modules`, `target/`, `.venv`, `build/` and similar folders of projects inactive for `--inactive` (30 days); toolchain versions nothing uses; unused tagged images (`--remove-unused-images`); stopped containers (`--remove-stopped-containers` or an interactive yes). |
+| `aggressive` | For emergencies: everything regenerable, including build outputs of projects in active use. Only `dss emergency` or an explicit `--tier aggressive` reaches it.                                                                                                                     |
+
+Covered ecosystems: JavaScript/TypeScript (npm, yarn, pnpm, bun, deno,
+framework build caches), Python, Rust, JVM (Gradle, Maven, Kotlin, Android),
+Go, C/C++ (CMake, ccache, vcpkg, Conan), .NET, PHP, Ruby, Swift/Xcode, Dart,
+Haskell, Scala, Elixir, OCaml, Lean, Julia, R, Zig, and scripting languages.
+Also covered: version managers (nvm, pyenv, rbenv, SDKMAN!, rustup, elan,
+ghcup, opam, swiftly, VS Code Server), Playwright, Puppeteer and Cypress
+browsers, IDE and AI agent caches, package manager archives, trash, crash
+reports, core dumps and journald logs.
+
+## Safety
+
+- **Dry run by default.** `scan` never deletes. `clean` and `emergency`
+  delete only with `--yes` or an interactive yes, and never with
+  `--dry-run`.
+- **Regenerable data only.** Every rule describes data that a tool
+  recreates: a cache, a build output or a dependency install.
+- **Liveness checks, repeated right before each batch is deleted.** Paths
+  that a process holds open (`/proc/*/fd`, `cwd`, `exe`, or `lsof` on
+  macOS) are skipped. So are projects with a running `cargo`, `gradle`,
+  `npm`, `node` or similar tool, and anything modified within
+  `--older-than` (1h). The newest build generation is always kept; in Rust,
+  that is the newest hash of each crate in `target/*/deps`.
+- **Git awareness.** A project or container is not touched while it has
+  uncommitted changes, unpushed commits or stashes. The blocker is shown in
+  the report. `--allow-dirty-repos` turns this off.
+- **Audit log on every run.** Each run, dry runs included, writes
+  `dss-<command>-<time>-<pid>.json` with every decision, the bytes freed
+  and left per environment, and disk usage before and after.
+
+## Docker
+
+With `--docker`, or automatically when a daemon is reachable, `dss` handles
+three kinds of Docker data:
+
+- **Daemon data:** `docker system df`, dangling images, build cache, and
+  optionally unused images and volumes.
+- **Running containers** are never stopped, restarted or removed. They are
+  scanned and cleaned from the inside through `docker exec`, with the same
+  rules and liveness checks as the host.
+- **Stopped containers** are listed with their size, image, command, owner
+  session (from labels and environment) and the Git state of repositories
+  in their writable layer. The layer is copied out with `docker cp` and
+  checked with Git. A container is removed only with
+  `--remove-stopped-containers` or after an interactive yes per container,
+  and only when its Git state is clean. Before `docker rm`, its logs and
+  `docker inspect` output are saved to `--backup-dir`.
+
+`--recursive` follows Docker-in-Docker: a container that runs its own daemon
+is scanned as a new environment, down to `--depth` levels (default 3). The
+CI job `Docker-in-Docker Integration` builds a host → l1 → l2 chain and runs
+`tests/integration/dind.mjs` against it (`npm run test:dind`).
+
+## Emergency mode
+
+`dss emergency --free 20G` (at least 20 GiB available) or
+`dss emergency --until 80%` (at most 80% used) works through the tiers in
+order. Within a tier it removes caches first, then Docker objects, and
+stopped containers last, only when approved. It re-reads the disk after
+every deletion and stops as soon as the goal is met. It exits with 3 when
+even the aggressive tier cannot reach the goal. `--path` chooses the volume
+(default `/`).
+
+## Library
+
+```js
+import { scan, clean, emergency, formatReport } from 'disk-space-saviour';
+
+const report = await scan({ roots: ['/work'], docker: false });
+console.log(formatReport(report));
+
+// Library calls delete unless dryRun is set.
+const audit = await clean(report, { tier: 'safe', dryRun: true });
+console.log(audit.plannedBytes, audit.file);
+
+await emergency({ free: '20G', removeStoppedContainers: false });
+```
+
+Types ship in `src/index.d.ts`. See `examples/basic-usage.js` for a runnable
+example and `examples/universal-app` for a report viewer.
+
+## Configuration
+
+| Option / variable                | Default                                    | Purpose                                     |
+| -------------------------------- | ------------------------------------------ | ------------------------------------------- |
+| `--audit-dir`, `DSS_AUDIT_DIR`   | `$XDG_STATE_HOME/disk-space-saviour/audit` | Where audit logs go                         |
+| `--backup-dir`, `DSS_BACKUP_DIR` | `…/disk-space-saviour/backups`             | Container log backups before `docker rm`    |
+| `--older-than`                   | `1h`                                       | Activity window; newer files are kept       |
+| `--inactive`                     | `30d`                                      | Project inactivity before `moderate`        |
+| `--min-size`                     | `1M`                                       | Smaller items are not reported              |
+| `--depth`                        | `3`                                        | Docker nesting depth                        |
+| `--journal-keep`                 | `512M`                                     | journald size to keep                       |
+| `--verbose`, `DSS_DEBUG=1`       | off                                        | List everything, trace commands and timings |
+
+`$XDG_STATE_HOME` falls back to `~/.local/state`. Linux and macOS are
+supported (liveness uses `/proc` on Linux and `lsof` on macOS).
+
+### Repository settings
+
+#### Protected-Branch Release Pull Requests
+
+If `main` requires pull requests and the `Pipeline Status` check, configure a
+repository secret named `RELEASE_PR_TOKEN`. It must be a fine-grained PAT for
+an automation actor other than the workflow's built-in `GITHUB_TOKEN`, scoped
+to this repository with Contents and Pull requests write access and Checks read
+access. The release and generated-preview fallbacks use it to open the PR, wait
+for the PR's own checks, and merge only after they pass. The manual
+changeset-PR mode uses it for the same reason. Teams that generate short-lived
+GitHub App installation tokens can wire that action output to the same workflow
+inputs instead of storing a PAT.
+
+Repositories that allow the release workflow to push directly to `main` do not
+exercise the fallback, but manual changeset PR creation still requires this
+secret.
+
+#### Optional Docker Hub Publishing
+
+Docker publishing is disabled by default. To enable it for a project that ships
+a Docker image, add a `Dockerfile` and configure these GitHub Actions settings:
+
+| Setting              | Type               | Description                                                                           |
+| -------------------- | ------------------ | ------------------------------------------------------------------------------------- |
+| `DOCKERHUB_IMAGE`    | Variable           | Docker Hub image name, for example `namespace/image`. This enables Docker publishing. |
+| `DOCKERHUB_USERNAME` | Variable           | Docker Hub username used by `docker/login-action`.                                    |
+| `DOCKERHUB_TOKEN`    | Secret             | Docker Hub access token used for registry authentication.                             |
+| `DOCKER_CONTEXT`     | Variable, optional | Docker build context. Defaults to `.`.                                                |
+| `DOCKERFILE`         | Variable, optional | Dockerfile path. Defaults to `./Dockerfile`.                                          |
+
+When enabled, the release workflow waits until the exact published npm version
+is visible in the npm registry, then publishes Docker Hub tags for `latest` and
+that same version. The Docker build also receives `NPM_PACKAGE_VERSION` as a
+build argument so Dockerfiles can install the matching published package.
+
+#### ESLint Rules
+
+Customize ESLint in `eslint.config.js`. Current configuration:
+
+- ES Modules support
+- Prettier integration
+- No console restrictions (common in CLI tools)
+- Strict equality enforcement
+- Async/await best practices
+- **Strict unused variables rule**: No exceptions - all unused variables, arguments, and caught errors must be removed (no `_` prefix exceptions)
+
+#### Prettier Options
+
+Configured in `.prettierrc`:
+
+- Single quotes
+- Semicolons
+- 2-space indentation
+- 80-character line width
+- ES5 trailing commas
+- LF line endings
+
+## Development
+
+```bash
+npm install
+npm test                  # Node.js, 30s per test
+bun test --timeout 30000  # Bun
+deno test --allow-read    # Deno (read-only tests)
+npm run check             # lint + format + duplication
+npm run test:dind         # Docker-in-Docker integration (needs --privileged)
+node bin/dss.js scan --verbose
+```
+
+### Project Structure
 
 ```
 .
@@ -78,8 +273,6 @@ node bin/example-package-name.js add 2 3
 ├── deno.json             # Deno configuration
 └── package.json          # Node.js package manifest
 ```
-
-## Design Choices
 
 ### Multi-Runtime Support
 
@@ -266,75 +459,7 @@ The link checker workflow (`.github/workflows/links.yml`) validates all links in
 
 Add regex patterns to `.lycheeignore` to exclude URLs from checks (e.g., local dev URLs, example.com, known rate-limited sites).
 
-## Configuration
-
-### Updating Package Name
-
-After creating a repository from this template, update the package name in:
-
-1. `package.json`: replace `"@link-foundation/example-package-name"` with your package name
-2. `.changeset/config.json`: Package references
-
-Release scripts derive the package name from `package.json` at runtime, so no
-script-level package-name constants need to be edited during template adoption.
-
-### Protected-Branch Release Pull Requests
-
-If `main` requires pull requests and the `Pipeline Status` check, configure a
-repository secret named `RELEASE_PR_TOKEN`. It must be a fine-grained PAT for
-an automation actor other than the workflow's built-in `GITHUB_TOKEN`, scoped
-to this repository with Contents and Pull requests write access and Checks read
-access. The release and generated-preview fallbacks use it to open the PR, wait
-for the PR's own checks, and merge only after they pass. The manual
-changeset-PR mode uses it for the same reason. Teams that generate short-lived
-GitHub App installation tokens can wire that action output to the same workflow
-inputs instead of storing a PAT.
-
-Repositories that allow the release workflow to push directly to `main` do not
-exercise the fallback, but manual changeset PR creation still requires this
-secret.
-
-### Optional Docker Hub Publishing
-
-Docker publishing is disabled by default. To enable it for a project that ships
-a Docker image, add a `Dockerfile` and configure these GitHub Actions settings:
-
-| Setting              | Type               | Description                                                                           |
-| -------------------- | ------------------ | ------------------------------------------------------------------------------------- |
-| `DOCKERHUB_IMAGE`    | Variable           | Docker Hub image name, for example `namespace/image`. This enables Docker publishing. |
-| `DOCKERHUB_USERNAME` | Variable           | Docker Hub username used by `docker/login-action`.                                    |
-| `DOCKERHUB_TOKEN`    | Secret             | Docker Hub access token used for registry authentication.                             |
-| `DOCKER_CONTEXT`     | Variable, optional | Docker build context. Defaults to `.`.                                                |
-| `DOCKERFILE`         | Variable, optional | Dockerfile path. Defaults to `./Dockerfile`.                                          |
-
-When enabled, the release workflow waits until the exact published npm version
-is visible in the npm registry, then publishes Docker Hub tags for `latest` and
-that same version. The Docker build also receives `NPM_PACKAGE_VERSION` as a
-build argument so Dockerfiles can install the matching published package.
-
-### ESLint Rules
-
-Customize ESLint in `eslint.config.js`. Current configuration:
-
-- ES Modules support
-- Prettier integration
-- No console restrictions (common in CLI tools)
-- Strict equality enforcement
-- Async/await best practices
-- **Strict unused variables rule**: No exceptions - all unused variables, arguments, and caught errors must be removed (no `_` prefix exceptions)
-
-### Prettier Options
-
-Configured in `.prettierrc`:
-
-- Single quotes
-- Semicolons
-- 2-space indentation
-- 80-character line width
-- ES5 trailing commas
-- LF line endings
-
-## Scripts Reference
+### Scripts Reference
 
 | Script                               | Description                                           |
 | ------------------------------------ | ----------------------------------------------------- |
@@ -352,6 +477,16 @@ Configured in `.prettierrc`:
 | `npm run example:mobile:sync`        | Build and sync the app bundle into Capacitor projects |
 | `bun run changeset`                  | Create a new changeset                                |
 
+### Best Practices
+
+The repository implements CI/CD best practices for AI-driven development. See [BEST-PRACTICES.md](docs/BEST-PRACTICES.md) for details on:
+
+- File size limits for AI readability
+- Automated formatting and linting
+- Multi-runtime and cross-platform testing
+- Changeset-based versioning
+- Concurrency control for CI/CD pipelines
+
 ## Contributing
 
 See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed contribution guidelines.
@@ -364,16 +499,6 @@ Quick steps:
 4. Create a changeset: `bun run changeset`
 5. Commit your changes (pre-commit hooks will run automatically)
 6. Push and create a Pull Request
-
-## Best Practices
-
-This template implements CI/CD best practices for AI-driven development. See [BEST-PRACTICES.md](docs/BEST-PRACTICES.md) for details on:
-
-- File size limits for AI readability
-- Automated formatting and linting
-- Multi-runtime and cross-platform testing
-- Changeset-based versioning
-- Concurrency control for CI/CD pipelines
 
 ## License
 
