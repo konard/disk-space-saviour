@@ -18,3 +18,8 @@ so a Node.js tool whose main thread is renamed (for example `MainThread`) is
 still seen as running. A Docker-in-Docker CI job (`npm run test:dind`) checks
 recursion two daemons deep, cleaning inside running containers, and the
 approval, Git and log-backup rules for stopped containers.
+
+Open files are matched through symlinks (a scan of `/var/...` sees files that
+`lsof` reports under `/private/var/...` on macOS), and process working
+directories are read with `lsof` on macOS, so a tool running elsewhere does not
+block a project it is not using.
