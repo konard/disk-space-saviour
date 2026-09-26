@@ -70,6 +70,7 @@ function volume() {
     const project = join(root, 'projects', name);
     writeBlob(join(project, 'node_modules', 'dep', 'index.js'), bytes);
     writeFileSync(join(project, 'package.json'), '{}');
+    writeFileSync(join(project, 'package-lock.json'), '{}');
     paths[name] = join(project, 'node_modules');
   }
   age(root, 40 * DAY_MS);
@@ -86,7 +87,7 @@ function volume() {
     });
   const free = () => CAPACITY - treeBytes(root);
   const kept = () => Object.keys(paths).filter((key) => existsSync(paths[key]));
-  return { root, run, free, kept };
+  return { root, run, free, kept, env };
 }
 
 describe('emergency goals', () => {
@@ -107,6 +108,24 @@ describe('emergency goals', () => {
 });
 
 describe('emergency mode', () => {
+  it('only cleans items on the watched volume', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const { root, run, free, kept, env } = volume();
+    try {
+      env.deviceId = async (target) => (target.includes('/home/') ? 2 : 1);
+      const audit = await run({ free: free() + 100 * KIB });
+      expect(audit.entries.some((entry) => entry.rule === 'npm-cache')).toBe(
+        false
+      );
+      expect(kept()).toContain('npm');
+      expect(kept()).toContain('pip');
+    } finally {
+      removeRoot(root);
+    }
+  });
+
   it('stops after the caches when they free enough', async () => {
     if (readOnlyRuntime()) {
       return;

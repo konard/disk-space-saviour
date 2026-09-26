@@ -149,8 +149,8 @@ async function brewItems(context, isRoot) {
     description: 'Homebrew outdated versions and stale downloads',
     path: prefix || 'brew',
     bytes,
-    tier: 'safe',
-    reason: 'superseded formula versions and downloads',
+    tier: 'moderate',
+    reason: 'Homebrew may remove old kegs and unneeded dependencies',
     action: { type: 'command', argv: ['brew', 'cleanup'], measure: [] },
     checks: { busy: ['brew'], cwd: null, mtime: false },
   });

@@ -54,7 +54,7 @@ command to get the report or audit log as JSON (`dss scan --json`).
 
 ```
 dss scan [paths...] [--docker] [--depth N] [--json]      # report only
-dss clean [paths...] --tier safe|moderate|aggressive [--yes] [--older-than 1h]
+dss clean [paths...] --tier safe|moderate [--yes] [--older-than 1h]
 dss emergency --free 20G | --until 80% [--path /] [--yes]
 dss docker scan|clean [--container ID] [--recursive]
 ```
@@ -73,8 +73,8 @@ Run `dss --help` for every option. The most useful ones:
 - `--exclude PATH|GLOB` makes paths untouchable.
 - `--scanner NAME` restricts scanning to `projects`, `global`, `versions`,
   `agents` or `system`.
-- `--report FILE` makes `dss clean` start from a saved `dss scan --json`
-  report. Every item is still re-checked before it is deleted.
+- `--report FILE` limits cleaning to items in a saved `dss scan --json`
+  report. The current rules rescan those items before deletion.
 
 ## Tiers
 
@@ -83,9 +83,9 @@ both.
 
 | Tier         | What it removes                                                                                                                                                                                                                                                                     |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `safe`       | Download caches (npm, pnpm, yarn, pip, uv, Cargo registry, Gradle, Maven, Go, NuGet, and 40+ more), incremental and superseded build artifacts (old Rust hashes), dangling Docker images and build cache. Includes these caches inside running containers.                          |
+| `safe`       | Download caches (npm, pnpm, yarn, pip, uv, Cargo registry, Gradle, Go, NuGet, and many more), dangling Docker images and build cache. Includes these caches inside running containers.                                                                                              |
 | `moderate`   | Whole `node_modules`, `target/`, `.venv`, `build/` and similar folders of projects inactive for `--inactive` (30 days); toolchain versions nothing uses; unused tagged images (`--remove-unused-images`); stopped containers (`--remove-stopped-containers` or an interactive yes). |
-| `aggressive` | For emergencies: everything regenerable, including build outputs of projects in active use. Only `dss emergency` or an explicit `--tier aggressive` reaches it.                                                                                                                     |
+| `aggressive` | For emergencies: everything regenerable, including build outputs of projects in active use. Only `dss emergency` reaches it.                                                                                                                                                        |
 
 Covered ecosystems: JavaScript/TypeScript (npm, yarn, pnpm, bun, deno,
 framework build caches), Python, Rust, JVM (Gradle, Maven, Kotlin, Android),
@@ -103,15 +103,16 @@ reports, core dumps and journald logs.
   `--dry-run`.
 - **Regenerable data only.** Every rule describes data that a tool
   recreates: a cache, a build output or a dependency install.
-- **Liveness checks, repeated right before each batch is deleted.** Paths
+- **Liveness checks, repeated right before each path is deleted.** Paths
   that a process holds open (`/proc/*/fd`, `cwd`, `exe`, or `lsof` on
   macOS) are skipped. So are projects with a running `cargo`, `gradle`,
   `npm`, `node` or similar tool, and anything modified within
-  `--older-than` (1h). The newest build generation is always kept; in Rust,
-  that is the newest hash of each crate in `target/*/deps`.
+  `--older-than` (1h). Rust build artifacts stay intact in the safe tier;
+  Cargo can reuse older feature variants without updating their timestamps.
 - **Git awareness.** A project or container is not touched while it has
   uncommitted changes, unpushed commits or stashes. The blocker is shown in
-  the report. `--allow-dirty-repos` turns this off.
+  the report. Stopped containers with Git work require an exact
+  `--allow-dirty-container ID` override.
 - **Audit log on every run.** Each run, dry runs included, writes
   `dss-<command>-<time>-<pid>.json` with every decision, the bytes freed
   and left per environment, and disk usage before and after.
@@ -122,7 +123,8 @@ With `--docker`, or automatically when a daemon is reachable, `dss` handles
 three kinds of Docker data:
 
 - **Daemon data:** `docker system df`, dangling images, build cache, and
-  optionally unused images and volumes.
+  optionally unused images. `--include-volumes` lists unattached volumes
+  for manual inspection; it does not delete them.
 - **Running containers** are never stopped, restarted or removed. They are
   scanned and cleaned from the inside through `docker exec`, with the same
   rules and liveness checks as the host.
@@ -147,7 +149,7 @@ order. Within a tier it removes caches first, then Docker objects, and
 stopped containers last, only when approved. It re-reads the disk after
 every deletion and stops as soon as the goal is met. It exits with 3 when
 even the aggressive tier cannot reach the goal. `--path` chooses the volume
-(default `/`).
+(default `/`); items on other host volumes are skipped.
 
 ## Library
 

@@ -9,7 +9,8 @@ import { spawn } from 'node:child_process';
 import { existsSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { clean } from '../src/clean.js';
+import { clean, cleanOptions } from '../src/clean.js';
+import { LocalEnv } from '../src/env/local.js';
 import { GitInspector, stateBlockers } from '../src/git.js';
 import { scan } from '../src/scan.js';
 import {
@@ -31,7 +32,8 @@ import {
 function repoWithModules(root) {
   const repo = pushedRepo(join(root, 'app'));
   writeFileSync(join(repo, 'package.json'), '{}');
-  git(repo, 'add', 'package.json');
+  writeFileSync(join(repo, 'package-lock.json'), '{}');
+  git(repo, 'add', 'package.json', 'package-lock.json');
   git(repo, 'commit', '-q', '-m', 'package');
   git(repo, 'push', '-q');
   const modules = join(repo, 'node_modules');
@@ -47,6 +49,19 @@ async function scanRepo(root) {
 }
 
 describe('Git state', () => {
+  it('does not inherit an aggressive tier or disabled age checks from a saved report', () => {
+    const options = cleanOptions(
+      { options: { tier: 'aggressive', olderThan: '0s' } },
+      {}
+    );
+    expect(options.tier).toBe('safe');
+    expect(options.staleAgeMs).toBe(60 * 60 * 1000);
+  });
+  it('reserves aggressive cleanup for emergency mode', () => {
+    expect(() => cleanOptions({ options: {} }, { tier: 'aggressive' })).toThrow(
+      /emergency mode/
+    );
+  });
   it('names every kind of unsaved work', () => {
     expect(
       stateBlockers('/w', { error: null, dirty: 2, unpushed: 1, stashes: 1 })
@@ -85,6 +100,40 @@ describe('Git state', () => {
     removeRoot(root);
   });
 
+  it('blocks an unpushed commit on detached HEAD', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const root = tempRoot('dss-git-detached-');
+    const repo = pushedRepo(join(root, 'repo'));
+    git(repo, 'checkout', '--detach', '-q');
+    writeFileSync(join(repo, 'DETACHED.md'), 'local work\n');
+    git(repo, 'add', 'DETACHED.md');
+    git(repo, 'commit', '-q', '-m', 'detached work');
+    expect(
+      (await new GitInspector(fixtureEnv(root)).repoBlockers(repo)).join()
+    ).toMatch(/1 unpushed commit/);
+    removeRoot(root);
+  });
+
+  it('does not execute commands configured by a repository during inspection', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const root = tempRoot('dss-git-untrusted-');
+    const repo = pushedRepo(join(root, 'repo'));
+    const monitor = join(root, 'FSMONITOR_RAN');
+    const filter = join(root, 'FILTER_RAN');
+    git(repo, 'config', 'core.fsmonitor', `touch ${monitor}; false`);
+    git(repo, 'config', 'filter.evil.clean', `touch ${filter}; cat`);
+    writeFileSync(join(repo, '.gitattributes'), 'README.md filter=evil\n');
+    writeFileSync(join(repo, 'README.md'), 'edited\n');
+    await new GitInspector(fixtureEnv(root)).repoBlockers(repo);
+    expect(existsSync(monitor)).toBe(false);
+    expect(existsSync(filter)).toBe(false);
+    removeRoot(root);
+  });
+
   it('blocks a directory with tracked files at scan time', async () => {
     if (readOnlyRuntime()) {
       return;
@@ -103,6 +152,48 @@ describe('Git state', () => {
 });
 
 describe('re-checks right before deleting', () => {
+  it('protects a nested solver clone at scan time and after a saved report', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const parent = tempRoot('dss-solver-parent-');
+    const work = join(parent, 'gh-issue-solver-example');
+    const repo = pushedRepo(join(work, 'checkout'));
+    age(work, 40 * DAY_MS);
+    const env = new (class extends LocalEnv {
+      async openPaths() {
+        return super.openPaths({ strict: false });
+      }
+    })({ homes: [], tmpDirs: [parent] });
+    const input = scanInput(env, [], {
+      scanners: ['global'],
+      now: () => Date.now() + DAY_MS,
+    });
+    const report = await scan(input);
+    const item = report.items.find((entry) => entry.path === work);
+    expect(Boolean(item)).toBe(true);
+    expect(item.blockers).toEqual([]);
+    git(repo, 'checkout', '--detach', '-q');
+    writeFileSync(join(repo, 'WORK.md'), 'unpublished\n');
+    git(repo, 'add', 'WORK.md');
+    git(repo, 'commit', '-q', '-m', 'work');
+    const fresh = await scan(input);
+    expect(
+      fresh.items.find((entry) => entry.path === work).blockers.join()
+    ).toMatch(/unpushed commit/);
+    const audit = await clean(report, {
+      env,
+      tier: 'moderate',
+      now: () => Date.now() + DAY_MS,
+      audit: false,
+    });
+    expect(audit.entries.find((entry) => entry.path === work).reason).toMatch(
+      /unpushed commit/
+    );
+    expect(existsSync(work)).toBe(true);
+    removeRoot(parent);
+  });
+
   it('deletes an untracked dependency dir of a clean, pushed repo', async () => {
     if (readOnlyRuntime()) {
       return;
@@ -158,7 +249,9 @@ describe('re-checks right before deleting', () => {
     expect(existsSync(modules)).toBe(true);
     removeRoot(root);
   });
+});
 
+describe('liveness re-checks right before deleting', () => {
   /**
    * Holds a file inside `node_modules` open while cleaning a report made
    * from `scanRoot`, which may be a symlink to the repository's parent.

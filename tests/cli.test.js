@@ -8,9 +8,12 @@ import { existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { USAGE, parseCli, runCli, toOptions } from '../src/cli.js';
+import { clean } from '../src/clean.js';
+import { scan } from '../src/scan.js';
 import {
   DAY_MS,
   age,
+  fixtureEnv,
   readOnlyRuntime,
   removeRoot,
   tempRoot,
@@ -55,7 +58,7 @@ function fakeApi({ status = 'planned', goalMet = true } = {}) {
     command: 'clean',
     dryRun: Boolean(options.dryRun),
     goalMet,
-    entries: [{ status: options.dryRun ? 'planned' : status }],
+    entries: [{ id: 'plan-item', status: options.dryRun ? 'planned' : status }],
     environments: [],
   });
   return {
@@ -162,6 +165,7 @@ describe('consent', () => {
     const io = fakeIo({ interactive: true, answers: ['yes', 'y'] });
     const { last } = await run(['clean'], { io });
     expect(last.dryRun).toBe(false);
+    expect(last.approvedIds).toEqual(['plan-item']);
     const approved = await last.confirm({
       description: 'stopped container web (abc)',
       bytes: 2048,
@@ -189,6 +193,13 @@ describe('exit codes', () => {
     expect(met.code).toBe(0);
   });
 
+  it('returns 1 when an emergency action fails even if the goal is met', async () => {
+    const api = fakeApi({ status: 'failed', goalMet: true });
+    expect(
+      (await run(['emergency', '--free', '1G', '--yes'], { api })).code
+    ).toBe(1);
+  });
+
   it('limits docker commands to Docker', async () => {
     const { api } = await run(['docker', 'clean', '--recursive', '--yes']);
     const [, options] = api.calls[0];
@@ -199,6 +210,73 @@ describe('exit codes', () => {
 });
 
 describe('dss on real files', () => {
+  it('rescans a saved report before executing edited paths', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const root = tempRoot('dss-report-');
+    try {
+      const project = join(root, 'app');
+      const vendor = writeBlob(join(project, 'vendor', 'autoload.php'));
+      const protectedFile = writeBlob(join(root, 'keep', 'notes.txt'));
+      writeFileSync(join(project, 'composer.json'), '{}');
+      writeFileSync(join(project, 'composer.lock'), '{}');
+      age(root, 40 * DAY_MS);
+      const env = fixtureEnv(root);
+      const api = {
+        scan: (options) => scan({ ...options, env }),
+        clean: (report, options) => clean(report, { ...options, env }),
+      };
+      const args = [
+        root,
+        '--no-docker',
+        '--no-native',
+        '--scanner',
+        'projects',
+        '--min-size',
+        '0',
+        '--audit-dir',
+        join(root, 'audit'),
+      ];
+      const saved = await api.scan({
+        roots: [root],
+        docker: false,
+        noNative: true,
+        scanners: ['projects'],
+        minSize: 0,
+      });
+      const item = saved.items.find(
+        (entry) => entry.rule === 'composer-vendor'
+      );
+      expect(Boolean(item)).toBe(true);
+      item.paths = [join(root, 'keep')];
+      item.action.paths = item.paths;
+      item.blockers = [];
+      const reportFile = join(root, 'report.json');
+      writeFileSync(reportFile, JSON.stringify(saved));
+      const io = fakeIo();
+      expect(
+        await runCli(
+          [
+            'clean',
+            ...args,
+            '--report',
+            reportFile,
+            '--tier',
+            'moderate',
+            '--yes',
+            '--json',
+          ],
+          { io, api }
+        )
+      ).toBe(0);
+      expect(existsSync(protectedFile)).toBe(true);
+      expect(existsSync(vendor)).toBe(false);
+    } finally {
+      removeRoot(root);
+    }
+  });
+
   it('scans, plans and cleans with an audit log for every run', async () => {
     if (readOnlyRuntime()) {
       return;
@@ -211,6 +289,7 @@ describe('dss on real files', () => {
     const vendor = join(project, 'vendor');
     writeBlob(join(vendor, 'autoload.php'), 256 * 1024);
     writeFileSync(join(project, 'composer.json'), '{}');
+    writeFileSync(join(project, 'composer.lock'), '{}');
     age(root, 40 * DAY_MS);
     const auditDir = join(root, 'audit');
     const common = [
@@ -224,21 +303,26 @@ describe('dss on real files', () => {
       '--audit-dir',
       auditDir,
     ];
+    const env = fixtureEnv(root);
+    const api = {
+      scan: (options) => scan({ ...options, env }),
+      clean: (report, options) => clean(report, { ...options, env }),
+    };
 
     const scanned = fakeIo();
-    expect(await runCli(['scan', ...common], { io: scanned })).toBe(0);
+    expect(await runCli(['scan', ...common], { io: scanned, api })).toBe(0);
     expect(scanned.out[0]).toMatch(/nothing was deleted/);
     expect(scanned.out[0]).toMatch(/MODERATE {2}1 item/);
     expect(scanned.out[0]).toContain(vendor);
 
     const planned = fakeIo();
     const cleanArgs = ['clean', ...common, '--tier', 'moderate'];
-    expect(await runCli(cleanArgs, { io: planned })).toBe(0);
+    expect(await runCli(cleanArgs, { io: planned, api })).toBe(0);
     expect(existsSync(vendor)).toBe(true);
 
     const cleaned = fakeIo();
     expect(
-      await runCli([...cleanArgs, '--yes', '--json'], { io: cleaned })
+      await runCli([...cleanArgs, '--yes', '--json'], { io: cleaned, api })
     ).toBe(0);
     const audit = JSON.parse(cleaned.out[0]);
     expect(audit.entries.map((e) => e.status)).toEqual(['removed']);

@@ -38,6 +38,12 @@ function matchingName(proc, names) {
       return name;
     }
   }
+  const commandWords = (proc.command ?? '').toLowerCase().split(/[^a-z0-9_-]+/);
+  for (const candidate of names) {
+    if (commandWords.includes(candidate.toLowerCase())) {
+      return candidate;
+    }
+  }
   return null;
 }
 
@@ -54,6 +60,7 @@ export class LivenessProbe {
     this.refreshedAt = -Infinity;
     this.processes = [];
     this.openPaths = null;
+    this.probeError = false;
     this.realPaths = new Map();
   }
 
@@ -61,8 +68,12 @@ export class LivenessProbe {
     if (!force && this.now() - this.refreshedAt < this.refreshMs) {
       return;
     }
-    this.processes = (await this.env.processes()) ?? [];
-    this.openPaths = await this.env.openPaths();
+    const processes = await this.env.processes().catch(() => null);
+    this.processes = processes ?? [];
+    this.openPaths = await this.env.openPaths().catch(() => null);
+    this.probeError =
+      (processes === null || this.openPaths === null) &&
+      (this.env.platform === 'linux' || this.env.platform === 'darwin');
     this.refreshedAt = this.now();
   }
 
@@ -143,6 +154,9 @@ export class LivenessProbe {
   busyReason(item) {
     const checks = item.checks ?? {};
     return (
+      (this.probeError
+        ? 'cannot verify process and open-file activity'
+        : null) ??
       (checks.mtime === false ? null : this.recentWrite(item.newestMtimeMs)) ??
       this.runningTool(checks.busy, checks.cwd) ??
       this.openInside(item.paths ?? [])

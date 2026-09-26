@@ -5,9 +5,9 @@
 
 import { scanDocker } from './docker/scan.js';
 import { LocalEnv } from './env/local.js';
+import { block, tierTotals } from './items.js';
 import { hostExecutor, trace } from './exec.js';
 import { GitInspector } from './git.js';
-import { tierTotals } from './items.js';
 import { LivenessProbe } from './liveness.js';
 import { resolveOptions } from './options.js';
 import { existingPaths, isWithin, matchesGlob } from './paths.js';
@@ -26,6 +26,66 @@ export const SCANNERS = {
 };
 
 export const REPORT_SCHEMA = 1;
+const trustedReports = new WeakMap();
+const RESCAN_OPTIONS = new Set([
+  'roots',
+  'scanners',
+  'containers',
+  'host',
+  'docker',
+  'dockerDepth',
+  'maxDepth',
+  'staleAge',
+  'olderThan',
+  'inactive',
+  'minSize',
+  'only',
+  'exclude',
+  'includeVolumes',
+  'removeStoppedContainers',
+  'removeUnusedImages',
+  'allowDirtyRepos',
+  'allowDirtyContainers',
+  'noNative',
+  'journalKeep',
+  'env',
+  'now',
+]);
+
+function safetySnapshot(report) {
+  return JSON.stringify(report);
+}
+
+function sealReport(report) {
+  trustedReports.set(report, safetySnapshot(report));
+  return report;
+}
+
+/** Rebuild scanner-derived actions when a report came from JSON or changed. */
+export async function revalidateReport(saved, input = {}) {
+  if (trustedReports.get(saved) === safetySnapshot(saved)) {
+    return saved;
+  }
+  const scope = {
+    roots: saved.options?.roots,
+    scanners: saved.options?.scanners,
+    containers: saved.options?.containers,
+    host: saved.options?.host,
+    docker: saved.options?.docker,
+    dockerDepth: saved.options?.dockerDepth,
+    maxDepth: saved.options?.maxDepth,
+  };
+  for (const [key, value] of Object.entries(input)) {
+    if (RESCAN_OPTIONS.has(key) && value !== undefined && value !== null) {
+      scope[key] = value;
+    }
+  }
+  const current = await scan(scope);
+  const selected = new Set((saved.items ?? []).map((item) => item.id));
+  current.items = current.items.filter((item) => selected.has(item.id));
+  current.totals = tierTotals(current.items);
+  return sealReport(current);
+}
 
 /** Common project locations inside containers, scanned when present. */
 export const CONTAINER_ROOTS = [
@@ -116,11 +176,22 @@ export async function selfContainerIds(env) {
     return [];
   }
   const ids = new Set();
-  for (const file of ['/proc/self/mountinfo', '/proc/self/cgroup']) {
-    const text = (await env.readText(file).catch(() => null)) ?? '';
-    for (const match of text.matchAll(
-      /(?:containers\/|docker[-/])([0-9a-f]{64})/g
-    )) {
+  const pattern = /(?:containers\/|docker[-/])([0-9a-f]{64})/g;
+  const cgroup =
+    (await env.readText('/proc/self/cgroup').catch(() => null)) ?? '';
+  for (const match of cgroup.matchAll(pattern)) {
+    ids.add(match[1]);
+  }
+  const mounts =
+    (await env.readText('/proc/self/mountinfo').catch(() => null)) ?? '';
+  for (const line of mounts.split('\n')) {
+    const mountpoint = line.split(' ')[4];
+    if (
+      !['/etc/hostname', '/etc/hosts', '/etc/resolv.conf'].includes(mountpoint)
+    ) {
+      continue;
+    }
+    for (const match of line.matchAll(pattern)) {
       ids.add(match[1]);
     }
   }
@@ -142,6 +213,7 @@ function excluded(item, exclude, pathApi) {
     exclude.some(
       (pattern) =>
         isWithin(target, pattern, pathApi) ||
+        isWithin(pattern, target, pathApi) ||
         matchesGlob(pathApi.basename(target), pattern)
     )
   );
@@ -217,6 +289,25 @@ async function dockerSection(env, options, errors) {
  *   adapter (tests).
  * @returns {Promise<object>} report
  */
+function blockMountedHostItems(items, mounts, pathApi) {
+  for (const item of items) {
+    if (item.action?.type !== 'remove') {
+      continue;
+    }
+    for (const mount of mounts) {
+      if (
+        item.paths.some(
+          (target) =>
+            isWithin(target, mount.source, pathApi) ||
+            isWithin(mount.source, target, pathApi)
+        )
+      ) {
+        block(item, `bind-mounted by running container ${mount.containerId}`);
+      }
+    }
+  }
+}
+
 export async function scan(input = {}) {
   const options = resolveOptions(input);
   const env = input.env ?? new LocalEnv();
@@ -227,6 +318,7 @@ export async function scan(input = {}) {
       ? []
       : await scanEnvironment(env, options, { roots: options.roots, errors });
   const docker = await dockerSection(env, options, errors);
+  blockMountedHostItems(hostItems, docker?.bindMounts ?? [], env.path);
   const items = filterItems(
     [...hostItems, ...(docker?.items ?? [])],
     options,
@@ -268,7 +360,7 @@ export function buildReport({
   errors,
   startedAt,
 }) {
-  return {
+  return sealReport({
     schema: REPORT_SCHEMA,
     tool: 'disk-space-saviour',
     createdAt: new Date(options.now()).toISOString(),
@@ -283,8 +375,9 @@ export function buildReport({
           daemons: docker.daemons,
           containers: docker.containers,
           hints: docker.hints,
+          volumes: docker.volumes,
         }
       : null,
     errors,
-  };
+  });
 }

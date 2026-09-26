@@ -129,6 +129,7 @@ export class FakeDockerWorld {
         const container = this.#find(name, args[1]);
         return container ? ok(container.diff ?? '') : fail('No such container');
       },
+      cp: () => fail('Could not find the file in the container'),
       history: () => ok(''),
       rm: () => this.#remove(daemon, name, args),
       builder: () => {
@@ -145,7 +146,12 @@ export class FakeDockerWorld {
       return fail(`unsupported: docker system ${sub}`);
     }
     if (args.includes('-v')) {
-      return ok(JSON.stringify({ Images: daemon.images ?? [], Volumes: [] }));
+      return ok(
+        JSON.stringify({
+          Images: daemon.images ?? [],
+          Volumes: daemon.volumes ?? [],
+        })
+      );
     }
     return ok(
       JSON.stringify({
@@ -220,6 +226,7 @@ function inspectObject(container) {
       Labels: container.labels ?? {},
       Env: container.env ?? [],
     },
+    Mounts: container.mounts ?? [],
   };
 }
 

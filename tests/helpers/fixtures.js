@@ -77,6 +77,9 @@ export function projectFixture(root, rule, bytes = 64 * 1024) {
   if (marker) {
     writeFileSync(join(project, concrete(marker)), '');
   }
+  if (rule.lockfiles) {
+    writeFileSync(join(project, rule.lockfiles[0]), '');
+  }
   const parent = rule.parentName ? join(project, rule.parentName) : project;
   const dir = join(parent, concrete(rule.names[0]));
   mkdirSync(dir, { recursive: true });
@@ -114,7 +117,7 @@ class FixtureEnv extends LocalEnv {
   }
 
   async openPaths() {
-    const paths = await super.openPaths();
+    const paths = await super.openPaths({ strict: false });
     return paths
       ? new Set([...paths].filter((open) => this.#inside(open)))
       : null;

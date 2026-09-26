@@ -6,11 +6,12 @@
 
 import { describe, it, expect } from 'test-anywhere';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { PROJECT_RULES } from '../src/rules/ecosystems.js';
-import { scan } from '../src/scan.js';
+import { clean } from '../src/clean.js';
+import { scan, selfContainerIds } from '../src/scan.js';
 import {
   DAY_MS,
   age,
@@ -24,6 +25,21 @@ import {
 } from './helpers/fixtures.js';
 
 let aged = null;
+
+describe('self container detection', () => {
+  it('ignores another container whose shm is mounted on the host', async () => {
+    const other = 'a'.repeat(64);
+    const own = 'b'.repeat(64);
+    const env = {
+      platform: 'linux',
+      readText: async (file) =>
+        file.endsWith('mountinfo')
+          ? `1 2 0:1 /var/lib/docker/containers/${other}/mounts/shm /other/shm rw - tmpfs shm rw\n3 4 0:2 /var/lib/docker/containers/${own}/hostname /etc/hostname rw - ext4 /dev/root rw`
+          : '',
+    };
+    expect(await selfContainerIds(env)).toEqual([own]);
+  });
+});
 
 /**
  * One fixture project per rule, untouched for 40 days, scanned once.
@@ -76,6 +92,27 @@ describe('project rules find their fixture project', () => {
 });
 
 describe('project activity and markers', () => {
+  it('counts recent writes in nested source directories', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const root = tempRoot('dss-nested-activity-');
+    try {
+      const rule = PROJECT_RULES.find((entry) => entry.id === 'node-modules');
+      projectFixture(root, rule);
+      age(root, 40 * DAY_MS);
+      writeBlob(join(root, rule.id, 'src', 'deep', 'active.js'));
+      const report = await scan(
+        scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
+      );
+      expect(
+        report.items.find((item) => item.rule === 'node-modules')?.tier
+      ).toBe('aggressive');
+    } finally {
+      removeRoot(root);
+    }
+  });
+
   it('blocks a project written inside the activity window', async () => {
     if (readOnlyRuntime()) {
       return;
@@ -148,6 +185,53 @@ describe('project activity and markers', () => {
     expect(report.items).toEqual([]);
     removeRoot(root);
   });
+
+  it('requires a lockfile before reporting installed dependencies and again at clean time', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const root = tempRoot('dss-lockfile-');
+    const rule = PROJECT_RULES.find((entry) => entry.id === 'node-modules');
+    const modules = projectFixture(root, rule);
+    const lock = join(root, rule.id, 'package-lock.json');
+    age(root, 40 * DAY_MS);
+    const env = fixtureEnv(root);
+    const input = scanInput(env, [root], { scanners: ['projects'] });
+    const report = await scan(input);
+    expect(report.items.some((item) => item.path === modules)).toBe(true);
+    rmSync(lock);
+    const audit = await clean(report, { env, tier: 'moderate', audit: false });
+    expect(audit.entries[0].reason).toMatch(/no lockfile remains/);
+    expect(existsSync(modules)).toBe(true);
+    expect(
+      (await scan(input)).items.some((item) => item.path === modules)
+    ).toBe(false);
+    removeRoot(root);
+  });
+
+  it('does not scan global installs under hidden configuration directories', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const root = tempRoot('dss-global-installs-');
+    writeBlob(
+      join(root, '.config', 'yarn', 'global', 'node_modules', 'cli', 'index.js')
+    );
+    writeFileSync(
+      join(root, '.config', 'yarn', 'global', 'package.json'),
+      '{}'
+    );
+    writeFileSync(
+      join(root, '.config', 'yarn', 'global', 'package-lock.json'),
+      '{}'
+    );
+    age(root, 40 * DAY_MS);
+    const report = await scan(
+      scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
+    );
+    expect(report.items).toEqual([]);
+    removeRoot(root);
+  });
 });
 
 function duBytes(target) {
@@ -164,6 +248,7 @@ describe('sizes', () => {
     const project = join(root, 'app');
     mkdirSync(project, { recursive: true });
     writeFileSync(join(project, 'package.json'), '{}');
+    writeFileSync(join(project, 'package-lock.json'), '{}');
     const modules = join(project, 'node_modules');
     for (let index = 0; index < 40; index++) {
       writeBlob(

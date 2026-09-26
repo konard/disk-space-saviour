@@ -96,6 +96,14 @@ export const ECOSYSTEMS = [
         description: 'installed npm dependencies',
         names: ['node_modules'],
         markers: ['package.json'],
+        lockfiles: [
+          'package-lock.json',
+          'npm-shrinkwrap.json',
+          'pnpm-lock.yaml',
+          'yarn.lock',
+          'bun.lock',
+          'bun.lockb',
+        ],
         busy: JS_BUSY,
       },
       {
@@ -193,19 +201,14 @@ export const ECOSYSTEMS = [
         description: 'virtual environment',
         names: ['.venv', 'venv', '.env', 'env'],
         selfMarkers: ['pyvenv.cfg'],
+        lockfiles: ['poetry.lock', 'uv.lock', 'Pipfile.lock', 'pdm.lock'],
         busy: PY_BUSY,
       },
       {
         id: 'python-bytecode',
         kind: 'cache',
         description: 'bytecode and tool caches',
-        names: [
-          '__pycache__',
-          '.pytest_cache',
-          '.mypy_cache',
-          '.ruff_cache',
-          '.hypothesis',
-        ],
+        names: ['__pycache__', '.pytest_cache', '.mypy_cache', '.ruff_cache'],
         busy: PY_BUSY,
       },
       {
@@ -269,13 +272,6 @@ export const ECOSYSTEMS = [
           '~/.gradle/wrapper/dists',
           '~/.gradle/daemon',
         ],
-        busy: JVM_BUSY,
-      },
-      {
-        id: 'maven-repository',
-        description: 'Maven local repository (may hold `mvn install` outputs)',
-        tier: 'moderate',
-        paths: ['~/.m2/repository'],
         busy: JVM_BUSY,
       },
       {
@@ -377,13 +373,6 @@ export const ECOSYSTEMS = [
         paths: ['~/.cache/vcpkg/archives', '{LOCALAPPDATA}/vcpkg/archives'],
         busy: ['vcpkg'],
       },
-      {
-        id: 'conan-cache',
-        description: 'Conan package cache',
-        tier: 'moderate',
-        paths: ['~/.conan/data', '~/.conan2/p'],
-        busy: ['conan'],
-      },
     ],
     projects: [
       {
@@ -474,6 +463,7 @@ export const ECOSYSTEMS = [
         description: 'Composer dependencies',
         names: ['vendor'],
         markers: ['composer.json'],
+        lockfiles: ['composer.lock'],
         selfMarkers: ['autoload.php'],
         busy: ['composer', 'php', 'php-fpm'],
       },
@@ -504,6 +494,7 @@ export const ECOSYSTEMS = [
         names: ['bundle'],
         parentName: 'vendor',
         parentMarkers: ['Gemfile'],
+        lockfiles: ['Gemfile.lock'],
         busy: ['ruby', 'bundle', 'rails', 'puma'],
       },
       {
@@ -764,14 +755,14 @@ export const ECOSYSTEMS = [
       {
         id: 'julia-compiled',
         description: 'Julia precompilation cache',
-        paths: ['~/.julia/compiled', '~/.julia/logs'],
+        paths: ['~/.julia/compiled'],
         busy: ['julia'],
       },
       {
         id: 'julia-packages',
         description: 'Julia packages and artifacts',
         tier: 'moderate',
-        paths: ['~/.julia/packages', '~/.julia/artifacts'],
+        paths: ['~/.julia/packages'],
         busy: ['julia'],
       },
     ],
@@ -780,15 +771,7 @@ export const ECOSYSTEMS = [
   {
     id: 'r',
     name: 'R',
-    caches: [
-      {
-        id: 'renv-cache',
-        description: 'renv package cache (project libraries link into it)',
-        tier: 'moderate',
-        paths: ['~/.cache/R/renv', '~/Library/Caches/org.R-project.R/R/renv'],
-        busy: ['R', 'Rscript', 'rsession'],
-      },
-    ],
+    caches: [],
     projects: [
       {
         id: 'renv-library',

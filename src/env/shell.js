@@ -10,7 +10,7 @@
 import path from 'node:path';
 
 import { shellQuote } from '../exec.js';
-import { parseDf, processAliases } from './local.js';
+import { DEFAULT_SKIP_NAMES, parseDf, processAliases } from './local.js';
 
 const STAT_FORMAT = '%F|%s|%b|%B|%Y|%n';
 const ARG_BATCH = 200;
@@ -47,10 +47,16 @@ for p in /proc/[0-9]*; do
   printf '%s|%s|%s|%s|%s\\n' "\${p#/proc/}" "$c" "$e" "$a" "$w"
 done`;
 
-const OPEN_PATHS_SCRIPT = `for p in /proc/[0-9]*; do
-  for l in "$p/cwd" "$p/exe" "$p"/fd/*; do readlink "$l" 2>/dev/null; done
+const OPEN_PATHS_SCRIPT = `failed=0
+for p in /proc/[0-9]*; do
+  [ -d "$p" ] || continue
+  ls "$p/fd" >/dev/null 2>&1 || { [ -d "$p" ] && failed=1; continue; }
+  for l in "$p/cwd" "$p/exe" "$p"/fd/*; do
+    [ -L "$l" ] || continue
+    readlink "$l" 2>/dev/null || failed=1
+  done
 done
-true`;
+exit "$failed"`;
 
 const REMOVE_SCRIPT = `rm -rf -- "$@" 2>/dev/null && exit 0
 chmod -R u+w -- "$@" 2>/dev/null
@@ -157,7 +163,7 @@ export class ShellEnv {
     this.options = options;
     this.vars = {};
     this.currentHome = null;
-    this.skipNames = options.skipNames ?? null;
+    this.skipNames = options.skipNames ?? DEFAULT_SKIP_NAMES;
   }
 
   sh(script, args = [], options = {}) {
@@ -359,7 +365,7 @@ export class ShellEnv {
       ...pruneSkipped,
       ...(type === 'f'
         ? ['-type', 'f', '(', ...findNameExpression(globs), ')', '-print']
-        : ['-false']),
+        : ['-name', '']),
     ];
     const result = await this.executor.run(argv);
     return result.stdout.split('\n').filter(Boolean);
@@ -378,6 +384,9 @@ export class ShellEnv {
 
   async processes() {
     const result = await this.sh(PROCESS_SCRIPT);
+    if (result.code !== 0) {
+      return null;
+    }
     const [selfPid, ...lines] = result.stdout.split('\n');
     return lines
       .map((line) => /^(\d+)\|([^|]*)\|([^|]*)\|([^|]*)\|(.*)$/.exec(line))

@@ -168,7 +168,7 @@ describe('Rust pruning', () => {
     removeRoot(root);
   });
 
-  it('scans and cleans only superseded artifacts in the safe tier', async () => {
+  it('does not prune reusable feature variants in the safe tier', async () => {
     if (readOnlyRuntime()) {
       return;
     }
@@ -181,16 +181,13 @@ describe('Rust pruning', () => {
       scanInput(env, [root], { scanners: ['projects'], inactive: '30d' })
     );
     const item = report.items.find((i) => i.rule === 'cargo-superseded');
-    expect(item.tier).toBe('safe');
-    expect(item.paths.sort()).toEqual(old.sort());
+    expect(item).toBe(undefined);
     const target = report.items.find((i) => i.rule === 'cargo-target');
     expect(target.tier).toBe('aggressive');
 
     const audit = await clean(report, { env, tier: 'safe', audit: false });
-    expect(audit.entries.map((e) => [e.rule, e.status])).toEqual([
-      ['cargo-superseded', 'removed'],
-    ]);
-    expect(old.some((path) => existsSync(path))).toBe(false);
+    expect(audit.entries).toEqual([]);
+    expect(old.every((path) => existsSync(path))).toBe(true);
     expect(kept.every((path) => existsSync(path))).toBe(true);
     removeRoot(root);
   });

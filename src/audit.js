@@ -70,7 +70,9 @@ export function startAudit(command, fields = {}) {
 export async function writeAudit(audit, options = {}) {
   const dir = auditDirectory(options);
   await fsp.mkdir(dir, { recursive: true });
-  audit.finishedAt ??= new Date().toISOString();
+  if (!options.inProgress) {
+    audit.finishedAt ??= new Date().toISOString();
+  }
   const stamp = audit.startedAt.replace(/[:.]/g, '-');
   const file = path.join(
     dir,

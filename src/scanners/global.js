@@ -6,6 +6,7 @@
 
 import { CACHE_RULES } from '../rules/ecosystems.js';
 import { OTHER_RULES } from '../rules/other.js';
+import { compareVersions } from '../rules/versions.js';
 import { block, makeItem } from '../items.js';
 import { expandGlobPaths, expandRulePath } from '../paths.js';
 import { olderThan, scanTimeBusy } from './common.js';
@@ -63,7 +64,6 @@ async function nativeAction(context, rule, base, paths) {
         type: 'command',
         argv: native.argv,
         measure: paths,
-        fallback: native.required ? null : removal,
       },
       blocker: null,
     };
@@ -88,6 +88,36 @@ function ageFilter(context, rule) {
       olderThan(context, usage.newestMtimeMs, options.inactiveMs);
   }
   return () => true;
+}
+
+/** Keep the latest installed revision of each browser and platform family. */
+async function olderVersions(env, rule, paths) {
+  if (!rule.versionPattern) {
+    return paths;
+  }
+  const groups = new Map();
+  for (const target of paths) {
+    if ((await env.stat(target))?.type !== 'dir') {
+      continue;
+    }
+    const match = rule.versionPattern.exec(env.path.basename(target));
+    if (!match) {
+      continue;
+    }
+    const family = `${env.path.dirname(target)}\0${match.groups.family ?? ''}`;
+    groups.set(family, [
+      ...(groups.get(family) ?? []),
+      { target, version: match.groups.version },
+    ]);
+  }
+  const old = new Set();
+  for (const entries of groups.values()) {
+    entries.sort((a, b) => compareVersions(b.version, a.version));
+    for (const entry of entries.slice(1)) {
+      old.add(entry.target);
+    }
+  }
+  return paths.filter((target) => old.has(target));
 }
 
 async function buildItem(context, rule, base, group) {
@@ -127,8 +157,7 @@ async function addBlockers(context, rule, item) {
   }
   if (rule.git) {
     for (const target of item.paths) {
-      const root = await git.findRepoRoot(target, target);
-      for (const reason of root ? await git.repoBlockers(root) : []) {
+      for (const reason of await git.treeBlockers(target)) {
         block(item, reason);
       }
     }
@@ -161,10 +190,11 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
   const found = [];
   const seen = new Set();
   for (const { rule, base, patterns } of planned) {
-    const paths = [
+    const candidates = [
       ...new Set(patterns.flatMap((pattern) => matches.get(pattern) ?? [])),
     ].filter((target) => !seen.has(target));
-    paths.forEach((target) => seen.add(target));
+    candidates.forEach((target) => seen.add(target));
+    const paths = await olderVersions(env, rule, candidates);
     if (paths.length > 0) {
       found.push({ rule, base, paths });
     }

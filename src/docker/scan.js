@@ -4,8 +4,8 @@
  * For every reachable daemon (the host's, then daemons running inside
  * containers, up to `dockerDepth` levels):
  * - daemon objects: dangling images and build cache (`safe`), unused tagged
- *   images (`moderate`, needs `removeUnusedImages`), dangling volumes (only
- *   with `includeVolumes`);
+ *   images (`moderate`, needs `removeUnusedImages`), unused volumes (reported
+ *   with `includeVolumes`, never removed automatically);
  * - running containers are never stopped, restarted or removed: their
  *   filesystems are scanned through `docker exec` with the same rules as
  *   the host, and a Docker CLI inside them is followed (Docker-in-Docker);
@@ -21,7 +21,11 @@ import { ShellEnv } from '../env/shell.js';
 import { containerExecutor, trace } from '../exec.js';
 import { block, makeItem } from '../items.js';
 import { DockerCli, parseDockerSize } from './cli.js';
-import { containerGitState, ownerOf } from './containers.js';
+import {
+  containerGitState,
+  gitBlockersForRemoval,
+  ownerOf,
+} from './containers.js';
 
 const RUNNING = new Set(['running']);
 const STOPPED = new Set(['exited', 'created', 'dead']);
@@ -130,32 +134,6 @@ function daemonItems(daemon, verbose, df, options) {
       })
     );
   }
-  if (options.includeVolumes) {
-    for (const volume of verbose.Volumes ?? []) {
-      if (volume.Links !== '0') {
-        continue;
-      }
-      items.push(
-        makeItem(env, {
-          rule: 'docker-dangling-volume',
-          kind: 'docker',
-          ecosystem: 'docker',
-          description: `Docker volume ${volume.Name} not attached to any container`,
-          target: `daemon:${daemon.id}:volume:${volume.Name}`,
-          bytes: parseDockerSize(volume.Size),
-          tier: 'aggressive',
-          reason: 'volumes can hold data that is not regenerable',
-          requiresConfirmation: 'includeVolumes',
-          action: {
-            type: 'command',
-            argv: ['docker', 'volume', 'rm', volume.Name],
-            ...measure,
-          },
-          checks: { busy: [], cwd: null, mtime: false },
-        })
-      );
-    }
-  }
   return items;
 }
 
@@ -245,10 +223,17 @@ async function stoppedItem(daemon, ps, inspected, options) {
     },
     checks: { busy: [], cwd: null, mtime: false },
   });
-  const git = await containerGitState(daemon.docker, ps.ID);
-  item.container.repos = git.repos;
-  if (!options.allowDirtyRepos) {
-    git.blockers.forEach((reason) => block(item, reason));
+  if (options.removeStoppedContainers) {
+    const git = await containerGitState(daemon.docker, ps.ID);
+    item.container.repos = git.repos;
+    item.container.gitBlockers = git.blockers;
+    gitBlockersForRemoval(git, ps.ID, options).forEach((reason) =>
+      block(item, reason)
+    );
+  } else {
+    item.container.repos = [];
+    item.container.gitBlockers = [];
+    item.container.gitCheckDeferred = true;
   }
   return item;
 }
@@ -274,6 +259,8 @@ class DockerScan {
       environments: [],
       items: [],
       hints: [],
+      bindMounts: [],
+      volumes: [],
     };
   }
 
@@ -316,6 +303,18 @@ class DockerScan {
       })),
     });
     this.result.items.push(...daemonItems(daemon, verbose, df, this.options));
+    if (this.options.includeVolumes) {
+      this.result.volumes.push(
+        ...(verbose.Volumes ?? [])
+          .filter((volume) => volume.Links === '0')
+          .map((volume) => ({
+            daemon: id,
+            name: volume.Name,
+            bytes: parseDockerSize(volume.Size),
+            note: 'inspect contents before removing this volume manually',
+          }))
+      );
+    }
     this.result.hints.push(...(await imageHints(docker, verbose)));
     await this.containers(daemon, record, depth, inherited);
   }
@@ -328,6 +327,18 @@ class DockerScan {
         c,
       ])
     );
+    if (record.env.kind === 'host') {
+      for (const ps of all.filter((row) => row.State === 'running')) {
+        for (const mount of inspected.get(ps.ID)?.Mounts ?? []) {
+          if (mount.Type === 'bind' && mount.Source?.startsWith('/')) {
+            this.result.bindMounts.push({
+              source: mount.Source,
+              containerId: ps.ID,
+            });
+          }
+        }
+      }
+    }
     for (const ps of all) {
       const selected =
         inherited || matchesFilter(ps, this.options.containerFilter);
@@ -362,6 +373,10 @@ class DockerScan {
       entry.note = 'this is the container dss runs in, scanned as the host';
       return;
     }
+    if (depth > this.options.dockerDepth) {
+      entry.note = `deeper than the Docker depth limit ${this.options.dockerDepth} (--depth)`;
+      return;
+    }
     if (STOPPED.has(ps.State)) {
       this.result.items.push(
         await stoppedItem(daemon, ps, inspected, this.options)
@@ -370,10 +385,6 @@ class DockerScan {
     }
     if (!RUNNING.has(ps.State)) {
       entry.note = `state ${ps.State}, left alone`;
-      return;
-    }
-    if (depth > this.options.dockerDepth) {
-      entry.note = `deeper than the Docker depth limit ${this.options.dockerDepth} (--depth)`;
       return;
     }
     await this.running(record, depth, ps, entry);
