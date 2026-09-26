@@ -413,6 +413,39 @@ describe('use-m load survives a stalled connection', () => {
     expect(Date.now() - started < 10000).toBe(true);
   });
 
+  it('does not answer a load from another URL with a cached use-m', async () => {
+    // Bun runs every test file in one process, so a use-m loaded by an
+    // earlier file must not stand in for a different URL.
+    if (!(await canListen())) {
+      console.log(
+        'Skipping: this runtime is not allowed to listen on 127.0.0.1.'
+      );
+      return;
+    }
+    const cdn = createServer((request, response) => {
+      response.end('({ use: async () => "cached" })');
+    });
+    await new Promise((resolve) => cdn.listen(0, '127.0.0.1', resolve));
+    const base = `http://127.0.0.1:${cdn.address().port}`;
+    let error;
+    try {
+      const use = await loadUse({ url: `${base}/a/use.js`, attempts: 1 });
+      expect(await use('x')).toBe('cached');
+      expect(await loadUse({ url: `${base}/a/use.js` })).toBe(use);
+      await loadUse({
+        url: 'http://127.0.0.1:1/b/use.js',
+        attempts: 1,
+        timeoutMs: 300,
+        sleep: async () => {},
+      });
+    } catch (caught) {
+      error = caught;
+    } finally {
+      cdn.close();
+    }
+    expect(error.message.includes('/b/use.js')).toBe(true);
+  });
+
   it('exposes the defaults that keep the worst case inside a job budget', () => {
     // 3 x 15s of attempts plus 2s + 4s of backoff = 51s.
     expect(DEFAULT_ATTEMPTS * DEFAULT_TIMEOUT_MS).toBe(45000);
