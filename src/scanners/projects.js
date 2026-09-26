@@ -7,15 +7,14 @@
  * every rule are searched again below, with the remaining depth, so a
  * non-matching `build` directory never hides real projects inside it.
  *
- * Cargo `target` directories additionally produce a `safe` sub-item with
- * superseded artifacts (see ./rust.js).
+ * Cargo `target` directories stay intact: build timestamps do not prove that
+ * a feature or profile variant can be deleted safely.
  */
 
 import { ECOSYSTEMS, PROJECT_RULES } from '../rules/ecosystems.js';
 import { block, makeItem } from '../items.js';
 import { isWithin, matchesGlob } from '../paths.js';
 import { listMany, olderThan, scanTimeBusy } from './common.js';
-import { analyzeRustProfile, findRustProfiles } from './rust.js';
 
 const ECOSYSTEM_NAMES = new Map(ECOSYSTEMS.map((e) => [e.id, e.name]));
 
@@ -46,6 +45,15 @@ function ruleAccepts(env, rule, candidate, selfListing, grandListing) {
     if (rule.parentMarkers && !anyMatch(grandListing, rule.parentMarkers)) {
       return false;
     }
+  }
+  if (
+    rule.lockfiles &&
+    !anyMatch(
+      rule.parentName ? grandListing : candidate.siblings,
+      rule.lockfiles
+    )
+  ) {
+    return false;
   }
   return true;
 }
@@ -181,50 +189,34 @@ async function addBlockers(context, item, requireClean) {
   }
 }
 
-async function rustItems(context, targetItem, rule) {
-  const { env, options, now } = context;
-  const items = [];
-  for (const profile of await findRustProfiles(env, targetItem.path)) {
-    const result = await analyzeRustProfile(env, profile, {
-      staleAgeMs: options.staleAgeMs,
-      now,
-    });
-    if (result.entries.length === 0) {
-      continue;
-    }
-    const item = makeItem(env, {
-      rule: 'cargo-superseded',
-      kind: 'build',
-      ecosystem: 'rust',
-      description: `superseded cargo artifacts (${result.removed} old units, ${result.kept} kept)`,
-      path: profile,
-      paths: result.entries.map((entry) => entry.path),
-      bytes: result.bytes,
-      newestMtimeMs: Math.max(...result.entries.map((e) => e.mtimeMs)),
-      project: targetItem.project,
-      tier: 'safe',
-      reason: 'older build hashes replaced by a newer build of the same unit',
-      parentId: targetItem.id,
-      recheck: { type: 'rust', profile },
-      checks: { busy: rule.busy, cwd: targetItem.project, mtime: true },
-    });
-    await addBlockers(context, item, false);
-    items.push(item);
+async function projectActivity(context, project, candidate, usage, globs) {
+  const { env, git } = context;
+  const repo = await git.findRepoRoot(project);
+  const lastCommitMs = repo ? (await git.repoState(repo)).lastCommitMs : 0;
+  context.projectUsage ??= new Map();
+  if (!context.projectUsage.has(project)) {
+    context.projectUsage.set(project, await env.usage(project));
   }
-  return items;
+  const projectUsage = context.projectUsage.get(project);
+  return Math.max(
+    usage?.newestMtimeMs ?? 0,
+    projectUsage?.newestMtimeMs ?? 0,
+    siblingActivity(candidate, globs),
+    lastCommitMs
+  );
 }
 
 async function projectItem(context, { candidate, rule }, usage, globs) {
-  const { env, git, options } = context;
+  const { env, options } = context;
   const project = rule.parentName
     ? env.path.dirname(candidate.parent)
     : candidate.parent;
-  const repo = await git.findRepoRoot(project);
-  const lastCommitMs = repo ? (await git.repoState(repo)).lastCommitMs : 0;
-  const lastActivityMs = Math.max(
-    usage?.newestMtimeMs ?? 0,
-    siblingActivity(candidate, globs),
-    lastCommitMs
+  const lastActivityMs = await projectActivity(
+    context,
+    project,
+    candidate,
+    usage,
+    globs
   );
   const item = makeItem(env, {
     rule: rule.id,
@@ -236,6 +228,7 @@ async function projectItem(context, { candidate, rule }, usage, globs) {
     newestMtimeMs: usage?.newestMtimeMs ?? 0,
     lastActivityMs,
     project,
+    lockfiles: rule.lockfiles ?? null,
     ...projectTier(context, rule, lastActivityMs),
     checks: { busy: rule.busy ?? [], cwd: project, mtime: true },
   });
@@ -268,9 +261,6 @@ export async function scanProjects(context, { rules = PROJECT_RULES } = {}) {
     }
     const item = await projectItem(context, match, usage, globs);
     items.push(item);
-    if (match.rule.id === 'cargo-target') {
-      items.push(...(await rustItems(context, item, match.rule)));
-    }
   }
   return items;
 }

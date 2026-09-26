@@ -31,8 +31,48 @@ export const COPY_EXCLUDES = [
 ];
 
 const DEFAULT_MAX_REPOS = 20;
-const OWNER_HINT = /session|issue|pull|task|owner|repo|url|solver|agent/i;
+const OWNER_HINT = /session|issue|pull|task|owner/i;
 const SECRET = /token|secret|password|key$/i;
+
+function safeOwnerHint(key, value) {
+  const text = String(value);
+  return (
+    OWNER_HINT.test(key) &&
+    !SECRET.test(key) &&
+    !/https?:\/\/|ghp_|github_pat_|sk-/.test(text)
+  );
+}
+
+/** Only an exact container id can waive verified unsaved Git work. */
+export function gitBlockersForRemoval(git, id, options = {}) {
+  if (!(options.allowDirtyContainers ?? []).includes(id)) {
+    return git.blockers;
+  }
+  return git.blockers.filter(
+    (reason) => !/^Git repository .+ has /.test(reason)
+  );
+}
+
+/** Bind mounts of running containers in the current Docker daemon. */
+export function isHostBindSource(source) {
+  return Boolean(
+    source && (path.posix.isAbsolute(source) || path.win32.isAbsolute(source))
+  );
+}
+
+export async function runningBindMounts(docker) {
+  const running = (await docker.containers()).filter(
+    (row) => row.State === 'running'
+  );
+  const inspected = await docker.inspect(running.map((row) => row.ID));
+  return inspected.flatMap((container) =>
+    (container.Mounts ?? [])
+      .filter(
+        (mount) => mount.Type === 'bind' && isHostBindSource(mount.Source)
+      )
+      .map((mount) => ({ source: mount.Source, containerId: container.Id }))
+  );
+}
 
 /**
  * Who a container belongs to: labels and environment variables that look
@@ -60,14 +100,14 @@ export function ownerOf(ps, inspected) {
 function ownerHints(inspected) {
   const hints = {};
   for (const [key, value] of Object.entries(inspected?.Config?.Labels ?? {})) {
-    if (OWNER_HINT.test(key)) {
+    if (safeOwnerHint(key, value)) {
       hints[`label:${key}`] = value;
     }
   }
   for (const pair of inspected?.Config?.Env ?? []) {
     const index = pair.indexOf('=');
     const key = pair.slice(0, index);
-    if (index > 0 && OWNER_HINT.test(key) && !SECRET.test(key)) {
+    if (index > 0 && safeOwnerHint(key, pair.slice(index + 1))) {
       hints[`env:${key}`] = pair.slice(index + 1);
     }
   }
@@ -96,6 +136,53 @@ async function copyAndCheck(docker, id, root, git) {
  * Git state of every repository written in a stopped container.
  * @returns {Promise<{repos: object[], blockers: string[]}>}
  */
+async function probeRepoRoots(docker, id, changed, roots, blockers) {
+  if (changed.length > 500) {
+    blockers.push('Git repository inspection limit exceeded');
+  }
+  const probed = new Map();
+  for (const target of changed.slice(0, 500)) {
+    for (let dir = target; dir !== '/'; dir = path.posix.dirname(dir)) {
+      if (probed.has(dir)) {
+        if (probed.get(dir)) {
+          roots.add(dir);
+        }
+        break;
+      }
+      const exists = await docker.pathExists(
+        id,
+        path.posix.join(dir, '.git', 'HEAD')
+      );
+      if (exists === null) {
+        blockers.push(`cannot inspect Git metadata near ${target}`);
+        break;
+      }
+      probed.set(dir, exists);
+      if (exists) {
+        roots.add(dir);
+        break;
+      }
+    }
+  }
+}
+
+function excludedWorkBlockers(checked, changed, blockers) {
+  const excluded = new Set(COPY_EXCLUDES.map((pattern) => pattern.slice(2)));
+  for (const root of checked) {
+    for (const target of changed) {
+      if (!target.startsWith(`${root}/`)) {
+        continue;
+      }
+      const parts = target.slice(root.length + 1).split('/');
+      if (parts.slice(0, -1).some((part) => excluded.has(part))) {
+        blockers.push(
+          `changed work under excluded folder ${target} cannot be verified`
+        );
+      }
+    }
+  }
+}
+
 export async function containerGitState(docker, id, options = {}) {
   const diff = await docker.diff(id);
   if (diff === null) {
@@ -104,16 +191,22 @@ export async function containerGitState(docker, id, options = {}) {
       blockers: ['cannot list the writable layer (`docker diff` failed)'],
     };
   }
-  const roots = repoRootsFromDiff(diff);
+  const roots = new Set(repoRootsFromDiff(diff));
   const maxRepos = options.maxRepos ?? DEFAULT_MAX_REPOS;
   const blockers = [];
-  if (roots.includes('/')) {
+  if (roots.has('/')) {
     blockers.push('the container root is a Git repository');
   }
-  const checked = roots.filter((root) => root !== '/').slice(0, maxRepos);
-  if (roots.length > checked.length + (roots.includes('/') ? 1 : 0)) {
+  const changed = diff
+    .split('\n')
+    .map((line) => /^[ACD] (\/.+)$/.exec(line.trim())?.[1])
+    .filter(Boolean);
+  await probeRepoRoots(docker, id, changed, roots, blockers);
+  const checked = [...roots].filter((root) => root !== '/').slice(0, maxRepos);
+  excludedWorkBlockers(checked, changed, blockers);
+  if (roots.size > checked.length + (roots.has('/') ? 1 : 0)) {
     blockers.push(
-      `${roots.length} repositories changed, only ${maxRepos} were verified`
+      `${roots.size} repositories changed, only ${maxRepos} were verified`
     );
   }
   const repos = [];

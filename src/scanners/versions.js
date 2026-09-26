@@ -135,7 +135,10 @@ export async function projectPins(env, roots, rules, maxDepth) {
 function newestInstalls(env, rule, installs, usages) {
   const groups = new Map();
   for (const dir of installs) {
-    const parent = env.path.dirname(dir);
+    const name = rule.versionOf?.(dir) ?? env.path.basename(dir);
+    const family =
+      /^([a-z][a-z_-]*?)(?=\d|[-=]|$)/i.exec(name)?.[1] ?? 'release';
+    const parent = `${env.path.dirname(dir)}\0${family}`;
     groups.set(parent, [...(groups.get(parent) ?? []), dir]);
   }
   const newest = new Set();
@@ -152,10 +155,22 @@ function newestInstalls(env, rule, installs, usages) {
   return newest;
 }
 
+async function blockPyenvEnvironments(env, rule, dir, item) {
+  if (rule.id !== 'pyenv-python') {
+    return;
+  }
+  if ((await env.list(env.path.join(dir, 'envs'))).length > 0) {
+    block(item, 'contains pyenv virtual environments');
+  }
+}
+
 async function ruleItems(context, rule, home, pins) {
   const { env } = context;
   const installs = await installDirs(env, rule, home);
   if (installs.length < 2) {
+    return [];
+  }
+  if (rule.protectAll) {
     return [];
   }
   const refs = [...(await managerRefs(env, rule, home, installs)), ...pins];
@@ -180,7 +195,9 @@ async function ruleItems(context, rule, home, pins) {
       tier: 'moderate',
       reason: `not the ${rule.manager} default, not pinned by a scanned project, not the newest`,
       checks: { busy: rule.busy ?? [], cwd: dir, mtime: true },
+      recheck: rule.id === 'pyenv-python' ? { type: 'pyenv-envs' } : null,
     });
+    await blockPyenvEnvironments(env, rule, dir, item);
     const busy = scanTimeBusy(context, item);
     if (busy) {
       block(item, `busy: ${busy}`);

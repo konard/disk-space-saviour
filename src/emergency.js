@@ -11,12 +11,12 @@
  * approval (`removeStoppedContainers` or an interactive yes).
  */
 
-import { startAudit } from './audit.js';
+import { startAudit, writeAudit } from './audit.js';
 import { Cleaner, cleanOrder, finishAudit, wantedItems } from './clean.js';
 import { LocalEnv } from './env/local.js';
 import { TIERS, selectByTier, tierRank } from './items.js';
 import { resolveGoal, resolveOptions } from './options.js';
-import { scan } from './scan.js';
+import { revalidateReport, scan } from './scan.js';
 
 /**
  * Used percentage the way `df` prints it: used / (used + available).
@@ -86,8 +86,13 @@ export async function emergency(input = {}) {
     diskBefore,
     bytesNeeded: bytesNeeded(goal, diskBefore),
   });
-  const report = input.report ?? (await scan({ ...input, env }));
+  const report = input.report
+    ? await revalidateReport(input.report, { ...input, env })
+    : await scan({ ...input, env });
   audit.report = { createdAt: report.createdAt, totals: report.totals };
+  if (options.audit !== false) {
+    await writeAudit(audit, { ...options, inProgress: true });
+  }
   let disk = diskBefore;
   if (!goalMet(goal, disk)) {
     disk = await escalate({ report, options, env, target, goal, audit });
@@ -98,9 +103,37 @@ export async function emergency(input = {}) {
 }
 
 async function escalate({ report, options, env, target, goal, audit }) {
-  const cleaner = new Cleaner(report, { ...options, env });
+  const persistProgress = async (entry) => {
+    if (!audit.entries.includes(entry)) {
+      audit.entries.push(entry);
+    }
+    if (options.audit !== false) {
+      await writeAudit(audit, { ...options, inProgress: true });
+    }
+  };
+  const cleaner = new Cleaner(report, {
+    ...options,
+    env,
+    onProgress: persistProgress,
+  });
   const done = new Set();
-  const wanted = wantedItems(report, options);
+  const targetDevice = await env.deviceId?.(target);
+  const scoped = await Promise.all(
+    wantedItems(report, options).map(async (item) => {
+      if (targetDevice === undefined) {
+        return item;
+      }
+      if (item.env !== env.id) {
+        return null;
+      }
+      const location = item.action?.volume ?? item.paths?.[0];
+      if (!location || !env.path.isAbsolute(location)) {
+        return null;
+      }
+      return (await env.deviceId(location)) === targetDevice ? item : null;
+    })
+  );
+  const wanted = scoped.filter(Boolean);
   let disk = audit.diskBefore;
   let freed = 0;
   for (const tier of TIERS.slice(0, tierRank(options.tier) + 1)) {
@@ -111,8 +144,13 @@ async function escalate({ report, options, env, target, goal, audit }) {
     for (const item of items) {
       done.add(item.id);
       const entry = await cleaner.process(item);
-      audit.entries.push(entry);
+      if (!audit.entries.includes(entry)) {
+        audit.entries.push(entry);
+      }
       options.onEntry?.(entry, item);
+      if (options.audit !== false) {
+        await writeAudit(audit, { ...options, inProgress: true });
+      }
       if (entry.status !== 'removed' && entry.status !== 'planned') {
         continue;
       }

@@ -165,6 +165,11 @@ function dockerSection(report) {
       `  hint ${hint.image}: ${formatBytes(hint.bytes)} layer, ${hint.hint}`
     );
   }
+  for (const volume of docker.volumes ?? []) {
+    lines.push(
+      `  volume ${volume.name}: ${formatBytes(volume.bytes)}, ${volume.note}`
+    );
+  }
   return lines;
 }
 

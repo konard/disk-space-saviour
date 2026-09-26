@@ -8,7 +8,8 @@
  * `worktree`. Tasks that run the agent in throwaway checkouts leave one
  * store per checkout behind (link-assistant/hive-mind#2186).
  *
- * - worktree recorded and gone: nothing is left to restore into, `safe`;
+ * - worktree recorded and gone: retained because the snapshot may be the only
+ *   remaining copy of uncommitted work;
  * - no project record and idle for the activity window: `moderate`;
  * - worktree still present: kept;
  * - the newest store is always kept.
@@ -87,10 +88,7 @@ function classify(context, state, usage) {
     return null;
   }
   if (state.hasRecord && state.worktree) {
-    return {
-      tier: 'safe',
-      reason: `recorded worktree ${state.worktree} no longer exists`,
-    };
+    return null;
   }
   if (olderThan(context, usage.newestMtimeMs, context.options.staleAgeMs)) {
     return {

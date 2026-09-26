@@ -36,6 +36,8 @@ export interface ScanOptions {
   removeStoppedContainers?: boolean;
   removeUnusedImages?: boolean;
   allowDirtyRepos?: boolean;
+  /** Exact container ids whose verified Git changes may be removed. */
+  allowDirtyContainers?: string[] | string;
   /** Delete files directly, never through native cache commands. */
   noNative?: boolean;
   /** journald size to keep (`512M`). */
@@ -130,6 +132,7 @@ export interface Report {
     daemons: Array<Record<string, unknown>>;
     containers: Array<Record<string, unknown>>;
     hints: Array<Record<string, unknown>>;
+    volumes: Array<Record<string, unknown>>;
   } | null;
   errors: Array<{ env: string; scanner: string; message: string }>;
 }
@@ -143,6 +146,9 @@ export interface AuditEntry {
   kind: string;
   description: string;
   path: string | null;
+  paths: string[];
+  pathCount: number;
+  deletedPaths: string[];
   status: 'planned' | 'removed' | 'skipped' | 'failed';
   reason: string | null;
   plannedBytes: number;

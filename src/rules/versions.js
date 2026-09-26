@@ -82,8 +82,8 @@ export function versionMatches(installed, reference) {
  * Compares dotted versions numerically, falling back to string order.
  */
 export function compareVersions(left, right) {
-  const a = normalizeVersion(left).split(/[.-]/);
-  const b = normalizeVersion(right).split(/[.-]/);
+  const a = normalizeVersion(left).split(/[=.-]/);
+  const b = normalizeVersion(right).split(/[=.-]/);
   for (let index = 0; index < Math.max(a.length, b.length); index++) {
     const x = a[index] ?? '';
     const y = b[index] ?? '';
@@ -223,6 +223,7 @@ export const VERSION_RULES = [
     ],
     projectFiles: {},
     busy: ['ocaml', 'dune', 'opam', 'ocamllsp'],
+    protectAll: true,
   },
   {
     id: 'swiftly-toolchain',

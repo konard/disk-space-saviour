@@ -30,8 +30,8 @@ Commands:
   help, version
 
 Scope:
-  --tier safe|moderate|aggressive   clean up to this tier (clean: safe,
-                             emergency: aggressive)
+  --tier safe|moderate|aggressive   clean up to this tier (clean: safe or
+                             moderate; emergency: aggressive)
   --docker / --no-docker     require / skip Docker (default: when reachable)
   --depth N                  Docker nesting depth to recurse into (default 3)
   --recursive                docker: recurse into nested daemons
@@ -55,8 +55,9 @@ Consent:
   --dry-run                  never delete, show the plan
   --remove-stopped-containers  allow docker rm of verified stopped containers
   --remove-unused-images     allow removal of unused tagged images
-  --include-volumes          allow removal of dangling volumes
-  --allow-dirty-repos        skip Git safety checks (dangerous)
+  --include-volumes          list unattached volumes for manual review
+  --allow-dirty-repos        allow dirty host repositories (dangerous)
+  --allow-dirty-container ID  override verified Git work in this container
 
 Output:
   --json                     print the report or audit log as JSON
@@ -93,6 +94,7 @@ const OPTIONS = {
   'remove-unused-images': { type: 'boolean' },
   'include-volumes': { type: 'boolean' },
   'allow-dirty-repos': { type: 'boolean' },
+  'allow-dirty-container': { type: 'string', multiple: true },
   'no-native': { type: 'boolean' },
   report: { type: 'string' },
   'audit-dir': { type: 'string' },
@@ -164,6 +166,7 @@ export function toOptions(values, paths = []) {
     removeUnusedImages: values['remove-unused-images'],
     includeVolumes: values['include-volumes'],
     allowDirtyRepos: values['allow-dirty-repos'],
+    allowDirtyContainers: values['allow-dirty-container'],
     noNative: values['no-native'],
     auditDir: values['audit-dir'],
     backupDir: values['backup-dir'],
@@ -331,7 +334,13 @@ class Cli {
       this.io.stderr('Nothing was deleted.');
       return run({ dryRun: true });
     }
-    return run({ dryRun: false, confirm: this.confirmItem() });
+    return run({
+      dryRun: false,
+      confirm: this.confirmItem(),
+      approvedIds: plan.entries
+        .filter((entry) => entry.status === 'planned')
+        .map((entry) => entry.id),
+    });
   }
 
   async clean(options, values) {
@@ -358,6 +367,9 @@ class Cli {
     this.print(values, audit, () =>
       formatAudit(audit, { verbose: values.verbose })
     );
+    if (audit.entries.some((entry) => entry.status === 'failed')) {
+      return 1;
+    }
     return audit.goalMet ? 0 : 3;
   }
 }

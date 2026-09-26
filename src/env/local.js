@@ -54,6 +54,7 @@ export const DEFAULT_SKIP_NAMES = [
   '.svn',
   '.Trash',
   '.cache',
+  '.config',
   '.local',
   '.npm',
   '.bun',
@@ -86,6 +87,9 @@ export const DEFAULT_SKIP_NAMES = [
   '.conda',
   '.ccache',
   '.vscode-server',
+  '.vscode',
+  '.cursor',
+  '.cursor-server',
   '.docker',
   'Library',
   'miniconda3',
@@ -531,6 +535,7 @@ export class LocalEnv {
         name,
         cwd,
         aliases: processAliases(exe, cmdline.split('\0')[0]),
+        command: cmdline.replaceAll('\0', ' '),
       });
     }
     return processes;
@@ -541,7 +546,7 @@ export class LocalEnv {
    * Returns null when the platform gives no reliable answer.
    * @returns {Promise<Set<string>|null>}
    */
-  async openPaths() {
+  async openPaths({ strict = true } = {}) {
     if (this.platform === 'linux') {
       const paths = new Set();
       let pids = [];
@@ -553,14 +558,39 @@ export class LocalEnv {
       for (const pid of pids) {
         const base = `/proc/${pid}`;
         for (const link of ['cwd', 'exe']) {
-          const target = await fsp.readlink(`${base}/${link}`).catch(() => '');
+          const target = await fsp
+            .readlink(`${base}/${link}`)
+            .catch((error) => {
+              if (
+                strict &&
+                (error.code === 'EACCES' || error.code === 'EPERM')
+              ) {
+                throw error;
+              }
+              return '';
+            });
           if (target.startsWith('/')) {
             paths.add(target.replace(/ \(deleted\)$/, ''));
           }
         }
-        const fds = await fsp.readdir(`${base}/fd`).catch(() => []);
+        const fds = await fsp.readdir(`${base}/fd`).catch((error) => {
+          if (strict && (error.code === 'EACCES' || error.code === 'EPERM')) {
+            throw error;
+          }
+          return [];
+        });
         for (const fd of fds) {
-          const target = await fsp.readlink(`${base}/fd/${fd}`).catch(() => '');
+          const target = await fsp
+            .readlink(`${base}/fd/${fd}`)
+            .catch((error) => {
+              if (
+                strict &&
+                (error.code === 'EACCES' || error.code === 'EPERM')
+              ) {
+                throw error;
+              }
+              return '';
+            });
           if (target.startsWith('/')) {
             paths.add(target.replace(/ \(deleted\)$/, ''));
           }
@@ -627,6 +657,14 @@ export class LocalEnv {
     }
     const result = await this.run(['df', '-Pk', target]);
     return parseDf(result.stdout);
+  }
+
+  async deviceId(target) {
+    try {
+      return (await fsp.stat(target)).dev;
+    } catch {
+      return null;
+    }
   }
 }
 

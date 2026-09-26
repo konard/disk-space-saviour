@@ -70,6 +70,22 @@ describe('LivenessProbe', () => {
     );
   });
 
+  it('recognizes a browser launcher named in process arguments', async () => {
+    const live = await probe([
+      {
+        pid: 7,
+        name: 'MainThread',
+        aliases: ['node', 'npm'],
+        command: 'npm exec @playwright/mcp@latest',
+      },
+    ]);
+    expect(
+      live.busyReason(
+        item({ checks: { busy: ['playwright'], cwd: null, mtime: false } })
+      )
+    ).toBe('playwright is running (pid 7)');
+  });
+
   it('ignores the tool when it runs in another project', async () => {
     const live = await probe([
       { pid: 7, name: 'npm', aliases: ['node', 'npm'], cwd: '/work/other' },
@@ -95,6 +111,20 @@ describe('LivenessProbe', () => {
     );
     expect(live.busyReason(item())).toBe(
       'in use: /work/app/node_modules/.bin/vite'
+    );
+  });
+
+  it('blocks deletion when Linux process inspection is incomplete', async () => {
+    const env = {
+      path: path.posix,
+      platform: 'linux',
+      processes: () => Promise.resolve(null),
+      openPaths: () => Promise.resolve(null),
+    };
+    const live = new LivenessProbe(env, { staleAgeMs: 3600e3 });
+    await live.refresh();
+    expect(live.busyReason(item())).toBe(
+      'cannot verify process and open-file activity'
     );
   });
 });

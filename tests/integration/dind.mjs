@@ -178,8 +178,8 @@ function checkScan(report) {
   assert.deepEqual(stopped.blockers, []);
   assert.equal(stopped.requiresConfirmation, 'removeStoppedContainers');
   const unsaved = stoppedNamed(report.items, 'unsaved-work');
-  assert.match(unsaved.blockers.join(' '), /uncommitted change/);
-  assert.equal(unsaved.container.repos[0].root, '/work');
+  assert.equal(unsaved.container.gitCheckDeferred, true);
+  assert.deepEqual(unsaved.container.repos, []);
   assert.ok(report.errors.length === 0, JSON.stringify(report.errors));
 }
 
@@ -256,6 +256,12 @@ function main() {
       '--remove-stopped-containers',
       ...containers,
     ]);
+    assert.ok(
+      !planned.entries.some((entry) =>
+        entry.description.includes('unsaved-work')
+      ),
+      'unsaved Git work is excluded from the removal plan'
+    );
     const cleaned = dss([
       'clean',
       '--yes',

@@ -4,13 +4,24 @@
  */
 
 import { describe, it, expect } from 'test-anywhere';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+  promises as fsp,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { clean } from '../src/clean.js';
 import { assertAllowed, repoRootsFromDiff } from '../src/docker/cli.js';
-import { ownerOf } from '../src/docker/containers.js';
+import {
+  containerGitState,
+  gitBlockersForRemoval,
+  ownerOf,
+} from '../src/docker/containers.js';
 import { scanDocker } from '../src/docker/scan.js';
 import { makeItem } from '../src/items.js';
 import { resolveOptions } from '../src/options.js';
@@ -20,6 +31,7 @@ import {
   containerId,
   fakeHostEnv,
 } from './helpers/fake-docker.js';
+import { pushedRepo } from './helpers/fixtures.js';
 
 const LIFECYCLE = new Set([
   'stop',
@@ -204,16 +216,104 @@ describe('docker diff and owner parsing', () => {
       { Names: 'box', Image: 'img', Command: '"run"' },
       {
         Config: {
-          Labels: { 'hive.session': 'abc' },
+          Labels: { 'hive.session': 'abc', 'owner.password': 'secret' },
           Env: ['ISSUE_URL=https://x/1', 'GITHUB_TOKEN=t', 'PATH=/bin'],
         },
         State: { FinishedAt: 'f' },
       }
     );
     expect(owner.session).toBe('abc');
-    expect(owner.hints['env:ISSUE_URL']).toBe('https://x/1');
+    expect(owner.hints['env:ISSUE_URL']).toBe(undefined);
     expect(Object.keys(owner.hints)).not.toContain('env:GITHUB_TOKEN');
+    expect(Object.keys(owner.hints)).not.toContain('label:owner.password');
     expect(owner.command).toBe('run');
+  });
+
+  it('finds edited files in an image repository with an untouched .git', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const root = mkdtempSync(join(tmpdir(), 'dss-docker-untouched-git-'));
+    try {
+      const repo = pushedRepo(join(root, 'repo'));
+      writeFileSync(join(repo, 'README.md'), 'edited in container\n');
+      const docker = {
+        diff: async () => 'C /workspace/repo/README.md\n',
+        pathExists: async (_id, target) =>
+          target === '/workspace/repo/.git/HEAD',
+        copyOut: async (_id, _source, destination) => {
+          await fsp.cp(repo, join(destination, 'repo'), { recursive: true });
+          return { code: 0, stderr: '' };
+        },
+      };
+      const state = await containerGitState(docker, 'container');
+      expect(state.repos.map((entry) => entry.root)).toEqual([
+        '/workspace/repo',
+      ]);
+      expect(state.blockers.join()).toMatch(/uncommitted change/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('checks a nested repository even when its parent is already known', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const visited = [];
+    const docker = {
+      diff: async () =>
+        'C /work/parent/.git/index\nC /work/parent/nested/README.md\n',
+      pathExists: async (_id, target) =>
+        ['/work/parent/.git/HEAD', '/work/parent/nested/.git/HEAD'].includes(
+          target
+        ),
+      copyOut: async (_id, source) => {
+        visited.push(source);
+        return { code: 1, stderr: 'copy unavailable' };
+      },
+    };
+    await containerGitState(docker, 'container');
+    expect(visited).toContain('/work/parent');
+    expect(visited).toContain('/work/parent/nested');
+  });
+
+  it('requires an exact per-container override for verified dirty Git work', () => {
+    const state = {
+      blockers: [
+        'Git repository /work has 1 uncommitted change',
+        'cannot inspect Git metadata near /other',
+      ],
+    };
+    expect(
+      gitBlockersForRemoval(state, 'full-id', {
+        allowDirtyRepos: true,
+      })
+    ).toEqual(state.blockers);
+    expect(
+      gitBlockersForRemoval(state, 'full-id', {
+        allowDirtyContainers: ['other-id'],
+      })
+    ).toEqual(state.blockers);
+    expect(
+      gitBlockersForRemoval(state, 'full-id', {
+        allowDirtyContainers: ['full-id'],
+      })
+    ).toEqual(['cannot inspect Git metadata near /other']);
+  });
+
+  it('blocks changed work hidden by the Git copy exclusions', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const docker = {
+      diff: async () =>
+        'A /work/repo/.git/HEAD\nA /work/repo/target/notes.txt\n',
+      pathExists: async () => false,
+      copyOut: async () => ({ code: 1, stderr: 'unavailable' }),
+    };
+    const state = await containerGitState(docker, 'container');
+    expect(state.blockers.join()).toMatch(/excluded folder/);
   });
 });
 
@@ -255,6 +355,24 @@ describe('recursive docker scan', () => {
     const build = result.containers.find((c) => c.name === 'build-7');
     expect(build.scanned).toBe(false);
     expect(build.note).toContain('Docker depth limit 1');
+    expect(
+      result.items.some((item) => item.container?.name === 'inner-old')
+    ).toBe(false);
+  });
+
+  it('lists unattached volumes without offering a delete action', async () => {
+    const fake = world();
+    fake.daemons.host.volumes = [
+      { Name: 'workspace-data', Links: '0', Size: '1GB' },
+    ];
+    const { result } = await scanWorld(fake, { includeVolumes: true });
+    expect(result.volumes.map((volume) => volume.name)).toEqual([
+      'workspace-data',
+    ]);
+    expect(
+      result.items.some((item) => item.rule === 'docker-dangling-volume')
+    ).toBe(false);
+    expect(() => assertAllowed(['volume', 'rm', 'workspace-data'])).toThrow();
   });
 
   it('never sends a lifecycle command while scanning', async () => {
@@ -273,7 +391,10 @@ describe('recursive docker scan', () => {
       return;
     }
     const fake = world();
-    const { result } = await scanWorld(fake, { dockerDepth: 3 });
+    const { result } = await scanWorld(fake, {
+      dockerDepth: 3,
+      removeStoppedContainers: true,
+    });
     const stopped = result.items.filter(
       (item) => item.rule === 'docker-stopped-container'
     );
@@ -336,12 +457,12 @@ describe('cleaning stopped containers', () => {
     const { env, report } = await scanWorld(fake, { dockerDepth: 3 });
     const audit = await clean(report, {
       env,
-      tier: 'aggressive',
+      tier: 'moderate',
       audit: false,
     });
 
     const entries = audit.entries.filter((e) => e.kind === 'container');
-    expect(entries.length).toBe(2);
+    expect(entries.length).toBe(3);
     for (const entry of entries) {
       expect(entry.status).toBe('skipped');
       expect(entry.reason).toContain('--remove-stopped-containers');
@@ -476,7 +597,7 @@ describe('cleaning stopped containers', () => {
         },
       });
 
-      expect(asked).toEqual(['s-2', null]);
+      expect(asked).toEqual(['s-3', 's-2']);
       expect(audit.entries.every((e) => e.status === 'skipped')).toBe(true);
       expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
     } finally {

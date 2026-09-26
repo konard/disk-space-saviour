@@ -42,6 +42,24 @@ const ALLOWED = new Map([
 
 const FORCE_FLAGS = new Set(['-f', '--force', '-v', '--volumes', '-l']);
 
+function assertContainerRemoval(args) {
+  if (args.slice(1).some((arg) => FORCE_FLAGS.has(arg))) {
+    throw new Error('dss never force-removes containers or their volumes');
+  }
+  if (args.length !== 2 || args[1].startsWith('-')) {
+    throw new Error('dss only removes one container by id');
+  }
+}
+
+function assertImageMutation(sub, args) {
+  if (sub === 'rm' && (args.length !== 3 || args[2].startsWith('-'))) {
+    throw new Error('dss only removes one image by id');
+  }
+  if (sub === 'prune' && (args.length !== 3 || args[2] !== '--force')) {
+    throw new Error('dss only prunes dangling images');
+  }
+}
+
 /**
  * Throws unless `args` (the arguments after `docker`) is a command dss may
  * run. `docker exec` payloads are not inspected: they run inside a
@@ -57,8 +75,14 @@ export function assertAllowed(args) {
   if (rule instanceof Set && !rule.has(sub)) {
     throw new Error(`dss refuses to run \`docker ${command} ${sub}\``);
   }
-  if (rule === 'rm' && args.slice(1).some((arg) => FORCE_FLAGS.has(arg))) {
-    throw new Error('dss never force-removes containers or their volumes');
+  if (rule === 'rm') {
+    assertContainerRemoval(args);
+  }
+  if (command === 'volume' && sub === 'rm') {
+    throw new Error('dss never removes Docker volumes automatically');
+  }
+  if (command === 'image') {
+    assertImageMutation(sub, args);
   }
 }
 
@@ -111,7 +135,7 @@ export function parseLabels(text) {
 export function repoRootsFromDiff(text) {
   const roots = new Set();
   for (const line of (text ?? '').split('\n')) {
-    const match = /^[AC] (.+)$/.exec(line.trim());
+    const match = /^[ACD] (.+)$/.exec(line.trim());
     if (!match) {
       continue;
     }
@@ -200,14 +224,37 @@ export class DockerCli {
     if (ids.length === 0) {
       return [];
     }
-    return JSON.parse(
-      await this.json(['inspect', '--type', 'container', ...ids])
-    );
+    try {
+      return JSON.parse(
+        await this.json(['inspect', '--type', 'container', ...ids])
+      );
+    } catch (error) {
+      if (ids.length === 1) {
+        throw error;
+      }
+      const found = [];
+      for (const id of ids) {
+        found.push(...(await this.inspect([id]).catch(() => [])));
+      }
+      return found;
+    }
   }
 
   async diff(id) {
     const result = await this.run(['diff', id]);
     return result.code === 0 ? result.stdout : null;
+  }
+
+  /** Check a small file in a stopped container without starting it. */
+  async pathExists(id, target) {
+    const result = await this.run(['cp', `${id}:${target}`, '-']);
+    if (result.code === 0) {
+      return true;
+    }
+    if (/could not find the file|no such file|not found/i.test(result.stderr)) {
+      return false;
+    }
+    return null;
   }
 
   async history(image) {
