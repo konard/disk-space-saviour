@@ -12,3 +12,9 @@ Docker-in-Docker daemons. `dss clean --tier safe|moderate|aggressive` deletes
 with liveness and git re-checks before every item, and `dss emergency --free
 20G | --until 80%` escalates tiers until the goal is met. Every run writes a
 JSON audit log.
+
+Liveness detection matches tools by executable name as well as process name,
+so a Node.js tool whose main thread is renamed (for example `MainThread`) is
+still seen as running. A Docker-in-Docker CI job (`npm run test:dind`) checks
+recursion two daemons deep, cleaning inside running containers, and the
+approval, Git and log-backup rules for stopped containers.
