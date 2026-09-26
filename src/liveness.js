@@ -16,15 +16,29 @@ import { formatDuration } from './units.js';
 
 const PROC_COMM_LIMIT = 15;
 
-function processMatches(proc, names) {
-  const name = proc.name ?? '';
-  return names.some(
-    (candidate) =>
-      name === candidate ||
-      (name.length === PROC_COMM_LIMIT &&
-        candidate.startsWith(name) &&
-        candidate.length > PROC_COMM_LIMIT)
+function nameMatches(name, candidate) {
+  return (
+    name === candidate ||
+    (name.length === PROC_COMM_LIMIT &&
+      candidate.startsWith(name) &&
+      candidate.length > PROC_COMM_LIMIT)
   );
+}
+
+/**
+ * Name of `proc` that matches one of `names`, or null. Besides the kernel
+ * name (`comm`, which programs may rename: Node.js calls its main thread
+ * `MainThread`), processes carry `aliases`: the executable and `argv[0]`
+ * base names.
+ */
+function matchingName(proc, names) {
+  const own = [proc.name ?? '', ...(proc.aliases ?? [])];
+  for (const name of own) {
+    if (name && names.some((candidate) => nameMatches(name, candidate))) {
+      return name;
+    }
+  }
+  return null;
 }
 
 export class LivenessProbe {
@@ -68,17 +82,18 @@ export class LivenessProbe {
     }
     const pathApi = this.env.path;
     for (const proc of this.processes) {
-      if (!processMatches(proc, names)) {
+      const name = matchingName(proc, names);
+      if (!name) {
         continue;
       }
       if (!cwd) {
-        return `${proc.name} is running (pid ${proc.pid})`;
+        return `${name} is running (pid ${proc.pid})`;
       }
       if (!proc.cwd) {
-        return `${proc.name} is running (pid ${proc.pid}, working directory unknown)`;
+        return `${name} is running (pid ${proc.pid}, working directory unknown)`;
       }
       if (isWithin(proc.cwd, cwd, pathApi)) {
-        return `${proc.name} is running in ${proc.cwd} (pid ${proc.pid})`;
+        return `${name} is running in ${proc.cwd} (pid ${proc.pid})`;
       }
     }
     return null;

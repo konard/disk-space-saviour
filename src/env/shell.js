@@ -10,7 +10,7 @@
 import path from 'node:path';
 
 import { shellQuote } from '../exec.js';
-import { parseDf } from './local.js';
+import { parseDf, processAliases } from './local.js';
 
 const STAT_FORMAT = '%F|%s|%b|%B|%Y|%n';
 const ARG_BATCH = 200;
@@ -41,8 +41,10 @@ true`;
 const PROCESS_SCRIPT = `echo "$$"
 for p in /proc/[0-9]*; do
   c=$(cat "$p/comm" 2>/dev/null) || continue
+  e=$(readlink "$p/exe" 2>/dev/null)
+  a=$(tr '\\000' '\\n' < "$p/cmdline" 2>/dev/null | head -n 1)
   w=$(readlink "$p/cwd" 2>/dev/null)
-  printf '%s|%s|%s\\n' "\${p#/proc/}" "$c" "$w"
+  printf '%s|%s|%s|%s|%s\\n' "\${p#/proc/}" "$c" "$e" "$a" "$w"
 done`;
 
 const OPEN_PATHS_SCRIPT = `for p in /proc/[0-9]*; do
@@ -373,9 +375,14 @@ export class ShellEnv {
     const result = await this.sh(PROCESS_SCRIPT);
     const [selfPid, ...lines] = result.stdout.split('\n');
     return lines
-      .map((line) => /^(\d+)\|([^|]*)\|(.*)$/.exec(line))
+      .map((line) => /^(\d+)\|([^|]*)\|([^|]*)\|([^|]*)\|(.*)$/.exec(line))
       .filter(Boolean)
-      .map((m) => ({ pid: Number(m[1]), name: m[2], cwd: m[3] || null }))
+      .map((m) => ({
+        pid: Number(m[1]),
+        name: m[2],
+        aliases: processAliases(m[3], m[4]),
+        cwd: m[5] || null,
+      }))
       .filter((proc) => String(proc.pid) !== selfPid.trim());
   }
 

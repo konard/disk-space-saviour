@@ -1,4 +1,18 @@
 /**
+ * Base names of a process's executable and `argv[0]`, without duplicates
+ * and without the ` (deleted)` suffix of replaced binaries.
+ * @param {string} exe target of `/proc/<pid>/exe`
+ * @param {string} argv0 first entry of `/proc/<pid>/cmdline`
+ * @returns {string[]}
+ */
+export function processAliases(exe, argv0) {
+  const names = [exe.replace(/ \(deleted\)$/, ''), argv0.split(' ')[0]]
+    .filter(Boolean)
+    .map((value) => path.posix.basename(value));
+  return [...new Set(names)];
+}
+
+/**
  * Environment adapter for the machine running dss, backed by node:fs.
  *
  * Scanners only talk to environment adapters, so the same rules run on the
@@ -467,7 +481,16 @@ export class LocalEnv {
         continue;
       }
       const cwd = await fsp.readlink(`${base}/cwd`).catch(() => null);
-      processes.push({ pid: Number(pid), name, cwd });
+      const exe = await fsp.readlink(`${base}/exe`).catch(() => '');
+      const cmdline = await fsp
+        .readFile(`${base}/cmdline`, 'utf8')
+        .catch(() => '');
+      processes.push({
+        pid: Number(pid),
+        name,
+        cwd,
+        aliases: processAliases(exe, cmdline.split('\0')[0]),
+      });
     }
     return processes;
   }
