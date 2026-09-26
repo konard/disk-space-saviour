@@ -127,7 +127,7 @@ async function escalate({ report, options, env, target, goal, audit }) {
         return null;
       }
       const location = item.action?.volume ?? item.paths?.[0];
-      if (!location || !location.startsWith('/')) {
+      if (!location || !env.path.isAbsolute(location)) {
         return null;
       }
       return (await env.deviceId(location)) === targetDevice ? item : null;

@@ -54,6 +54,12 @@ export function gitBlockersForRemoval(git, id, options = {}) {
 }
 
 /** Bind mounts of running containers in the current Docker daemon. */
+export function isHostBindSource(source) {
+  return Boolean(
+    source && (path.posix.isAbsolute(source) || path.win32.isAbsolute(source))
+  );
+}
+
 export async function runningBindMounts(docker) {
   const running = (await docker.containers()).filter(
     (row) => row.State === 'running'
@@ -61,7 +67,9 @@ export async function runningBindMounts(docker) {
   const inspected = await docker.inspect(running.map((row) => row.ID));
   return inspected.flatMap((container) =>
     (container.Mounts ?? [])
-      .filter((mount) => mount.Type === 'bind' && mount.Source?.startsWith('/'))
+      .filter(
+        (mount) => mount.Type === 'bind' && isHostBindSource(mount.Source)
+      )
       .map((mount) => ({ source: mount.Source, containerId: container.Id }))
   );
 }

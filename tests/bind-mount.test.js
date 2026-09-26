@@ -3,6 +3,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { clean } from '../src/clean.js';
+import { isHostBindSource } from '../src/docker/containers.js';
 import { scan } from '../src/scan.js';
 import { FakeDockerWorld } from './helpers/fake-docker.js';
 import {
@@ -17,6 +18,12 @@ import {
 } from './helpers/fixtures.js';
 
 describe('running Docker bind mounts', () => {
+  it('recognizes absolute Windows and Unix sources', () => {
+    expect(isHostBindSource('C:\\workspace\\project')).toBe(true);
+    expect(isHostBindSource('/workspace/project')).toBe(true);
+    expect(isHostBindSource('project')).toBe(false);
+  });
+
   it('blocks host deletion at scan time and when a mount appears before clean', async () => {
     if (readOnlyRuntime()) {
       return;
@@ -43,6 +50,8 @@ describe('running Docker bind mounts', () => {
         },
       });
       const env = fixtureEnv(root);
+      env.processes = async () => [];
+      env.openPaths = async () => new Set();
       env.executor = world.executor();
       const which = env.which.bind(env);
       env.which = (name) =>

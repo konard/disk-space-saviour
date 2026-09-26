@@ -24,6 +24,7 @@ import { DockerCli, parseDockerSize } from './cli.js';
 import {
   containerGitState,
   gitBlockersForRemoval,
+  isHostBindSource,
   ownerOf,
 } from './containers.js';
 
@@ -330,7 +331,7 @@ class DockerScan {
     if (record.env.kind === 'host') {
       for (const ps of all.filter((row) => row.State === 'running')) {
         for (const mount of inspected.get(ps.ID)?.Mounts ?? []) {
-          if (mount.Type === 'bind' && mount.Source?.startsWith('/')) {
+          if (mount.Type === 'bind' && isHostBindSource(mount.Source)) {
             this.result.bindMounts.push({
               source: mount.Source,
               containerId: ps.ID,

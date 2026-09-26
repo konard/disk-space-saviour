@@ -86,7 +86,7 @@ describe('Git state', () => {
       new GitInspector(fixtureEnv(root)).repoBlockers(repo);
     expect(await blockers()).toEqual([]);
 
-    writeFileSync(join(repo, 'README.md'), 'changed\n');
+    writeFileSync(join(repo, 'README.md'), 'changed contents\n');
     expect((await blockers()).join()).toMatch(/1 uncommitted change/);
 
     git(repo, 'stash', '-q');
@@ -160,11 +160,9 @@ describe('re-checks right before deleting', () => {
     const work = join(parent, 'gh-issue-solver-example');
     const repo = pushedRepo(join(work, 'checkout'));
     age(work, 40 * DAY_MS);
-    const env = new (class extends LocalEnv {
-      async openPaths() {
-        return super.openPaths({ strict: false });
-      }
-    })({ homes: [], tmpDirs: [parent] });
+    const env = new LocalEnv({ homes: [], tmpDirs: [parent] });
+    env.processes = async () => [];
+    env.openPaths = async () => new Set();
     const input = scanInput(env, [], {
       scanners: ['global'],
       now: () => Date.now() + DAY_MS,

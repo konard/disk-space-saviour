@@ -34,12 +34,13 @@ describe('agent snapshot stores', () => {
       const input = scanInput(env, [], { scanners: ['agents'] });
       const first = await scan(input);
       expect(
-        first.items.some((item) => item.path?.endsWith('/snapshot/old'))
+        first.items.some((item) => item.path === join(data, 'snapshot', 'old'))
       ).toBe(false);
       rmSync(record);
       const second = await scan(input);
       expect(
-        second.items.find((item) => item.path?.endsWith('/snapshot/old'))?.tier
+        second.items.find((item) => item.path === join(data, 'snapshot', 'old'))
+          ?.tier
       ).toBe('moderate');
     } finally {
       removeRoot(root);

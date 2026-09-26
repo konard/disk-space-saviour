@@ -26,8 +26,9 @@ const GIT_FLAGS = [
 
 const SAFE_GIT_ENV = {
   GIT_CONFIG_NOSYSTEM: '1',
-  GIT_CONFIG_GLOBAL: os.devNull,
-  GIT_CONFIG_SYSTEM: os.devNull,
+  // Git for Windows understands this MSYS path; Node's \\.\nul does not.
+  GIT_CONFIG_GLOBAL: '/dev/null',
+  GIT_CONFIG_SYSTEM: '/dev/null',
   GIT_CONFIG_COUNT: '0',
   GIT_CONFIG_PARAMETERS: '',
   GIT_ATTR_NOSYSTEM: '1',

@@ -42,16 +42,18 @@ describe('version manager pruning', () => {
         scanInput(fixtureEnv(root), [], { scanners: ['versions'] })
       );
       const paths = report.items.map((item) => item.path);
-      expect(paths.some((target) => target.endsWith('/3.11.4'))).toBe(true);
-      expect(paths.some((target) => target.endsWith('/3.12.0'))).toBe(false);
-      expect(paths.some((target) => target.endsWith('/anaconda3-2024'))).toBe(
-        false
+      expect(paths).toContain(join(home, '.pyenv', 'versions', '3.11.4'));
+      expect(paths).not.toContain(join(home, '.pyenv', 'versions', '3.12.0'));
+      expect(paths).not.toContain(
+        join(home, '.pyenv', 'versions', 'anaconda3-2024')
       );
-      expect(paths.some((target) => target.endsWith('/java/8'))).toBe(true);
-      expect(paths.some((target) => target.endsWith('/java/21.0.1-tem'))).toBe(
-        false
+      expect(paths).toContain(join(home, '.sdkman', 'candidates', 'java', '8'));
+      expect(paths).not.toContain(
+        join(home, '.sdkman', 'candidates', 'java', '21.0.1-tem')
       );
-      expect(paths.some((target) => target.includes('/.opam/'))).toBe(false);
+      expect(
+        paths.some((target) => target.startsWith(join(home, '.opam')))
+      ).toBe(false);
     } finally {
       removeRoot(root);
     }

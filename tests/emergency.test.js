@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'test-anywhere';
 import { existsSync, lstatSync, readdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 
 import {
   bytesNeeded,
@@ -114,7 +114,8 @@ describe('emergency mode', () => {
     }
     const { root, run, free, kept, env } = volume();
     try {
-      env.deviceId = async (target) => (target.includes('/home/') ? 2 : 1);
+      env.deviceId = async (target) =>
+        target.startsWith(`${join(root, 'home')}${sep}`) ? 2 : 1;
       const audit = await run({ free: free() + 100 * KIB });
       expect(audit.entries.some((entry) => entry.rule === 'npm-cache')).toBe(
         false
