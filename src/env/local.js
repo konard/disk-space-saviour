@@ -13,6 +13,21 @@ export function processAliases(exe, argv0) {
 }
 
 /**
+ * State letter and start time (clock ticks since boot) of a process from
+ * `/proc/<pid>/stat`. Fields are counted after the parenthesized name,
+ * which may hold spaces.
+ * @param {string} stat
+ * @returns {{state: string|null, startTime: string|null}}
+ */
+export function parseProcStat(stat) {
+  const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
+  return {
+    state: fields[0] || null,
+    startTime: /^\d+$/.test(fields[19] ?? '') ? fields[19] : null,
+  };
+}
+
+/**
  * Working directories by pid from `lsof -F pn -d cwd` field output
  * (`p<pid>` starts a process, `n<path>` names its file).
  * @param {string} output
@@ -530,9 +545,16 @@ export class LocalEnv {
       const cmdline = await fsp
         .readFile(`${base}/cmdline`, 'utf8')
         .catch(() => '');
+      const stat = parseProcStat(
+        await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
+      );
+      if (stat.state === 'Z') {
+        continue;
+      }
       processes.push({
         pid: Number(pid),
         name,
+        startTime: stat.startTime,
         cwd,
         aliases: processAliases(exe, cmdline.split('\0')[0]),
         command: cmdline.replaceAll('\0', ' '),

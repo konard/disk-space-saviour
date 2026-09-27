@@ -7,7 +7,9 @@
  * re-derives which hashes are superseded. Stopped containers are
  * re-inspected (still stopped, not restarted since the scan, Git state
  * still clean) and their logs and inspect data are saved before a plain
- * `docker rm`. Every decision lands in the audit log.
+ * `docker rm`. Long-running processes of each environment are watched
+ * across the cleanup (see ./health.js). Every decision lands in the audit
+ * log.
  */
 
 import { once } from 'node:events';
@@ -19,17 +21,22 @@ import { backupDirectory, startAudit, writeAudit } from './audit.js';
 import { DockerCli, assertAllowed, parseDockerSize } from './docker/cli.js';
 import {
   containerGitState,
+  containerNamed,
   gitBlockersForRemoval,
+  investigationBlocker,
   runningBindMounts,
 } from './docker/containers.js';
+import { imageNamed } from './docker/images.js';
 import { resolveEnvironment } from './env/resolve.js';
 import { GitInspector } from './git.js';
-import { dropNested, selectByTier, tierRank } from './items.js';
+import { HealthWatch } from './health.js';
+import { consentFlag, dropNested, selectByTier, tierRank } from './items.js';
 import { LivenessProbe } from './liveness.js';
 import { resolveOptions } from './options.js';
 import { isWithin } from './paths.js';
 import { OTHER_RULES } from './rules/other.js';
 import { compareVersions } from './rules/versions.js';
+import { analyzeRustProfile } from './scanners/rust.js';
 import { filterItems, revalidateReport } from './scan.js';
 
 const STOPPED = new Set(['exited', 'created', 'dead']);
@@ -57,14 +64,10 @@ export function cleanOrder(a, b) {
   );
 }
 
-function flagName(key) {
-  return `--${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
-}
-
-function sumBytes(usages) {
+function sumBytes(usages, paths = [...usages.keys()]) {
   let total = 0;
-  for (const usage of usages.values()) {
-    total += usage?.bytes ?? 0;
+  for (const target of paths) {
+    total += usages.get(target)?.bytes ?? 0;
   }
   return total;
 }
@@ -82,6 +85,7 @@ function entryFor(item) {
     paths: [...item.paths],
     pathCount: item.paths.length,
     deletedPaths: [],
+    skippedPaths: [],
     action: item.action?.type ?? 'none',
     plannedBytes: item.bytes,
     status: 'skipped',
@@ -128,6 +132,7 @@ export class Cleaner {
     this.report = report;
     this.options = options;
     this.contexts = new Map();
+    this.health = new HealthWatch();
     this.descriptors = new Map(
       (report.environments ?? []).map((env) => [env.id, env])
     );
@@ -174,12 +179,17 @@ export class Cleaner {
   }
 
   async #process(item, entry) {
+    const stopped = this.health.stopReason(item);
+    if (stopped) {
+      entry.reason = stopped;
+      return;
+    }
     if (item.blockers.length > 0) {
       entry.reason = item.blockers.join('; ');
       return;
     }
     if (!(await this.#confirmed(item))) {
-      entry.reason = `needs ${flagName(item.requiresConfirmation)} or an interactive yes`;
+      entry.reason = `needs ${consentFlag(item)} or an interactive yes`;
       return;
     }
     const ctx = this.context(item.env);
@@ -188,6 +198,7 @@ export class Cleaner {
       entry.reason = fresh.reason;
       return;
     }
+    entry.skippedPaths = fresh.skipped ?? [];
     entry.plannedBytes = fresh.item.bytes;
     entry.paths = [...fresh.item.paths];
     entry.pathCount = fresh.item.paths.length;
@@ -195,12 +206,17 @@ export class Cleaner {
       entry.status = 'planned';
       return;
     }
+    await this.health.baseline(ctx.env, item);
     await this.#execute(ctx, fresh.item, entry);
+    const lost = await this.health.check(ctx.env, item);
+    if (lost && !entry.reason) {
+      entry.reason = lost;
+    }
   }
 
   async #confirmed(item) {
     const flag = item.requiresConfirmation;
-    if (!flag || this.options[flag]) {
+    if (!flag || this.options[flag] === true) {
       return true;
     }
     return this.options.confirm
@@ -226,6 +242,15 @@ export class Cleaner {
       return { item };
     }
     let paths = item.paths;
+    if (item.recheck?.type === 'rust') {
+      const current = await analyzeRustProfile(ctx.env, item.recheck.profile, {
+        staleAgeMs: this.options.staleAgeMs,
+        now: this.options.now(),
+      });
+      const part = current[item.recheck.part] ?? current;
+      const still = new Set(part.entries.map((entry) => entry.path));
+      paths = paths.filter((target) => still.has(target));
+    }
     const usages = await ctx.env.usageMany(paths);
     paths = paths.filter((target) => usages.get(target));
     if (paths.length === 0) {
@@ -238,7 +263,7 @@ export class Cleaner {
     const fresh = {
       ...item,
       paths,
-      bytes: type === 'remove' ? sumBytes(usages) : item.bytes,
+      bytes: type === 'remove' ? sumBytes(usages, paths) : item.bytes,
       newestMtimeMs: newest || item.newestMtimeMs,
       action: type === 'remove' ? { ...item.action, paths } : item.action,
     };
@@ -247,7 +272,37 @@ export class Cleaner {
       return { reason: staticBlocker };
     }
     const safety = await this.#safetyBlocker(ctx, fresh, type);
-    return safety ? { reason: safety } : { item: fresh };
+    return safety
+      ? { reason: safety }
+      : this.#withoutOpenPaths(ctx, fresh, usages);
+  }
+
+  /**
+   * Items checked path by path (`checks.perPath`) lose only the paths a
+   * process holds open; the rest stays eligible.
+   */
+  #withoutOpenPaths(ctx, item, usages) {
+    if (!item.checks?.perPath) {
+      return { item };
+    }
+    const open = ctx.liveness.openPathsOf(item.paths);
+    const skipped = [...open].map(([target, reason]) => ({
+      path: target,
+      reason,
+    }));
+    const paths = item.paths.filter((target) => !open.has(target));
+    if (paths.length === 0) {
+      return { reason: `busy: every path is in use (${skipped[0].reason})` };
+    }
+    return {
+      item: {
+        ...item,
+        paths,
+        bytes: sumBytes(usages, paths),
+        action: { ...item.action, paths },
+      },
+      skipped,
+    };
   }
 
   async #staticBlocker(ctx, item) {
@@ -321,27 +376,51 @@ export class Cleaner {
   async #execute(ctx, item, entry) {
     const { action } = item;
     if (action.type === 'remove') {
-      for (const target of action.paths) {
-        await ctx.liveness.refresh(true);
-        await ctx.liveness.resolve([target]);
-        const busy = ctx.liveness.busyReason({ ...item, paths: [target] });
-        if (busy) {
-          entry.reason = `stopped before ${target}: busy: ${busy}`;
-          return;
-        }
-        const usage = await ctx.env.usage(target);
-        await ctx.env.remove([target]);
-        entry.status = 'removed';
-        entry.deletedPaths.push(target);
-        entry.freedBytes += usage?.bytes ?? 0;
-        await this.options.onProgress?.(entry);
-      }
+      await this.#removePaths(ctx, item, entry);
     } else if (action.type === 'command') {
       await this.#command(ctx, item, entry);
     } else if (action.type === 'docker-rm') {
       await this.#removeContainer(ctx, item, entry);
     } else {
       entry.reason = 'no safe action for this item';
+    }
+  }
+
+  /**
+   * Removes the paths one by one, re-checking liveness before each. A busy
+   * item stops; an item checked path by path skips just the busy path.
+   */
+  async #removePaths(ctx, item, entry) {
+    for (const target of item.action.paths) {
+      await ctx.liveness.refresh(true);
+      const stopped = this.health.verify(item, ctx.liveness.processList());
+      if (stopped) {
+        entry.reason = `stopped before ${target}: ${stopped}`;
+        return;
+      }
+      await ctx.liveness.resolve([target]);
+      const busy = ctx.liveness.busyReason({ ...item, paths: [target] });
+      if (busy) {
+        entry.reason = `stopped before ${target}: busy: ${busy}`;
+        return;
+      }
+      const usage = await ctx.env.usage(target);
+      const inUse =
+        item.checks?.perPath &&
+        (ctx.liveness.openInside([target]) ??
+          ctx.liveness.recentWrite(usage?.newestMtimeMs));
+      if (inUse) {
+        entry.skippedPaths.push({ path: target, reason: inUse });
+        continue;
+      }
+      await ctx.env.remove([target]);
+      entry.status = 'removed';
+      entry.deletedPaths.push(target);
+      entry.freedBytes += usage?.bytes ?? 0;
+      await this.options.onProgress?.(entry);
+    }
+    if (entry.deletedPaths.length === 0 && entry.skippedPaths.length > 0) {
+      entry.reason = 'every path was in use or recently written';
     }
   }
 
@@ -399,6 +478,16 @@ export class Cleaner {
       inspected.State.FinishedAt !== item.action.finishedAt
     ) {
       entry.reason = 'container ran again since the scan, scan again first';
+      return;
+    }
+    const kept = investigationBlocker(
+      inspected.State,
+      containerId,
+      name,
+      this.options
+    );
+    if (kept) {
+      entry.reason = kept;
       return;
     }
     const git = await containerGitState(docker, containerId);
@@ -502,21 +591,37 @@ export function wantedItems(report, options) {
   return filterItems(report.items, { ...options, minSizeBytes: 0 }, [], path)
     .filter((item) => !approved || approved.has(item.id))
     .map((item) => {
-      if (
-        item.action?.type !== 'docker-rm' ||
-        !options.allowDirtyContainers?.includes(item.action.containerId)
-      ) {
-        return item;
+      if (item.action?.type === 'docker-rm') {
+        return containerConsent(item, options);
       }
-      return {
-        ...item,
-        blockers: item.blockers.filter(
-          (reason) =>
-            !item.container?.gitBlockers?.includes(reason) ||
-            !/^Git repository .+ has /.test(reason)
-        ),
-      };
+      return item.image && imageNamed(options.removeImages, item.image)
+        ? { ...item, requiresConfirmation: null }
+        : item;
     });
+}
+
+/**
+ * Applies per-container consent: `--remove-container` approves the removal
+ * of that container and lifts its investigation hold, an exact
+ * `--allow-dirty-container` id waives its verified Git work.
+ */
+function containerConsent(item, options) {
+  const { containerId, name } = item.action;
+  const named = containerNamed(options.removeContainers, containerId, name);
+  const dirtyAllowed = options.allowDirtyContainers?.includes(containerId);
+  if (!named && !dirtyAllowed) {
+    return item;
+  }
+  const lifted = (reason) =>
+    (named && reason === item.container?.investigation) ||
+    (dirtyAllowed &&
+      item.container?.gitBlockers?.includes(reason) &&
+      /^Git repository .+ has /.test(reason));
+  return {
+    ...item,
+    requiresConfirmation: named ? null : item.requiresConfirmation,
+    blockers: item.blockers.filter((reason) => !lifted(reason)),
+  };
 }
 
 /**
@@ -531,7 +636,8 @@ export function planItems(report, options) {
 /** Options that only the cleaning run itself may grant. */
 export const CONFIRMATION_FLAGS = [
   'removeStoppedContainers',
-  'removeUnusedImages',
+  'removeContainers',
+  'removeImages',
   'includeVolumes',
   'allowDirtyRepos',
   'allowDirtyContainers',
@@ -576,6 +682,7 @@ export async function clean(report, input = {}) {
     ...options,
     onProgress: persistProgress,
   });
+  audit.health = cleaner.health.records;
   if (options.audit !== false) {
     await writeAudit(audit, { ...options, inProgress: true });
   }

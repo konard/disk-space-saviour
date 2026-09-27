@@ -7,15 +7,28 @@
  * features, flags, the toolchain or dependency versions creates a new hash
  * next to the old one, so old hashes pile up.
  *
- * A unit's identity is read from its fingerprint (`<kind>-<target>.json`
- * with the `target` and `profile` hashes, which separate lib/bin/test and
- * check/build units). Units without a fingerprint fall back to crate name,
- * artifact kind and crate root source (first entry of the `.d` file).
- * Incremental directories are grouped by crate.
+ * The result has two parts:
  *
- * For each identity the newest hash is kept, together with every hash built
- * within the same generation window (one build). Older hashes are reported
- * only when all of their files are outside the activity window.
+ * - **library**: `.rlib`, `.rmeta`, `.so`/`.dylib`/`.a`, `.d`, `build/*`
+ *   and `.fingerprint` entries. A unit's identity is read from its
+ *   fingerprint (`<kind>-<target>.json` with the `target` and `profile`
+ *   hashes, which separate lib/bin/test and check/build units). Units
+ *   without a fingerprint fall back to crate name, artifact kind and crate
+ *   root source (first entry of the `.d` file). For each identity the
+ *   newest hash is kept, together with every hash built within the same
+ *   generation window (one build); older hashes are reported only when all
+ *   of their files are outside the activity window. A running cargo may
+ *   already have judged these fresh, so callers must not touch this part
+ *   while cargo or rustc runs in the project.
+ * - **leaf**: nothing links against these, so they stay removable while
+ *   cargo runs (callers still skip files a process has open):
+ *   - incremental session directories whose newest file is older than
+ *     `leafIdleMs` and that hold no `-working` session. Each directory is
+ *     judged by its own age: lib, test and bin sessions of one crate live
+ *     side by side and never supersede each other;
+ *   - extension-less (or `.exe`) executables `<name>-<hash>` in `deps` and
+ *     `examples` (test and example binaries) older than `leafIdleMs` when a
+ *     newer build of the same unit exists.
  */
 
 import { listMany } from './common.js';
@@ -25,7 +38,9 @@ const INCREMENTAL = /^(.+)-([0-9a-z]{8,20})$/;
 const LIB_PREFIXED = new Set(['.rlib', '.rmeta', '.so', '.dylib', '.a']);
 const KIND_ORDER = ['lib', 'dylib', 'staticlib', 'bin', 'rmeta', 'other'];
 const NON_PROFILES = new Set(['doc', 'package', 'tmp', 'flycheck0']);
+const EXECUTABLE = new Set(['', '.exe']);
 export const DEFAULT_GENERATION_MS = 10 * 60 * 1000;
+export const DEFAULT_LEAF_IDLE_MS = 3 * 60 * 60 * 1000;
 
 function fileKind(extension) {
   const kinds = {
@@ -139,6 +154,25 @@ function hashedEntries(entries) {
   return (entries ?? []).filter((entry) => parseArtifactName(entry.name));
 }
 
+function isExecutable(entry) {
+  return (
+    entry.type !== 'dir' &&
+    EXECUTABLE.has(parseArtifactName(entry.name).extension)
+  );
+}
+
+function summarize(stale, kept) {
+  const entries = stale
+    .flatMap((unit) => unit.entries)
+    .map(({ path, bytes, mtimeMs }) => ({ path, bytes, mtimeMs }));
+  return {
+    entries,
+    bytes: entries.reduce((sum, entry) => sum + entry.bytes, 0),
+    kept,
+    removed: stale.length,
+  };
+}
+
 class UnitSet {
   constructor() {
     this.units = new Map();
@@ -240,24 +274,87 @@ function buildRole(listing) {
     : 'run';
 }
 
+function libraryPart(settings, keys, fallback, buildListings, entries) {
+  const units = new UnitSet();
+  for (const entry of entries) {
+    const { crate, hash } = parseArtifactName(entry.name);
+    const key =
+      keys.get(hash) ??
+      fallback.get(hash) ??
+      `build:${crate}:${buildRole(buildListings.get(entry.path))}`;
+    units.add(key, hash, entry);
+  }
+  const { stale, kept } = units.superseded(settings);
+  return summarize(stale, kept);
+}
+
+function executablePart(settings, keys, executables) {
+  const units = new UnitSet();
+  for (const { dir, entry } of executables) {
+    const { crate, hash } = parseArtifactName(entry.name);
+    units.add(`${dir}:${keys.get(hash) ?? crate}`, hash, entry);
+  }
+  return units.superseded({ ...settings, staleAgeMs: settings.leafIdleMs });
+}
+
+async function incrementalPart(env, settings, listing) {
+  const dirs = await withDirUsage(
+    env,
+    (listing ?? []).filter(
+      (entry) => entry.type === 'dir' && INCREMENTAL.test(entry.name)
+    )
+  );
+  const sessions = await listMany(
+    env,
+    dirs.map((entry) => entry.path)
+  );
+  const stale = [];
+  let kept = 0;
+  for (const entry of dirs) {
+    const working = (sessions.get(entry.path) ?? []).some((child) =>
+      child.name.endsWith('-working')
+    );
+    if (working || settings.now - entry.mtimeMs < settings.leafIdleMs) {
+      kept++;
+    } else {
+      stale.push({ entries: [entry] });
+    }
+  }
+  return { stale, kept };
+}
+
 /**
  * Superseded artifacts of one profile directory.
  * @param {object} env
  * @param {string} profileDir
- * @param {{staleAgeMs: number, now: number, generationMs?: number}} options
+ * @param {{staleAgeMs: number, now: number, generationMs?: number,
+ *   leafIdleMs?: number}} options `leafIdleMs` defaults to the larger of
+ *   3 hours and `staleAgeMs`
  * @returns {Promise<{entries: Array<{path: string, bytes: number,
- *   mtimeMs: number}>, bytes: number, kept: number, removed: number}>}
+ *   mtimeMs: number}>, bytes: number, kept: number, removed: number,
+ *   library: object, leaf: object}>} both parts together plus `library`
+ *   and `leaf` with the same shape
  */
 export async function analyzeRustProfile(env, profileDir, options) {
-  const settings = { generationMs: DEFAULT_GENERATION_MS, ...options };
+  const settings = {
+    generationMs: DEFAULT_GENERATION_MS,
+    ...options,
+    leafIdleMs:
+      options.leafIdleMs ??
+      Math.max(DEFAULT_LEAF_IDLE_MS, options.staleAgeMs ?? 0),
+  };
   const sub = (name) => env.path.join(profileDir, name);
   const listings = await listMany(env, [
     sub('deps'),
     sub('build'),
     sub('incremental'),
     sub('.fingerprint'),
+    sub('examples'),
   ]);
-  const fingerprints = hashedEntries(listings.get(sub('.fingerprint')));
+  const fingerprints = await withDirUsage(
+    env,
+    hashedEntries(listings.get(sub('.fingerprint')))
+  );
   const deps = await withDirUsage(
     env,
     hashedEntries(listings.get(sub('deps')))
@@ -275,31 +372,33 @@ export async function analyzeRustProfile(env, profileDir, options) {
       .map((entry) => entry.path)
   );
 
-  const units = new UnitSet();
-  for (const entry of [...deps, ...builds, ...fingerprints]) {
-    const { crate, hash } = parseArtifactName(entry.name);
-    const key =
-      keys.get(hash) ??
-      fallback.get(hash) ??
-      `build:${crate}:${buildRole(buildListings.get(entry.path))}`;
-    units.add(key, hash, entry);
-  }
-  const incremental = (listings.get(sub('incremental')) ?? []).filter(
-    (entry) => entry.type === 'dir' && INCREMENTAL.test(entry.name)
+  const library = libraryPart(settings, keys, fallback, buildListings, [
+    ...deps.filter((entry) => !isExecutable(entry)),
+    ...builds,
+    ...fingerprints,
+  ]);
+  const executables = executablePart(settings, keys, [
+    ...deps.filter(isExecutable).map((entry) => ({ dir: 'deps', entry })),
+    ...hashedEntries(listings.get(sub('examples')))
+      .filter(isExecutable)
+      .map((entry) => ({ dir: 'examples', entry })),
+  ]);
+  const incremental = await incrementalPart(
+    env,
+    settings,
+    listings.get(sub('incremental'))
   );
-  for (const entry of await withDirUsage(env, incremental)) {
-    const [, crate, hash] = INCREMENTAL.exec(entry.name);
-    units.add(`incremental:${crate}`, `i${hash}`, entry);
-  }
-
-  const { stale, kept } = units.superseded(settings);
-  const entries = stale
-    .flatMap((unit) => unit.entries)
-    .map(({ path, bytes, mtimeMs }) => ({ path, bytes, mtimeMs }));
+  const leaf = summarize(
+    [...incremental.stale, ...executables.stale],
+    incremental.kept + executables.kept
+  );
+  const entries = [...library.entries, ...leaf.entries];
   return {
     entries,
-    bytes: entries.reduce((sum, entry) => sum + entry.bytes, 0),
-    kept,
-    removed: stale.length,
+    bytes: library.bytes + leaf.bytes,
+    kept: library.kept + leaf.kept,
+    removed: library.removed + leaf.removed,
+    library,
+    leaf,
   };
 }

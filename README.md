@@ -81,11 +81,11 @@ Run `dss --help` for every option. The most useful ones:
 Tiers are cumulative: `moderate` includes `safe`, and `aggressive` includes
 both.
 
-| Tier         | What it removes                                                                                                                                                                                                                                                                     |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `safe`       | Download caches (npm, pnpm, yarn, pip, uv, Cargo registry, Gradle, Go, NuGet, and many more), dangling Docker images and build cache. Includes these caches inside running containers.                                                                                              |
-| `moderate`   | Whole `node_modules`, `target/`, `.venv`, `build/` and similar folders of projects inactive for `--inactive` (30 days); toolchain versions nothing uses; unused tagged images (`--remove-unused-images`); stopped containers (`--remove-stopped-containers` or an interactive yes). |
-| `aggressive` | For emergencies: everything regenerable, including build outputs of projects in active use. Only `dss emergency` reaches it.                                                                                                                                                        |
+| Tier         | What it removes                                                                                                                                                                                                                                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `safe`       | Download caches (npm, pnpm, yarn, pip, uv, Cargo registry, Gradle, Go, NuGet, and many more), dangling Docker images and build cache. Includes these caches inside running containers.                                                                                                                                  |
+| `moderate`   | Whole `node_modules`, `target/`, `.venv`, `build/` and similar folders of projects inactive for `--inactive` (30 days); toolchain versions nothing uses; unused tagged images, each one only with `--remove-image REF` or an interactive yes; stopped containers (`--remove-stopped-containers` or an interactive yes). |
+| `aggressive` | For emergencies: everything regenerable, including build outputs of projects in active use. Only `dss emergency` reaches it.                                                                                                                                                                                            |
 
 Covered ecosystems: JavaScript/TypeScript (npm, yarn, pnpm, bun, deno,
 framework build caches), Python, Rust, JVM (Gradle, Maven, Kotlin, Android),
@@ -107,8 +107,24 @@ reports, core dumps and journald logs.
   that a process holds open (`/proc/*/fd`, `cwd`, `exe`, or `lsof` on
   macOS) are skipped. So are projects with a running `cargo`, `gradle`,
   `npm`, `node` or similar tool, and anything modified within
-  `--older-than` (1h). Rust build artifacts stay intact in the safe tier;
-  Cargo can reuse older feature variants without updating their timestamps.
+  `--older-than` (1h).
+- **Rust builds are pruned in two parts.** `cargo-superseded` removes
+  older hashes of a unit (`.rlib`, `.rmeta`, `.so`/`.dylib`/`.a`,
+  `build/*`, `.fingerprint`) that a newer build replaced, but never while
+  `cargo` or `rustc` runs in the project: a running build may have judged
+  them fresh. `cargo-superseded-leaf` removes incremental session
+  directories idle for 3 hours and test/example binaries older than 3
+  hours that a newer build replaced. Nothing links against them, so this
+  part stays eligible while cargo runs; each file a process runs or holds
+  open is skipped.
+- **Running tasks must survive.** Before its first deletion in an
+  environment (the host or a container), `clean` records PID 1, agents
+  (`claude`, `codex`, `solve`, ...) and build tools (`cargo`, `gradle`,
+  ...) with their start times. It checks them again after every removed
+  path and item. If one is gone or its PID was reused, cleaning in that
+  environment stops at once, and the audit log and summary say which
+  process was lost. A build that simply finishes during the cleanup also
+  stops it: an exit cannot be told apart from a crash.
 - **Git awareness.** A project or container is not touched while it has
   uncommitted changes, unpushed commits or stashes. The blocker is shown in
   the report. Stopped containers with Git work require an exact
@@ -122,19 +138,31 @@ reports, core dumps and journald logs.
 With `--docker`, or automatically when a daemon is reachable, `dss` handles
 three kinds of Docker data:
 
-- **Daemon data:** `docker system df`, dangling images, build cache, and
-  optionally unused images. `--include-volumes` lists unattached volumes
-  for manual inspection; it does not delete them.
+- **Daemon data:** `docker system df`, dangling images and build cache.
+  `--include-volumes` lists unattached volumes for manual inspection; it
+  does not delete them.
+- **Unused tagged images** are listed with their size, creation date and
+  the container that used them last (from the `docker inspect` backups
+  of containers dss removed), when known. No tier removes them, emergency
+  mode included: approve each one with `--remove-image REF` (`repo:tag`,
+  `repo` for `:latest`, or an id prefix of at least 12 characters) or an
+  interactive yes for that image.
 - **Running containers** are never stopped, restarted or removed. They are
   scanned and cleaned from the inside through `docker exec`, with the same
   rules and liveness checks as the host.
 - **Stopped containers** are listed with their size, image, command, owner
-  session (from labels and environment) and the Git state of repositories
-  in their writable layer. The layer is copied out with `docker cp` and
-  checked with Git. A container is removed only with
+  session (`HIVE_MIND_PARENT_SESSION_ID` and other session labels or
+  environment variables, else a session id in the container name), task
+  URL, exit code and reason, OOM flag and end time, and the Git state of
+  repositories in their writable layer. The layer is copied out with
+  `docker cp` and checked with Git. A container is removed only with
   `--remove-stopped-containers` or after an interactive yes per container,
   and only when its Git state is clean. Before `docker rm`, its logs and
   `docker inspect` output are saved to `--backup-dir`.
+- **Containers kept for investigation** (a non-zero exit code or OOM
+  killed) are never removed by a tier or by `--remove-stopped-containers`,
+  in emergency mode too. Name each one with `--remove-container ID|NAME`
+  (a full name, or an id prefix of at least 12 characters) to remove it.
 
 `--recursive` follows Docker-in-Docker: a container that runs its own daemon
 is scanned as a new environment, down to `--depth` levels (default 3). The

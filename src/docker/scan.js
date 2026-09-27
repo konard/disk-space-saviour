@@ -4,29 +4,36 @@
  * For every reachable daemon (the host's, then daemons running inside
  * containers, up to `dockerDepth` levels):
  * - daemon objects: dangling images and build cache (`safe`), unused tagged
- *   images (`moderate`, needs `removeUnusedImages`), unused volumes (reported
- *   with `includeVolumes`, never removed automatically);
+ *   images (`moderate`, each one named in `removeImages`; ./images.js),
+ *   unused volumes (reported with `includeVolumes`, never removed
+ *   automatically);
  * - running containers are never stopped, restarted or removed: their
  *   filesystems are scanned through `docker exec` with the same rules as
  *   the host, and a Docker CLI inside them is followed (Docker-in-Docker);
- * - stopped containers are reported with their size, owner session and the
- *   Git state of repositories in their writable layer, and are removed only
- *   with `removeStoppedContainers` (after a logs backup, at clean time);
+ * - stopped containers are reported with their size, owner session, task,
+ *   exit code and the Git state of repositories in their writable layer,
+ *   and are removed only with `removeStoppedContainers` (after a logs
+ *   backup, at clean time). A container that failed or was OOM killed is
+ *   kept for investigation until it is named in `removeContainers`;
  * - image layer hints (report only).
  *
  * The same daemon reached twice (a mounted socket) is scanned once.
  */
 
+import { backupDirectory } from '../audit.js';
 import { ShellEnv } from '../env/shell.js';
 import { containerExecutor, trace } from '../exec.js';
 import { block, makeItem } from '../items.js';
 import { DockerCli, parseDockerSize } from './cli.js';
 import {
   containerGitState,
+  containerNamed,
   gitBlockersForRemoval,
+  investigationBlocker,
   isHostBindSource,
   ownerOf,
 } from './containers.js';
+import { lastUserOf, lastUsers } from './images.js';
 
 const RUNNING = new Set(['running']);
 const STOPPED = new Set(['exited', 'created', 'dead']);
@@ -53,7 +60,7 @@ export function containerSizes(sizeText) {
   };
 }
 
-function daemonItems(daemon, verbose, df, options) {
+function daemonItems(daemon, verbose, df, options, users) {
   const { env } = daemon;
   const items = [];
   const images = verbose.Images ?? [];
@@ -112,9 +119,10 @@ function daemonItems(daemon, verbose, df, options) {
       })
     );
   }
-  const tagged = unused.filter((image) => image.Tag !== '<none>');
-  for (const image of tagged) {
+  for (const image of taggedImages(unused)) {
     const name = `${image.Repository}:${image.Tag}`;
+    const bytes = parseDockerSize(image.UniqueSize ?? image.Size);
+    const summary = { ref: name, id: image.ID };
     items.push(
       makeItem(env, {
         rule: 'docker-unused-image',
@@ -122,10 +130,16 @@ function daemonItems(daemon, verbose, df, options) {
         ecosystem: 'docker',
         description: `unused Docker image ${name}`,
         target: `daemon:${daemon.id}:image:${image.ID}`,
-        bytes: parseDockerSize(image.UniqueSize ?? image.Size),
+        bytes,
         tier: 'moderate',
-        reason: 'no container uses it, pulled or built again on demand',
-        requiresConfirmation: 'removeUnusedImages',
+        reason: 'no container uses it; remove it only after deciding per image',
+        requiresConfirmation: 'removeImages',
+        image: {
+          ...summary,
+          bytes,
+          createdAt: image.CreatedAt ?? null,
+          lastUsedBy: lastUserOf(users, summary),
+        },
         action: {
           type: 'command',
           argv: ['docker', 'image', 'rm', image.ID],
@@ -136,6 +150,10 @@ function daemonItems(daemon, verbose, df, options) {
     );
   }
   return items;
+}
+
+function taggedImages(unused) {
+  return unused.filter((image) => image.Tag !== '<none>');
 }
 
 /**
@@ -204,6 +222,12 @@ async function imageHints(docker, verbose) {
 async function stoppedItem(daemon, ps, inspected, options) {
   const sizes = containerSizes(ps.Size);
   const owner = ownerOf(ps, inspected);
+  const kept = investigationBlocker(
+    inspected?.State,
+    ps.ID,
+    owner.name,
+    options
+  );
   const item = makeItem(daemon.env, {
     rule: 'docker-stopped-container',
     kind: 'container',
@@ -214,7 +238,13 @@ async function stoppedItem(daemon, ps, inspected, options) {
     tier: 'moderate',
     reason: 'stopped container, its writable layer is deleted by `docker rm`',
     requiresConfirmation: 'removeStoppedContainers',
-    container: { id: ps.ID, name: owner.name, state: ps.State, owner },
+    container: {
+      id: ps.ID,
+      name: owner.name,
+      state: ps.State,
+      owner,
+      investigation: kept,
+    },
     action: {
       type: 'docker-rm',
       containerId: ps.ID,
@@ -224,7 +254,13 @@ async function stoppedItem(daemon, ps, inspected, options) {
     },
     checks: { busy: [], cwd: null, mtime: false },
   });
-  if (options.removeStoppedContainers) {
+  if (kept) {
+    block(item, kept);
+  }
+  if (
+    options.removeStoppedContainers ||
+    containerNamed(options.removeContainers, ps.ID, owner.name)
+  ) {
     const git = await containerGitState(daemon.docker, ps.ID);
     item.container.repos = git.repos;
     item.container.gitBlockers = git.blockers;
@@ -303,7 +339,15 @@ class DockerScan {
         reclaimableBytes: parseDockerSize(row.Reclaimable),
       })),
     });
-    this.result.items.push(...daemonItems(daemon, verbose, df, this.options));
+    this.result.items.push(
+      ...daemonItems(
+        daemon,
+        verbose,
+        df,
+        this.options,
+        await this.users(verbose)
+      )
+    );
     if (this.options.includeVolumes) {
       this.result.volumes.push(
         ...(verbose.Volumes ?? [])
@@ -318,6 +362,18 @@ class DockerScan {
     }
     this.result.hints.push(...(await imageHints(docker, verbose)));
     await this.containers(daemon, record, depth, inherited);
+  }
+
+  /** Last users of images, read once and only when an image needs them. */
+  users(verbose) {
+    const unused = (verbose.Images ?? []).filter(
+      (image) => image.Containers === '0'
+    );
+    if (taggedImages(unused).length === 0) {
+      return Promise.resolve(new Map());
+    }
+    this.lastUsers ??= lastUsers(backupDirectory(this.options));
+    return this.lastUsers;
   }
 
   async containers(daemon, record, depth, inherited) {

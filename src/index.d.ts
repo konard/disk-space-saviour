@@ -34,7 +34,17 @@ export interface ScanOptions {
   exclude?: string[] | string;
   includeVolumes?: boolean;
   removeStoppedContainers?: boolean;
-  removeUnusedImages?: boolean;
+  /**
+   * Stopped containers (name, id or id prefix of 12+ characters) the
+   * operator approves one by one, including ones kept for investigation.
+   */
+  removeContainers?: string[] | string;
+  /**
+   * Unused tagged images (`repo:tag`, `repo` for `:latest`, or an id prefix
+   * of 12+ characters) the operator approves one by one. No tier removes
+   * an image without it or an interactive yes.
+   */
+  removeImages?: string[] | string;
   allowDirtyRepos?: boolean;
   /** Exact container ids whose verified Git changes may be removed. */
   allowDirtyContainers?: string[] | string;
@@ -94,6 +104,20 @@ export interface Item {
   requiresConfirmation: string | null;
   parentId: string | null;
   action: Action;
+  /** Unused tagged images (`docker-unused-image`). */
+  image?: {
+    ref: string;
+    id: string;
+    bytes: number;
+    createdAt: string | null;
+    /** Last removed container that ran this image, when dss backed it up. */
+    lastUsedBy: {
+      container: string;
+      session: string | null;
+      taskUrl: string | null;
+      finishedAt: string | null;
+    } | null;
+  };
   [key: string]: unknown;
 }
 

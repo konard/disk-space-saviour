@@ -10,6 +10,11 @@ import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 import { setImmediate } from 'node:timers';
 
+import { scanDocker } from '../../src/docker/scan.js';
+import { makeItem } from '../../src/items.js';
+import { resolveOptions } from '../../src/options.js';
+import { buildReport } from '../../src/scan.js';
+
 const ok = (stdout = '') => ({ code: 0, stdout, stderr: '' });
 const fail = (stderr, code = 1) => ({ code, stdout: '', stderr });
 
@@ -25,8 +30,9 @@ export class FakeDockerWorld {
    * @param {Record<string, {info: object, containers: object[],
    *   buildCache?: string, images?: object[]}>} daemons keyed by daemon
    *   name; `host` is the daemon of the machine running dss. Containers:
-   *   `{id, name, state, image, size, labels, env, finishedAt, diff,
-   *   daemon}` where `daemon` names the daemon running inside.
+   *   `{id, name, state, image, size, labels, env, finishedAt, exitCode,
+   *   oomKilled, error, diff, daemon}` where `daemon` names the daemon
+   *   running inside.
    */
   constructor(daemons) {
     this.daemons = daemons;
@@ -132,6 +138,7 @@ export class FakeDockerWorld {
       cp: () => fail('Could not find the file in the container'),
       history: () => ok(''),
       rm: () => this.#remove(daemon, name, args),
+      image: () => this.#image(daemon, sub, args),
       builder: () => {
         daemon.buildCache = '0B';
         return ok('Total reclaimed space: 2GB\n');
@@ -162,6 +169,19 @@ export class FakeDockerWorld {
         Reclaimable: daemon.buildCache ?? '0B',
       })
     );
+  }
+
+  #image(daemon, sub, args) {
+    if (sub !== 'rm') {
+      return fail(`unsupported: docker image ${sub}`);
+    }
+    const images = daemon.images ?? [];
+    const image = images.find((entry) => entry.ID === args[2]);
+    if (!image) {
+      return fail(`No such image: ${args[2]}`);
+    }
+    images.splice(images.indexOf(image), 1);
+    return ok(`Deleted: sha256:${image.ID}\n`);
   }
 
   #remove(daemon, name, args) {
@@ -209,7 +229,10 @@ function psRow(container) {
     // eslint-disable-next-line local/no-changelog-comments -- `docker ps` time format
     CreatedAt: '2026-09-01 10:00:00 +0000 UTC',
     State: container.state,
-    Status: container.state === 'running' ? 'Up 2 hours' : 'Exited (0)',
+    Status:
+      container.state === 'running'
+        ? 'Up 2 hours'
+        : `Exited (${container.exitCode ?? 0}) 3 days ago`,
     Size: container.size ?? '0B (virtual 80MB)',
   };
 }
@@ -220,6 +243,9 @@ function inspectObject(container) {
     Name: `/${container.name}`,
     State: {
       Status: container.state,
+      ExitCode: container.state === 'running' ? 0 : (container.exitCode ?? 0),
+      OOMKilled: Boolean(container.oomKilled),
+      Error: container.error ?? '',
       FinishedAt: container.finishedAt ?? '2026-09-20T10:00:00Z',
     },
     Config: {
@@ -243,5 +269,55 @@ export function fakeHostEnv(world) {
     executor,
     run: (argv, options) => executor.run(argv, options),
     which: (command) => Promise.resolve(command === 'docker'),
+    processes: () => Promise.resolve([]),
+    openPaths: () => Promise.resolve(new Set()),
   };
+}
+
+/** `docker info` of a fake daemon. */
+export function daemonInfo(id, name) {
+  return {
+    ID: id,
+    Name: name,
+    ServerVersion: '29.0.0',
+    Driver: 'overlay2',
+    DockerRootDir: '/var/lib/docker',
+  };
+}
+
+/**
+ * Scans the fake world from the host daemon; every running container's
+ * filesystem yields one `npm-cache` item.
+ */
+export async function scanWorld(fake, input = {}) {
+  const env = fakeHostEnv(fake);
+  const options = resolveOptions({ docker: true, ...input });
+  const scanned = [];
+  const result = await scanDocker(
+    { env, executor: env.executor, chain: [] },
+    options,
+    (inner) => {
+      scanned.push(inner.id);
+      return Promise.resolve([
+        makeItem(inner, {
+          rule: 'npm-cache',
+          path: '/root/.npm/_cacache',
+          bytes: 1e6,
+        }),
+      ]);
+    }
+  );
+  const report = buildReport({
+    options,
+    env,
+    items: result.items,
+    environments: [
+      { id: env.id, label: env.label, kind: 'host', depth: 0, chain: [] },
+      ...result.environments,
+    ],
+    docker: result,
+    errors: [],
+    startedAt: options.now(),
+  });
+  return { env, result, report, scanned };
 }

@@ -56,7 +56,7 @@ console.log(`--- without consent\n${show(noConsent)}`);
 const real = await clean(report, {
   ...common,
   removeStoppedContainers: true,
-  removeUnusedImages: false,
+  removeImages: [],
 });
 console.log(`--- with consent\n${show(real)}`);
 console.log('exists after clean', existsSync(`${root}/proj/node_modules`));

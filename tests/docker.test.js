@@ -22,14 +22,11 @@ import {
   gitBlockersForRemoval,
   ownerOf,
 } from '../src/docker/containers.js';
-import { scanDocker } from '../src/docker/scan.js';
-import { makeItem } from '../src/items.js';
-import { resolveOptions } from '../src/options.js';
-import { buildReport } from '../src/scan.js';
 import {
   FakeDockerWorld,
   containerId,
-  fakeHostEnv,
+  daemonInfo,
+  scanWorld,
 } from './helpers/fake-docker.js';
 import { pushedRepo } from './helpers/fixtures.js';
 
@@ -43,16 +40,6 @@ const LIFECYCLE = new Set([
   'update',
   'container',
 ]);
-
-function daemonInfo(id, name) {
-  return {
-    ID: id,
-    Name: name,
-    ServerVersion: '29.0.0',
-    Driver: 'overlay2',
-    DockerRootDir: '/var/lib/docker',
-  };
-}
 
 /**
  * host daemon
@@ -122,39 +109,6 @@ function world() {
  * to a local temp dir and cleaning writes backups.
  */
 const readOnlyRuntime = () => typeof Deno !== 'undefined';
-
-async function scanWorld(fake, input = {}) {
-  const env = fakeHostEnv(fake);
-  const options = resolveOptions({ docker: true, ...input });
-  const scanned = [];
-  const result = await scanDocker(
-    { env, executor: env.executor, chain: [] },
-    options,
-    (inner) => {
-      scanned.push(inner.id);
-      return Promise.resolve([
-        makeItem(inner, {
-          rule: 'npm-cache',
-          path: '/root/.npm/_cacache',
-          bytes: 1e6,
-        }),
-      ]);
-    }
-  );
-  const report = buildReport({
-    options,
-    env,
-    items: result.items,
-    environments: [
-      { id: env.id, label: env.label, kind: 'host', depth: 0, chain: [] },
-      ...result.environments,
-    ],
-    docker: result,
-    errors: [],
-    startedAt: options.now(),
-  });
-  return { env, result, report, scanned };
-}
 
 function lifecycleCalls(fake) {
   return fake

@@ -108,6 +108,12 @@ describe('argument parsing', () => {
       '--only',
       'node',
       '--remove-stopped-containers',
+      '--remove-container',
+      'oom-task',
+      '--remove-image',
+      'alpine:3.20',
+      '--remove-image',
+      'ghcr.io/o/app:latest',
     ]);
     const options = toOptions(values, paths);
     expect(options.roots).toEqual(['/w']);
@@ -116,6 +122,11 @@ describe('argument parsing', () => {
     expect(options.docker).toBe(false);
     expect(options.only).toEqual(['rust', 'node']);
     expect(options.removeStoppedContainers).toBe(true);
+    expect(options.removeContainers).toEqual(['oom-task']);
+    expect(options.removeImages).toEqual([
+      'alpine:3.20',
+      'ghcr.io/o/app:latest',
+    ]);
   });
 
   it('prints usage and rejects bad input with exit code 2', async () => {
@@ -129,6 +140,7 @@ describe('argument parsing', () => {
       ['frobnicate'],
       ['scan', '--no-such-flag'],
       ['emergency'],
+      ['clean', '--remove-unused-images'],
     ]) {
       const io = fakeIo();
       expect(await runCli(argv, { io, api: fakeApi() })).toBe(2);

@@ -33,6 +33,11 @@ export const COPY_EXCLUDES = [
 const DEFAULT_MAX_REPOS = 20;
 const OWNER_HINT = /session|issue|pull|task|owner/i;
 const SECRET = /token|secret|password|key$/i;
+const TASK_URL_KEY = /(issue|pull|task)[\w.-]*url|url[\w.-]*(issue|pull|task)/i;
+const TASK_URL = /^https:\/\/[\w.-]+(\/[\w.~%#/-]*)?$/;
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+const SHORT_ID = 12;
+const ENDED = new Set(['exited', 'dead']);
 
 function safeOwnerHint(key, value) {
   const text = String(value);
@@ -76,25 +81,123 @@ export async function runningBindMounts(docker) {
 
 /**
  * Who a container belongs to: labels and environment variables that look
- * like session, issue or task identifiers, plus its command.
+ * like session, issue or task identifiers (`HIVE_MIND_PARENT_SESSION_ID`
+ * first among them), else a session UUID in the container name; plus its
+ * command, task URL and how it ended.
  * @param {object} ps row of `docker ps --format json`
  * @param {object} [inspected] `docker inspect` object
  */
 export function ownerOf(ps, inspected) {
   const hints = ownerHints(inspected);
-  const session =
-    Object.entries(hints).find(([key]) => /session/i.test(key))?.[1] ??
-    Object.values(hints)[0] ??
-    null;
+  const name = String(ps.Names ?? '').split(',')[0];
+  const [sessionSource, session] = sessionOf(hints, name);
+  const state = ENDED.has(inspected?.State?.Status) ? inspected.State : null;
   return {
-    name: String(ps.Names ?? '').split(',')[0],
+    name,
     image: ps.Image,
     command: ps.Command ? ps.Command.replace(/^"|"$/g, '') : null,
     createdAt: ps.CreatedAt ?? null,
     finishedAt: inspected?.State?.FinishedAt ?? null,
+    exitCode: typeof state?.ExitCode === 'number' ? state.ExitCode : null,
+    oomKilled: Boolean(state?.OOMKilled),
+    exitReason: exitReason(state),
+    taskUrl: taskUrlOf(inspected),
     session,
+    sessionSource,
     hints,
   };
+}
+
+function sessionOf(hints, name) {
+  const entries = Object.entries(hints);
+  const found =
+    entries.find(([key]) => /HIVE_MIND_PARENT_SESSION_ID$/.test(key)) ??
+    entries.find(([key]) => /session/i.test(key)) ??
+    entries[0];
+  if (found) {
+    return found;
+  }
+  const fromName = UUID.exec(name)?.[0];
+  return fromName ? ['name', fromName] : [null, null];
+}
+
+/**
+ * How a stopped container ended, from `docker inspect` State.
+ * @returns {string|null}
+ */
+export function exitReason(state) {
+  if (!ENDED.has(state?.Status) || typeof state.ExitCode !== 'number') {
+    return null;
+  }
+  if (state.Error) {
+    return state.Error;
+  }
+  if (state.OOMKilled) {
+    return 'killed: out of memory';
+  }
+  if (state.ExitCode === 0) {
+    return 'completed';
+  }
+  return state.ExitCode > 128
+    ? `killed by signal ${state.ExitCode - 128}`
+    : `failed with exit code ${state.ExitCode}`;
+}
+
+/**
+ * Why a task runner keeps a stopped container for investigation (it failed
+ * or was OOM killed), or null.
+ */
+export function investigationReason(state) {
+  const parts = [];
+  if (state?.ExitCode) {
+    parts.push(`exit ${state.ExitCode}`);
+  }
+  if (state?.OOMKilled) {
+    parts.push('OOM killed');
+  }
+  return parts.length > 0
+    ? `kept for investigation (${parts.join(', ')})`
+    : null;
+}
+
+/**
+ * Whether the operator named this container with `--remove-container`:
+ * its name, full id or an id prefix of at least 12 characters.
+ */
+export function containerNamed(names, id, name) {
+  return (names ?? []).some(
+    (entry) =>
+      entry === name ||
+      entry === `/${name}` ||
+      (entry.length >= SHORT_ID && id.startsWith(entry))
+  );
+}
+
+/** Blocker of a container kept for investigation that was not named. */
+export function investigationBlocker(state, id, name, options = {}) {
+  const reason = investigationReason(state);
+  if (!reason || containerNamed(options.removeContainers, id, name)) {
+    return null;
+  }
+  return `${reason}; remove it only with --remove-container ${id.slice(0, SHORT_ID)}`;
+}
+
+function taskUrlOf(inspected) {
+  const pairs = [
+    ...Object.entries(inspected?.Config?.Labels ?? {}),
+    ...(inspected?.Config?.Env ?? []).map((pair) => {
+      const index = pair.indexOf('=');
+      return [pair.slice(0, index), pair.slice(index + 1)];
+    }),
+  ];
+  const found = pairs.find(
+    ([key, value]) =>
+      TASK_URL_KEY.test(key) &&
+      !SECRET.test(key) &&
+      TASK_URL.test(value) &&
+      !/ghp_|github_pat_|sk-/.test(value)
+  );
+  return found?.[1] ?? null;
 }
 
 function ownerHints(inspected) {

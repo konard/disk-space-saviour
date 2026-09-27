@@ -3,7 +3,7 @@
  * (`--json`) are the report and audit objects themselves.
  */
 
-import { TIERS } from './items.js';
+import { TIERS, consentFlag } from './items.js';
 import { formatBytes } from './units.js';
 
 const DEFAULT_LIMIT = 25;
@@ -49,13 +49,9 @@ function itemLocation(item) {
 function itemLine(item, showEnv) {
   const env = showEnv ? `[${item.envLabel}] ` : '';
   const confirm = item.requiresConfirmation
-    ? `  (needs --${kebab(item.requiresConfirmation)})`
+    ? `  (needs ${consentFlag(item)})`
     : '';
   return `  ${pad(formatBytes(item.bytes), 10)}  ${env}${item.rule}  ${itemLocation(item)}${confirm}`;
-}
-
-function kebab(name) {
-  return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
 function limited(lines, limit) {
@@ -123,6 +119,26 @@ function repoSummary(repo) {
   return `${repo.root}: ${parts.length > 0 ? parts.join(', ') : 'clean and pushed'}`;
 }
 
+/** Exit code, OOM flag, end time and task of a stopped container. */
+function endedLine(owner) {
+  if (!owner || owner.exitCode === null || owner.exitCode === undefined) {
+    return null;
+  }
+  const parts = [
+    `exit ${owner.exitCode}${owner.exitReason ? ` (${owner.exitReason})` : ''}`,
+  ];
+  if (owner.oomKilled) {
+    parts.push('OOM killed');
+  }
+  if (owner.finishedAt) {
+    parts.push(`ended ${owner.finishedAt}`);
+  }
+  if (owner.taskUrl) {
+    parts.push(`task ${owner.taskUrl}`);
+  }
+  return parts.join(', ');
+}
+
 function containerLines(container, stoppedItems) {
   const session = container.owner?.session
     ? `session ${container.owner.session}`
@@ -134,11 +150,46 @@ function containerLines(container, stoppedItems) {
   if (container.note) {
     lines.push(`      ${container.note}`);
   }
+  const ended = endedLine(container.owner);
+  if (ended) {
+    lines.push(`      ${ended}`);
+  }
   const item = stoppedItems.get(container.id);
+  if (item?.container?.investigation) {
+    lines.push(`      ${item.container.investigation}`);
+  }
   for (const repo of item?.container?.repos ?? []) {
     lines.push(`      git ${repoSummary(repo)}`);
   }
   return lines;
+}
+
+function lastUseText(user) {
+  if (!user) {
+    return 'last use unknown';
+  }
+  const details = [
+    user.session && `session ${user.session}`,
+    user.taskUrl && `task ${user.taskUrl}`,
+    user.finishedAt && `ended ${user.finishedAt}`,
+  ].filter(Boolean);
+  const more = details.length > 0 ? ` (${details.join(', ')})` : '';
+  return `last used by container ${user.container}${more}`;
+}
+
+/** Size, creation date, last user and the flag of an unused image. */
+function imageLine(item) {
+  const { image } = item;
+  const created = image.createdAt ? `created ${image.createdAt}, ` : '';
+  const consent = item.requiresConfirmation
+    ? `, needs ${consentFlag(item)}`
+    : '';
+  return `  image ${image.ref} (${String(image.id)
+    .replace(/^sha256:/, '')
+    .slice(
+      0,
+      12
+    )}) unused, ${formatBytes(image.bytes)}, ${created}${lastUseText(image.lastUsedBy)}${consent}`;
 }
 
 function dockerSection(report) {
@@ -159,6 +210,9 @@ function dockerSection(report) {
   }
   for (const container of docker.containers) {
     lines.push(...containerLines(container, stoppedItems));
+  }
+  for (const item of report.items.filter((entry) => entry.image)) {
+    lines.push(imageLine(item));
   }
   for (const hint of docker.hints ?? []) {
     lines.push(
@@ -242,6 +296,22 @@ function environmentLines(environments) {
   );
 }
 
+/**
+ * Whether the watched long-running processes survived, per environment.
+ */
+function healthLines(records) {
+  const lines = (records ?? []).map((record) => {
+    if (record.stopped) {
+      return `  ${record.envLabel}: STOPPED cleaning: ${record.stopped}`;
+    }
+    if (!record.available) {
+      return `  ${record.envLabel}: processes could not be listed`;
+    }
+    return `  ${record.envLabel}: ${record.watched.length} watched processes still running`;
+  });
+  return lines.length > 0 ? ['', 'Task health:', ...lines] : [];
+}
+
 function emergencyLines(audit) {
   if (audit.command !== 'emergency') {
     return [];
@@ -289,6 +359,7 @@ export function formatAudit(audit, options = {}) {
     lines.push(`  ${hidden} skipped (use --verbose to list them)`);
   }
   lines.push('', 'Per environment:', ...environmentLines(audit.environments));
+  lines.push(...healthLines(audit.health));
   lines.push(
     '',
     audit.dryRun

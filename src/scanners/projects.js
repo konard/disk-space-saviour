@@ -7,14 +7,16 @@
  * every rule are searched again below, with the remaining depth, so a
  * non-matching `build` directory never hides real projects inside it.
  *
- * Cargo `target` directories stay intact: build timestamps do not prove that
- * a feature or profile variant can be deleted safely.
+ * Cargo `target` directories additionally yield `cargo-superseded` items:
+ * older build hashes that a newer build of the same unit replaced (see
+ * `rust.js`).
  */
 
 import { ECOSYSTEMS, PROJECT_RULES } from '../rules/ecosystems.js';
 import { block, makeItem } from '../items.js';
 import { isWithin, matchesGlob } from '../paths.js';
 import { listMany, olderThan, scanTimeBusy } from './common.js';
+import { analyzeRustProfile, findRustProfiles } from './rust.js';
 
 const ECOSYSTEM_NAMES = new Map(ECOSYSTEMS.map((e) => [e.id, e.name]));
 
@@ -240,6 +242,70 @@ async function projectItem(context, { candidate, rule }, usage, globs) {
   return item;
 }
 
+const RUST_PARTS = {
+  library: {
+    rule: 'cargo-superseded',
+    description: (part) =>
+      `superseded cargo artifacts (${part.removed} old units, ${part.kept} kept)`,
+    reason: 'older build hashes replaced by a newer build of the same unit',
+  },
+  leaf: {
+    rule: 'cargo-superseded-leaf',
+    description: (part) =>
+      `idle cargo incremental caches and superseded test/example binaries (${part.removed} old, ${part.kept} kept)`,
+    reason:
+      'nothing links against them; removable while cargo runs, files in use are skipped',
+  },
+};
+
+/**
+ * One item per part and profile. The library part is busy while cargo or
+ * rustc runs in the project. The leaf part ignores running tools and drops
+ * only the paths that a process holds open (`checks.perPath`).
+ */
+async function rustItems(context, targetItem, rule) {
+  const { env, liveness, options, now } = context;
+  const items = [];
+  for (const profile of await findRustProfiles(env, targetItem.path)) {
+    const result = await analyzeRustProfile(env, profile, {
+      staleAgeMs: options.staleAgeMs,
+      now,
+    });
+    for (const [name, spec] of Object.entries(RUST_PARTS)) {
+      const part = result[name];
+      const leaf = name === 'leaf';
+      const open = leaf
+        ? (liveness?.openPathsOf(part.entries.map((e) => e.path)) ?? new Map())
+        : new Map();
+      const entries = part.entries.filter((entry) => !open.has(entry.path));
+      if (entries.length === 0) {
+        continue;
+      }
+      const item = makeItem(env, {
+        rule: spec.rule,
+        kind: 'build',
+        ecosystem: 'rust',
+        description: spec.description(part),
+        path: profile,
+        paths: entries.map((entry) => entry.path),
+        bytes: entries.reduce((sum, entry) => sum + entry.bytes, 0),
+        newestMtimeMs: Math.max(...entries.map((entry) => entry.mtimeMs)),
+        project: targetItem.project,
+        tier: 'safe',
+        reason: spec.reason,
+        parentId: targetItem.id,
+        recheck: { type: 'rust', profile, part: name },
+        checks: leaf
+          ? { busy: [], cwd: targetItem.project, mtime: true, perPath: true }
+          : { busy: rule.busy, cwd: targetItem.project, mtime: true },
+      });
+      await addBlockers(context, item, false);
+      items.push(item);
+    }
+  }
+  return items;
+}
+
 /**
  * Scans project trees below `context.options.roots`.
  * @returns {Promise<object[]>} report items
@@ -261,6 +327,9 @@ export async function scanProjects(context, { rules = PROJECT_RULES } = {}) {
     }
     const item = await projectItem(context, match, usage, globs);
     items.push(item);
+    if (match.rule.id === 'cargo-target') {
+      items.push(...(await rustItems(context, item, match.rule)));
+    }
   }
   return items;
 }
