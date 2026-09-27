@@ -107,8 +107,16 @@ reports, core dumps and journald logs.
   that a process holds open (`/proc/*/fd`, `cwd`, `exe`, or `lsof` on
   macOS) are skipped. So are projects with a running `cargo`, `gradle`,
   `npm`, `node` or similar tool, and anything modified within
-  `--older-than` (1h). Rust build artifacts stay intact in the safe tier;
-  Cargo can reuse older feature variants without updating their timestamps.
+  `--older-than` (1h).
+- **Rust builds are pruned in two parts.** `cargo-superseded` removes
+  older hashes of a unit (`.rlib`, `.rmeta`, `.so`/`.dylib`/`.a`,
+  `build/*`, `.fingerprint`) that a newer build replaced, but never while
+  `cargo` or `rustc` runs in the project: a running build may have judged
+  them fresh. `cargo-superseded-leaf` removes incremental session
+  directories idle for 3 hours and test/example binaries older than 3
+  hours that a newer build replaced. Nothing links against them, so this
+  part stays eligible while cargo runs; each file a process runs or holds
+  open is skipped.
 - **Git awareness.** A project or container is not touched while it has
   uncommitted changes, unpushed commits or stashes. The blocker is shown in
   the report. Stopped containers with Git work require an exact

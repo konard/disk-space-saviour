@@ -62,10 +62,10 @@ function flagName(key) {
   return `--${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
 }
 
-function sumBytes(usages) {
+function sumBytes(usages, paths = [...usages.keys()]) {
   let total = 0;
-  for (const usage of usages.values()) {
-    total += usage?.bytes ?? 0;
+  for (const target of paths) {
+    total += usages.get(target)?.bytes ?? 0;
   }
   return total;
 }
@@ -83,6 +83,7 @@ function entryFor(item) {
     paths: [...item.paths],
     pathCount: item.paths.length,
     deletedPaths: [],
+    skippedPaths: [],
     action: item.action?.type ?? 'none',
     plannedBytes: item.bytes,
     status: 'skipped',
@@ -189,6 +190,7 @@ export class Cleaner {
       entry.reason = fresh.reason;
       return;
     }
+    entry.skippedPaths = fresh.skipped ?? [];
     entry.plannedBytes = fresh.item.bytes;
     entry.paths = [...fresh.item.paths];
     entry.pathCount = fresh.item.paths.length;
@@ -232,7 +234,8 @@ export class Cleaner {
         staleAgeMs: this.options.staleAgeMs,
         now: this.options.now(),
       });
-      const still = new Set(current.entries.map((entry) => entry.path));
+      const part = current[item.recheck.part] ?? current;
+      const still = new Set(part.entries.map((entry) => entry.path));
       paths = paths.filter((target) => still.has(target));
     }
     const usages = await ctx.env.usageMany(paths);
@@ -247,7 +250,7 @@ export class Cleaner {
     const fresh = {
       ...item,
       paths,
-      bytes: type === 'remove' ? sumBytes(usages) : item.bytes,
+      bytes: type === 'remove' ? sumBytes(usages, paths) : item.bytes,
       newestMtimeMs: newest || item.newestMtimeMs,
       action: type === 'remove' ? { ...item.action, paths } : item.action,
     };
@@ -256,7 +259,37 @@ export class Cleaner {
       return { reason: staticBlocker };
     }
     const safety = await this.#safetyBlocker(ctx, fresh, type);
-    return safety ? { reason: safety } : { item: fresh };
+    return safety
+      ? { reason: safety }
+      : this.#withoutOpenPaths(ctx, fresh, usages);
+  }
+
+  /**
+   * Items checked path by path (`checks.perPath`) lose only the paths a
+   * process holds open; the rest stays eligible.
+   */
+  #withoutOpenPaths(ctx, item, usages) {
+    if (!item.checks?.perPath) {
+      return { item };
+    }
+    const open = ctx.liveness.openPathsOf(item.paths);
+    const skipped = [...open].map(([target, reason]) => ({
+      path: target,
+      reason,
+    }));
+    const paths = item.paths.filter((target) => !open.has(target));
+    if (paths.length === 0) {
+      return { reason: `busy: every path is in use (${skipped[0].reason})` };
+    }
+    return {
+      item: {
+        ...item,
+        paths,
+        bytes: sumBytes(usages, paths),
+        action: { ...item.action, paths },
+      },
+      skipped,
+    };
   }
 
   async #staticBlocker(ctx, item) {
@@ -330,27 +363,46 @@ export class Cleaner {
   async #execute(ctx, item, entry) {
     const { action } = item;
     if (action.type === 'remove') {
-      for (const target of action.paths) {
-        await ctx.liveness.refresh(true);
-        await ctx.liveness.resolve([target]);
-        const busy = ctx.liveness.busyReason({ ...item, paths: [target] });
-        if (busy) {
-          entry.reason = `stopped before ${target}: busy: ${busy}`;
-          return;
-        }
-        const usage = await ctx.env.usage(target);
-        await ctx.env.remove([target]);
-        entry.status = 'removed';
-        entry.deletedPaths.push(target);
-        entry.freedBytes += usage?.bytes ?? 0;
-        await this.options.onProgress?.(entry);
-      }
+      await this.#removePaths(ctx, item, entry);
     } else if (action.type === 'command') {
       await this.#command(ctx, item, entry);
     } else if (action.type === 'docker-rm') {
       await this.#removeContainer(ctx, item, entry);
     } else {
       entry.reason = 'no safe action for this item';
+    }
+  }
+
+  /**
+   * Removes the paths one by one, re-checking liveness before each. A busy
+   * item stops; an item checked path by path skips just the busy path.
+   */
+  async #removePaths(ctx, item, entry) {
+    for (const target of item.action.paths) {
+      await ctx.liveness.refresh(true);
+      await ctx.liveness.resolve([target]);
+      const busy = ctx.liveness.busyReason({ ...item, paths: [target] });
+      if (busy) {
+        entry.reason = `stopped before ${target}: busy: ${busy}`;
+        return;
+      }
+      const usage = await ctx.env.usage(target);
+      const inUse =
+        item.checks?.perPath &&
+        (ctx.liveness.openInside([target]) ??
+          ctx.liveness.recentWrite(usage?.newestMtimeMs));
+      if (inUse) {
+        entry.skippedPaths.push({ path: target, reason: inUse });
+        continue;
+      }
+      await ctx.env.remove([target]);
+      entry.status = 'removed';
+      entry.deletedPaths.push(target);
+      entry.freedBytes += usage?.bytes ?? 0;
+      await this.options.onProgress?.(entry);
+    }
+    if (entry.deletedPaths.length === 0 && entry.skippedPaths.length > 0) {
+      entry.reason = 'every path was in use or recently written';
     }
   }
 

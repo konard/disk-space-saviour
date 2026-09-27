@@ -148,18 +148,37 @@ export class LivenessProbe {
   }
 
   /**
-   * First reason the item is busy, or null when it is idle.
+   * Paths of `paths` that a process holds open, with the reason.
+   * @param {string[]} paths
+   * @returns {Map<string, string>}
+   */
+  openPathsOf(paths) {
+    const open = new Map();
+    for (const target of paths) {
+      const reason = this.openInside([target]);
+      if (reason) {
+        open.set(target, reason);
+      }
+    }
+    return open;
+  }
+
+  /**
+   * First reason the item is busy, or null when it is idle. Items with
+   * `checks.perPath` leave open files to `openPathsOf`: the caller skips
+   * those paths and keeps the item.
    * @param {object} item
    */
   busyReason(item) {
     const checks = item.checks ?? {};
+    const paths = checks.perPath ? [] : (item.paths ?? []);
     return (
       (this.probeError
         ? 'cannot verify process and open-file activity'
         : null) ??
       (checks.mtime === false ? null : this.recentWrite(item.newestMtimeMs)) ??
       this.runningTool(checks.busy, checks.cwd) ??
-      this.openInside(item.paths ?? [])
+      this.openInside(paths)
     );
   }
 }

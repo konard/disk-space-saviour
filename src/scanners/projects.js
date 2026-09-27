@@ -242,35 +242,66 @@ async function projectItem(context, { candidate, rule }, usage, globs) {
   return item;
 }
 
+const RUST_PARTS = {
+  library: {
+    rule: 'cargo-superseded',
+    description: (part) =>
+      `superseded cargo artifacts (${part.removed} old units, ${part.kept} kept)`,
+    reason: 'older build hashes replaced by a newer build of the same unit',
+  },
+  leaf: {
+    rule: 'cargo-superseded-leaf',
+    description: (part) =>
+      `idle cargo incremental caches and superseded test/example binaries (${part.removed} old, ${part.kept} kept)`,
+    reason:
+      'nothing links against them; removable while cargo runs, files in use are skipped',
+  },
+};
+
+/**
+ * One item per part and profile. The library part is busy while cargo or
+ * rustc runs in the project. The leaf part ignores running tools and drops
+ * only the paths that a process holds open (`checks.perPath`).
+ */
 async function rustItems(context, targetItem, rule) {
-  const { env, options, now } = context;
+  const { env, liveness, options, now } = context;
   const items = [];
   for (const profile of await findRustProfiles(env, targetItem.path)) {
     const result = await analyzeRustProfile(env, profile, {
       staleAgeMs: options.staleAgeMs,
       now,
     });
-    if (result.entries.length === 0) {
-      continue;
+    for (const [name, spec] of Object.entries(RUST_PARTS)) {
+      const part = result[name];
+      const leaf = name === 'leaf';
+      const open = leaf
+        ? (liveness?.openPathsOf(part.entries.map((e) => e.path)) ?? new Map())
+        : new Map();
+      const entries = part.entries.filter((entry) => !open.has(entry.path));
+      if (entries.length === 0) {
+        continue;
+      }
+      const item = makeItem(env, {
+        rule: spec.rule,
+        kind: 'build',
+        ecosystem: 'rust',
+        description: spec.description(part),
+        path: profile,
+        paths: entries.map((entry) => entry.path),
+        bytes: entries.reduce((sum, entry) => sum + entry.bytes, 0),
+        newestMtimeMs: Math.max(...entries.map((entry) => entry.mtimeMs)),
+        project: targetItem.project,
+        tier: 'safe',
+        reason: spec.reason,
+        parentId: targetItem.id,
+        recheck: { type: 'rust', profile, part: name },
+        checks: leaf
+          ? { busy: [], cwd: targetItem.project, mtime: true, perPath: true }
+          : { busy: rule.busy, cwd: targetItem.project, mtime: true },
+      });
+      await addBlockers(context, item, false);
+      items.push(item);
     }
-    const item = makeItem(env, {
-      rule: 'cargo-superseded',
-      kind: 'build',
-      ecosystem: 'rust',
-      description: `superseded cargo artifacts (${result.removed} old units, ${result.kept} kept)`,
-      path: profile,
-      paths: result.entries.map((entry) => entry.path),
-      bytes: result.bytes,
-      newestMtimeMs: Math.max(...result.entries.map((e) => e.mtimeMs)),
-      project: targetItem.project,
-      tier: 'safe',
-      reason: 'older build hashes replaced by a newer build of the same unit',
-      parentId: targetItem.id,
-      recheck: { type: 'rust', profile },
-      checks: { busy: rule.busy, cwd: targetItem.project, mtime: true },
-    });
-    await addBlockers(context, item, false);
-    items.push(item);
   }
   return items;
 }
