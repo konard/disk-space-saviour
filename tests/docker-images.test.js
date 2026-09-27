@@ -102,6 +102,7 @@ describe('naming unused images', () => {
       expect(imageNamed([name], big)).toBe(false);
     }
     expect(imageNamed(undefined, big)).toBe(false);
+    expect(imageNamed([BIG], { ref: 'x:1', id: '' })).toBe(false);
   });
 
   it('refuses blanket consent for every unused image', () => {

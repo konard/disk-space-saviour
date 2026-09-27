@@ -34,6 +34,7 @@ export function imageNamed(names, image) {
       entry === image.ref ||
       `${entry}:latest` === image.ref ||
       (bare.length >= SHORT_ID &&
+        id.length >= SHORT_ID &&
         /^[0-9a-f]+$/i.test(bare) &&
         (id.startsWith(bare) || bare.startsWith(id)))
     );
