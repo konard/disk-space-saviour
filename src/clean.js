@@ -30,6 +30,7 @@ import { resolveOptions } from './options.js';
 import { isWithin } from './paths.js';
 import { OTHER_RULES } from './rules/other.js';
 import { compareVersions } from './rules/versions.js';
+import { analyzeRustProfile } from './scanners/rust.js';
 import { filterItems, revalidateReport } from './scan.js';
 
 const STOPPED = new Set(['exited', 'created', 'dead']);
@@ -226,6 +227,14 @@ export class Cleaner {
       return { item };
     }
     let paths = item.paths;
+    if (item.recheck?.type === 'rust') {
+      const current = await analyzeRustProfile(ctx.env, item.recheck.profile, {
+        staleAgeMs: this.options.staleAgeMs,
+        now: this.options.now(),
+      });
+      const still = new Set(current.entries.map((entry) => entry.path));
+      paths = paths.filter((target) => still.has(target));
+    }
     const usages = await ctx.env.usageMany(paths);
     paths = paths.filter((target) => usages.get(target));
     if (paths.length === 0) {

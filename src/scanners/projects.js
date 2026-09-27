@@ -7,14 +7,16 @@
  * every rule are searched again below, with the remaining depth, so a
  * non-matching `build` directory never hides real projects inside it.
  *
- * Cargo `target` directories stay intact: build timestamps do not prove that
- * a feature or profile variant can be deleted safely.
+ * Cargo `target` directories additionally yield `cargo-superseded` items:
+ * older build hashes that a newer build of the same unit replaced (see
+ * `rust.js`).
  */
 
 import { ECOSYSTEMS, PROJECT_RULES } from '../rules/ecosystems.js';
 import { block, makeItem } from '../items.js';
 import { isWithin, matchesGlob } from '../paths.js';
 import { listMany, olderThan, scanTimeBusy } from './common.js';
+import { analyzeRustProfile, findRustProfiles } from './rust.js';
 
 const ECOSYSTEM_NAMES = new Map(ECOSYSTEMS.map((e) => [e.id, e.name]));
 
@@ -240,6 +242,39 @@ async function projectItem(context, { candidate, rule }, usage, globs) {
   return item;
 }
 
+async function rustItems(context, targetItem, rule) {
+  const { env, options, now } = context;
+  const items = [];
+  for (const profile of await findRustProfiles(env, targetItem.path)) {
+    const result = await analyzeRustProfile(env, profile, {
+      staleAgeMs: options.staleAgeMs,
+      now,
+    });
+    if (result.entries.length === 0) {
+      continue;
+    }
+    const item = makeItem(env, {
+      rule: 'cargo-superseded',
+      kind: 'build',
+      ecosystem: 'rust',
+      description: `superseded cargo artifacts (${result.removed} old units, ${result.kept} kept)`,
+      path: profile,
+      paths: result.entries.map((entry) => entry.path),
+      bytes: result.bytes,
+      newestMtimeMs: Math.max(...result.entries.map((e) => e.mtimeMs)),
+      project: targetItem.project,
+      tier: 'safe',
+      reason: 'older build hashes replaced by a newer build of the same unit',
+      parentId: targetItem.id,
+      recheck: { type: 'rust', profile },
+      checks: { busy: rule.busy, cwd: targetItem.project, mtime: true },
+    });
+    await addBlockers(context, item, false);
+    items.push(item);
+  }
+  return items;
+}
+
 /**
  * Scans project trees below `context.options.roots`.
  * @returns {Promise<object[]>} report items
@@ -261,6 +296,9 @@ export async function scanProjects(context, { rules = PROJECT_RULES } = {}) {
     }
     const item = await projectItem(context, match, usage, globs);
     items.push(item);
+    if (match.rule.id === 'cargo-target') {
+      items.push(...(await rustItems(context, item, match.rule)));
+    }
   }
   return items;
 }

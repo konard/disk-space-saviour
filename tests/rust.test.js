@@ -168,7 +168,7 @@ describe('Rust pruning', () => {
     removeRoot(root);
   });
 
-  it('does not prune reusable feature variants in the safe tier', async () => {
+  it('scans and cleans only superseded artifacts in the safe tier', async () => {
     if (readOnlyRuntime()) {
       return;
     }
@@ -181,14 +181,40 @@ describe('Rust pruning', () => {
       scanInput(env, [root], { scanners: ['projects'], inactive: '30d' })
     );
     const item = report.items.find((i) => i.rule === 'cargo-superseded');
-    expect(item).toBe(undefined);
+    expect(item.tier).toBe('safe');
+    expect([...item.paths].sort()).toEqual(old.sort());
     const target = report.items.find((i) => i.rule === 'cargo-target');
     expect(target.tier).toBe('aggressive');
 
     const audit = await clean(report, { env, tier: 'safe', audit: false });
-    expect(audit.entries).toEqual([]);
-    expect(old.every((path) => existsSync(path))).toBe(true);
+    expect(audit.entries.map((e) => [e.rule, e.status])).toEqual([
+      ['cargo-superseded', 'removed'],
+    ]);
+    expect(old.some((path) => existsSync(path))).toBe(false);
     expect(kept.every((path) => existsSync(path))).toBe(true);
+    removeRoot(root);
+  });
+
+  // Fails if the rule is ever disconnected from the projects scanner.
+  it('reports superseded builds of an inactive project from a scan', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const root = tempRoot('dss-rust-regression-');
+    const { project, profile } = cargoProject(root);
+    const old = unit(profile, '1111111111111111', 3 * DAY_MS, 'serde');
+    unit(profile, '2222222222222222', 2 * DAY_MS, 'serde');
+    writeBlob(old[1], 5 * 1000 * 1000);
+    touch(old[1], 3 * DAY_MS);
+    age(join(project, 'Cargo.toml'), 40 * DAY_MS);
+    const report = await scan(
+      scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
+    );
+    const item = report.items.find((i) => i.rule === 'cargo-superseded');
+    expect(item?.tier).toBe('safe');
+    expect(item.path).toBe(profile);
+    expect([...item.paths].sort()).toEqual(old.sort());
+    expect(item.bytes >= 5 * 1000 * 1000).toBe(true);
     removeRoot(root);
   });
 });
