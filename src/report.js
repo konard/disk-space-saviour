@@ -123,6 +123,26 @@ function repoSummary(repo) {
   return `${repo.root}: ${parts.length > 0 ? parts.join(', ') : 'clean and pushed'}`;
 }
 
+/** Exit code, OOM flag, end time and task of a stopped container. */
+function endedLine(owner) {
+  if (!owner || owner.exitCode === null || owner.exitCode === undefined) {
+    return null;
+  }
+  const parts = [
+    `exit ${owner.exitCode}${owner.exitReason ? ` (${owner.exitReason})` : ''}`,
+  ];
+  if (owner.oomKilled) {
+    parts.push('OOM killed');
+  }
+  if (owner.finishedAt) {
+    parts.push(`ended ${owner.finishedAt}`);
+  }
+  if (owner.taskUrl) {
+    parts.push(`task ${owner.taskUrl}`);
+  }
+  return parts.join(', ');
+}
+
 function containerLines(container, stoppedItems) {
   const session = container.owner?.session
     ? `session ${container.owner.session}`
@@ -134,7 +154,14 @@ function containerLines(container, stoppedItems) {
   if (container.note) {
     lines.push(`      ${container.note}`);
   }
+  const ended = endedLine(container.owner);
+  if (ended) {
+    lines.push(`      ${ended}`);
+  }
   const item = stoppedItems.get(container.id);
+  if (item?.container?.investigation) {
+    lines.push(`      ${item.container.investigation}`);
+  }
   for (const repo of item?.container?.repos ?? []) {
     lines.push(`      git ${repoSummary(repo)}`);
   }

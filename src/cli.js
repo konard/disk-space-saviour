@@ -54,6 +54,8 @@ Consent:
   -y, --yes                  delete without asking (non-interactive use)
   --dry-run                  never delete, show the plan
   --remove-stopped-containers  allow docker rm of verified stopped containers
+  --remove-container ID|NAME  remove this stopped container, even one kept
+                             for investigation (repeat)
   --remove-unused-images     allow removal of unused tagged images
   --include-volumes          list unattached volumes for manual review
   --allow-dirty-repos        allow dirty host repositories (dangerous)
@@ -91,6 +93,7 @@ const OPTIONS = {
   yes: { type: 'boolean', short: 'y' },
   'dry-run': { type: 'boolean' },
   'remove-stopped-containers': { type: 'boolean' },
+  'remove-container': { type: 'string', multiple: true },
   'remove-unused-images': { type: 'boolean' },
   'include-volumes': { type: 'boolean' },
   'allow-dirty-repos': { type: 'boolean' },
@@ -163,6 +166,7 @@ export function toOptions(values, paths = []) {
     until: values.until,
     path: values.path,
     removeStoppedContainers: values['remove-stopped-containers'],
+    removeContainers: values['remove-container'],
     removeUnusedImages: values['remove-unused-images'],
     includeVolumes: values['include-volumes'],
     allowDirtyRepos: values['allow-dirty-repos'],

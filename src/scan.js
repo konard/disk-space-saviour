@@ -43,6 +43,7 @@ const RESCAN_OPTIONS = new Set([
   'exclude',
   'includeVolumes',
   'removeStoppedContainers',
+  'removeContainers',
   'removeUnusedImages',
   'allowDirtyRepos',
   'allowDirtyContainers',

@@ -145,12 +145,18 @@ three kinds of Docker data:
   scanned and cleaned from the inside through `docker exec`, with the same
   rules and liveness checks as the host.
 - **Stopped containers** are listed with their size, image, command, owner
-  session (from labels and environment) and the Git state of repositories
-  in their writable layer. The layer is copied out with `docker cp` and
-  checked with Git. A container is removed only with
+  session (`HIVE_MIND_PARENT_SESSION_ID` and other session labels or
+  environment variables, else a session id in the container name), task
+  URL, exit code and reason, OOM flag and end time, and the Git state of
+  repositories in their writable layer. The layer is copied out with
+  `docker cp` and checked with Git. A container is removed only with
   `--remove-stopped-containers` or after an interactive yes per container,
   and only when its Git state is clean. Before `docker rm`, its logs and
   `docker inspect` output are saved to `--backup-dir`.
+- **Containers kept for investigation** (a non-zero exit code or OOM
+  killed) are never removed by a tier or by `--remove-stopped-containers`,
+  in emergency mode too. Name each one with `--remove-container ID|NAME`
+  (a full name, or an id prefix of at least 12 characters) to remove it.
 
 `--recursive` follows Docker-in-Docker: a container that runs its own daemon
 is scanned as a new environment, down to `--depth` levels (default 3). The

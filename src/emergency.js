@@ -8,7 +8,8 @@
  *
  * Within a tier, caches inside containers and on the host go first, Docker
  * objects next, and stopped containers last, and those only with operator
- * approval (`removeStoppedContainers` or an interactive yes).
+ * approval (`removeStoppedContainers` or an interactive yes). A container
+ * kept for investigation needs its own `removeContainers` entry.
  */
 
 import { startAudit, writeAudit } from './audit.js';

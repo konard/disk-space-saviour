@@ -21,7 +21,9 @@ import { backupDirectory, startAudit, writeAudit } from './audit.js';
 import { DockerCli, assertAllowed, parseDockerSize } from './docker/cli.js';
 import {
   containerGitState,
+  containerNamed,
   gitBlockersForRemoval,
+  investigationBlocker,
   runningBindMounts,
 } from './docker/containers.js';
 import { resolveEnvironment } from './env/resolve.js';
@@ -481,6 +483,16 @@ export class Cleaner {
       entry.reason = 'container ran again since the scan, scan again first';
       return;
     }
+    const kept = investigationBlocker(
+      inspected.State,
+      containerId,
+      name,
+      this.options
+    );
+    if (kept) {
+      entry.reason = kept;
+      return;
+    }
     const git = await containerGitState(docker, containerId);
     const blockers = gitBlockersForRemoval(git, containerId, this.options);
     if (blockers.length > 0) {
@@ -581,22 +593,33 @@ export function wantedItems(report, options) {
   const approved = options.approvedIds ? new Set(options.approvedIds) : null;
   return filterItems(report.items, { ...options, minSizeBytes: 0 }, [], path)
     .filter((item) => !approved || approved.has(item.id))
-    .map((item) => {
-      if (
-        item.action?.type !== 'docker-rm' ||
-        !options.allowDirtyContainers?.includes(item.action.containerId)
-      ) {
-        return item;
-      }
-      return {
-        ...item,
-        blockers: item.blockers.filter(
-          (reason) =>
-            !item.container?.gitBlockers?.includes(reason) ||
-            !/^Git repository .+ has /.test(reason)
-        ),
-      };
-    });
+    .map((item) =>
+      item.action?.type === 'docker-rm' ? containerConsent(item, options) : item
+    );
+}
+
+/**
+ * Applies per-container consent: `--remove-container` approves the removal
+ * of that container and lifts its investigation hold, an exact
+ * `--allow-dirty-container` id waives its verified Git work.
+ */
+function containerConsent(item, options) {
+  const { containerId, name } = item.action;
+  const named = containerNamed(options.removeContainers, containerId, name);
+  const dirtyAllowed = options.allowDirtyContainers?.includes(containerId);
+  if (!named && !dirtyAllowed) {
+    return item;
+  }
+  const lifted = (reason) =>
+    (named && reason === item.container?.investigation) ||
+    (dirtyAllowed &&
+      item.container?.gitBlockers?.includes(reason) &&
+      /^Git repository .+ has /.test(reason));
+  return {
+    ...item,
+    requiresConfirmation: named ? null : item.requiresConfirmation,
+    blockers: item.blockers.filter((reason) => !lifted(reason)),
+  };
 }
 
 /**
@@ -611,6 +634,7 @@ export function planItems(report, options) {
 /** Options that only the cleaning run itself may grant. */
 export const CONFIRMATION_FLAGS = [
   'removeStoppedContainers',
+  'removeContainers',
   'removeUnusedImages',
   'includeVolumes',
   'allowDirtyRepos',

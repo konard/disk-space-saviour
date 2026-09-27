@@ -9,9 +9,11 @@
  * - running containers are never stopped, restarted or removed: their
  *   filesystems are scanned through `docker exec` with the same rules as
  *   the host, and a Docker CLI inside them is followed (Docker-in-Docker);
- * - stopped containers are reported with their size, owner session and the
- *   Git state of repositories in their writable layer, and are removed only
- *   with `removeStoppedContainers` (after a logs backup, at clean time);
+ * - stopped containers are reported with their size, owner session, task,
+ *   exit code and the Git state of repositories in their writable layer,
+ *   and are removed only with `removeStoppedContainers` (after a logs
+ *   backup, at clean time). A container that failed or was OOM killed is
+ *   kept for investigation until it is named in `removeContainers`;
  * - image layer hints (report only).
  *
  * The same daemon reached twice (a mounted socket) is scanned once.
@@ -23,7 +25,9 @@ import { block, makeItem } from '../items.js';
 import { DockerCli, parseDockerSize } from './cli.js';
 import {
   containerGitState,
+  containerNamed,
   gitBlockersForRemoval,
+  investigationBlocker,
   isHostBindSource,
   ownerOf,
 } from './containers.js';
@@ -204,6 +208,12 @@ async function imageHints(docker, verbose) {
 async function stoppedItem(daemon, ps, inspected, options) {
   const sizes = containerSizes(ps.Size);
   const owner = ownerOf(ps, inspected);
+  const kept = investigationBlocker(
+    inspected?.State,
+    ps.ID,
+    owner.name,
+    options
+  );
   const item = makeItem(daemon.env, {
     rule: 'docker-stopped-container',
     kind: 'container',
@@ -214,7 +224,13 @@ async function stoppedItem(daemon, ps, inspected, options) {
     tier: 'moderate',
     reason: 'stopped container, its writable layer is deleted by `docker rm`',
     requiresConfirmation: 'removeStoppedContainers',
-    container: { id: ps.ID, name: owner.name, state: ps.State, owner },
+    container: {
+      id: ps.ID,
+      name: owner.name,
+      state: ps.State,
+      owner,
+      investigation: kept,
+    },
     action: {
       type: 'docker-rm',
       containerId: ps.ID,
@@ -224,7 +240,13 @@ async function stoppedItem(daemon, ps, inspected, options) {
     },
     checks: { busy: [], cwd: null, mtime: false },
   });
-  if (options.removeStoppedContainers) {
+  if (kept) {
+    block(item, kept);
+  }
+  if (
+    options.removeStoppedContainers ||
+    containerNamed(options.removeContainers, ps.ID, owner.name)
+  ) {
     const git = await containerGitState(daemon.docker, ps.ID);
     item.container.repos = git.repos;
     item.container.gitBlockers = git.blockers;

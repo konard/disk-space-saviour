@@ -34,6 +34,11 @@ export interface ScanOptions {
   exclude?: string[] | string;
   includeVolumes?: boolean;
   removeStoppedContainers?: boolean;
+  /**
+   * Stopped containers (name, id or id prefix of 12+ characters) the
+   * operator approves one by one, including ones kept for investigation.
+   */
+  removeContainers?: string[] | string;
   removeUnusedImages?: boolean;
   allowDirtyRepos?: boolean;
   /** Exact container ids whose verified Git changes may be removed. */
