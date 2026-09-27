@@ -15,7 +15,7 @@ import {
   readFileSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import { clean } from '../src/clean.js';
 import { parseProcStat } from '../src/env/local.js';
@@ -83,7 +83,7 @@ describe('process start times', () => {
     const own = processes.find((entry) => entry.pid === process.pid);
     const stat = parseProcStat(readFileSync('/proc/self/stat', 'utf8'));
     expect(own.startTime).toBe(stat.startTime);
-    expect(own.aliases).toContain('node');
+    expect(own.aliases).toContain(basename(process.execPath));
   });
 });
 
