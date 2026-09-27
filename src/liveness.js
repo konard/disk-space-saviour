@@ -31,7 +31,7 @@ function nameMatches(name, candidate) {
  * `MainThread`), processes carry `aliases`: the executable and `argv[0]`
  * base names.
  */
-function matchingName(proc, names) {
+export function matchingName(proc, names) {
   const own = [proc.name ?? '', ...(proc.aliases ?? [])];
   for (const name of own) {
     if (name && names.some((candidate) => nameMatches(name, candidate))) {
@@ -69,12 +69,18 @@ export class LivenessProbe {
       return;
     }
     const processes = await this.env.processes().catch(() => null);
+    this.listed = processes !== null;
     this.processes = processes ?? [];
     this.openPaths = await this.env.openPaths().catch(() => null);
     this.probeError =
       (processes === null || this.openPaths === null) &&
       (this.env.platform === 'linux' || this.env.platform === 'darwin');
     this.refreshedAt = this.now();
+  }
+
+  /** Processes of the last refresh, or null when they could not be listed. */
+  processList() {
+    return this.listed ? this.processes : null;
   }
 
   /**

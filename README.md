@@ -117,6 +117,14 @@ reports, core dumps and journald logs.
   hours that a newer build replaced. Nothing links against them, so this
   part stays eligible while cargo runs; each file a process runs or holds
   open is skipped.
+- **Running tasks must survive.** Before its first deletion in an
+  environment (the host or a container), `clean` records PID 1, agents
+  (`claude`, `codex`, `solve`, ...) and build tools (`cargo`, `gradle`,
+  ...) with their start times. It checks them again after every removed
+  path and item. If one is gone or its PID was reused, cleaning in that
+  environment stops at once, and the audit log and summary say which
+  process was lost. A build that simply finishes during the cleanup also
+  stops it: an exit cannot be told apart from a crash.
 - **Git awareness.** A project or container is not touched while it has
   uncommitted changes, unpushed commits or stashes. The blocker is shown in
   the report. Stopped containers with Git work require an exact

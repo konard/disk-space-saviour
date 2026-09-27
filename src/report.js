@@ -242,6 +242,22 @@ function environmentLines(environments) {
   );
 }
 
+/**
+ * Whether the watched long-running processes survived, per environment.
+ */
+function healthLines(records) {
+  const lines = (records ?? []).map((record) => {
+    if (record.stopped) {
+      return `  ${record.envLabel}: STOPPED cleaning: ${record.stopped}`;
+    }
+    if (!record.available) {
+      return `  ${record.envLabel}: processes could not be listed`;
+    }
+    return `  ${record.envLabel}: ${record.watched.length} watched processes still running`;
+  });
+  return lines.length > 0 ? ['', 'Task health:', ...lines] : [];
+}
+
 function emergencyLines(audit) {
   if (audit.command !== 'emergency') {
     return [];
@@ -289,6 +305,7 @@ export function formatAudit(audit, options = {}) {
     lines.push(`  ${hidden} skipped (use --verbose to list them)`);
   }
   lines.push('', 'Per environment:', ...environmentLines(audit.environments));
+  lines.push(...healthLines(audit.health));
   lines.push(
     '',
     audit.dryRun

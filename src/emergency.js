@@ -116,6 +116,7 @@ async function escalate({ report, options, env, target, goal, audit }) {
     env,
     onProgress: persistProgress,
   });
+  audit.health = cleaner.health.records;
   const done = new Set();
   const targetDevice = await env.deviceId?.(target);
   const scoped = await Promise.all(

@@ -44,7 +44,8 @@ for p in /proc/[0-9]*; do
   e=$(readlink "$p/exe" 2>/dev/null)
   a=$(tr '\\000' '\\n' < "$p/cmdline" 2>/dev/null | head -n 1)
   w=$(readlink "$p/cwd" 2>/dev/null)
-  printf '%s|%s|%s|%s|%s\\n' "\${p#/proc/}" "$c" "$e" "$a" "$w"
+  t=$(sed 's/.*) //' "$p/stat" 2>/dev/null | cut -d' ' -f1,20)
+  printf '%s|%s|%s|%s|%s|%s\\n' "\${p#/proc/}" "$t" "$c" "$e" "$a" "$w"
 done`;
 
 const OPEN_PATHS_SCRIPT = `failed=0
@@ -389,13 +390,16 @@ export class ShellEnv {
     }
     const [selfPid, ...lines] = result.stdout.split('\n');
     return lines
-      .map((line) => /^(\d+)\|([^|]*)\|([^|]*)\|([^|]*)\|(.*)$/.exec(line))
-      .filter(Boolean)
+      .map((line) =>
+        /^(\d+)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|(.*)$/.exec(line)
+      )
+      .filter((m) => m && !m[2].startsWith('Z '))
       .map((m) => ({
         pid: Number(m[1]),
-        name: m[2],
-        aliases: processAliases(m[3], m[4]),
-        cwd: m[5] || null,
+        startTime: m[2].split(' ')[1] || null,
+        name: m[3],
+        aliases: processAliases(m[4], m[5]),
+        cwd: m[6] || null,
       }))
       .filter((proc) => String(proc.pid) !== selfPid.trim());
   }

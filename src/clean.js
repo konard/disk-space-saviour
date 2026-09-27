@@ -7,7 +7,9 @@
  * re-derives which hashes are superseded. Stopped containers are
  * re-inspected (still stopped, not restarted since the scan, Git state
  * still clean) and their logs and inspect data are saved before a plain
- * `docker rm`. Every decision lands in the audit log.
+ * `docker rm`. Long-running processes of each environment are watched
+ * across the cleanup (see ./health.js). Every decision lands in the audit
+ * log.
  */
 
 import { once } from 'node:events';
@@ -24,6 +26,7 @@ import {
 } from './docker/containers.js';
 import { resolveEnvironment } from './env/resolve.js';
 import { GitInspector } from './git.js';
+import { HealthWatch } from './health.js';
 import { dropNested, selectByTier, tierRank } from './items.js';
 import { LivenessProbe } from './liveness.js';
 import { resolveOptions } from './options.js';
@@ -130,6 +133,7 @@ export class Cleaner {
     this.report = report;
     this.options = options;
     this.contexts = new Map();
+    this.health = new HealthWatch();
     this.descriptors = new Map(
       (report.environments ?? []).map((env) => [env.id, env])
     );
@@ -176,6 +180,11 @@ export class Cleaner {
   }
 
   async #process(item, entry) {
+    const stopped = this.health.stopReason(item);
+    if (stopped) {
+      entry.reason = stopped;
+      return;
+    }
     if (item.blockers.length > 0) {
       entry.reason = item.blockers.join('; ');
       return;
@@ -198,7 +207,12 @@ export class Cleaner {
       entry.status = 'planned';
       return;
     }
+    await this.health.baseline(ctx.env, item);
     await this.#execute(ctx, fresh.item, entry);
+    const lost = await this.health.check(ctx.env, item);
+    if (lost && !entry.reason) {
+      entry.reason = lost;
+    }
   }
 
   async #confirmed(item) {
@@ -380,6 +394,11 @@ export class Cleaner {
   async #removePaths(ctx, item, entry) {
     for (const target of item.action.paths) {
       await ctx.liveness.refresh(true);
+      const stopped = this.health.verify(item, ctx.liveness.processList());
+      if (stopped) {
+        entry.reason = `stopped before ${target}: ${stopped}`;
+        return;
+      }
       await ctx.liveness.resolve([target]);
       const busy = ctx.liveness.busyReason({ ...item, paths: [target] });
       if (busy) {
@@ -637,6 +656,7 @@ export async function clean(report, input = {}) {
     ...options,
     onProgress: persistProgress,
   });
+  audit.health = cleaner.health.records;
   if (options.audit !== false) {
     await writeAudit(audit, { ...options, inProgress: true });
   }
