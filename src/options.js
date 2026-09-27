@@ -22,7 +22,7 @@ export const DEFAULTS = {
   includeVolumes: false,
   removeStoppedContainers: false,
   removeContainers: [],
-  removeUnusedImages: false,
+  removeImages: [],
   allowDirtyRepos: false,
   allowDirtyContainers: [],
   noNative: false,
@@ -57,6 +57,11 @@ function toList(value) {
  * @returns {object}
  */
 export function resolveOptions(input = {}) {
+  if (input.removeUnusedImages) {
+    throw new Error(
+      '--remove-unused-images is not supported: approve each image with --remove-image REF'
+    );
+  }
   const merged = { ...DEFAULTS };
   for (const [key, value] of Object.entries(input)) {
     if (value !== undefined) {
@@ -77,6 +82,7 @@ export function resolveOptions(input = {}) {
     containerFilter: toList(merged.containers),
     allowDirtyContainers: toList(merged.allowDirtyContainers),
     removeContainers: toList(merged.removeContainers),
+    removeImages: toList(merged.removeImages),
     scanners: toList(merged.scanners),
     only: toList(merged.only),
     exclude: toList(merged.exclude),

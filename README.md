@@ -81,11 +81,11 @@ Run `dss --help` for every option. The most useful ones:
 Tiers are cumulative: `moderate` includes `safe`, and `aggressive` includes
 both.
 
-| Tier         | What it removes                                                                                                                                                                                                                                                                     |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `safe`       | Download caches (npm, pnpm, yarn, pip, uv, Cargo registry, Gradle, Go, NuGet, and many more), dangling Docker images and build cache. Includes these caches inside running containers.                                                                                              |
-| `moderate`   | Whole `node_modules`, `target/`, `.venv`, `build/` and similar folders of projects inactive for `--inactive` (30 days); toolchain versions nothing uses; unused tagged images (`--remove-unused-images`); stopped containers (`--remove-stopped-containers` or an interactive yes). |
-| `aggressive` | For emergencies: everything regenerable, including build outputs of projects in active use. Only `dss emergency` reaches it.                                                                                                                                                        |
+| Tier         | What it removes                                                                                                                                                                                                                                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `safe`       | Download caches (npm, pnpm, yarn, pip, uv, Cargo registry, Gradle, Go, NuGet, and many more), dangling Docker images and build cache. Includes these caches inside running containers.                                                                                                                                  |
+| `moderate`   | Whole `node_modules`, `target/`, `.venv`, `build/` and similar folders of projects inactive for `--inactive` (30 days); toolchain versions nothing uses; unused tagged images, each one only with `--remove-image REF` or an interactive yes; stopped containers (`--remove-stopped-containers` or an interactive yes). |
+| `aggressive` | For emergencies: everything regenerable, including build outputs of projects in active use. Only `dss emergency` reaches it.                                                                                                                                                                                            |
 
 Covered ecosystems: JavaScript/TypeScript (npm, yarn, pnpm, bun, deno,
 framework build caches), Python, Rust, JVM (Gradle, Maven, Kotlin, Android),
@@ -138,9 +138,15 @@ reports, core dumps and journald logs.
 With `--docker`, or automatically when a daemon is reachable, `dss` handles
 three kinds of Docker data:
 
-- **Daemon data:** `docker system df`, dangling images, build cache, and
-  optionally unused images. `--include-volumes` lists unattached volumes
-  for manual inspection; it does not delete them.
+- **Daemon data:** `docker system df`, dangling images and build cache.
+  `--include-volumes` lists unattached volumes for manual inspection; it
+  does not delete them.
+- **Unused tagged images** are listed with their size, creation date and
+  the container that used them last (from the `docker inspect` backups
+  of containers dss removed), when known. No tier removes them, emergency
+  mode included: approve each one with `--remove-image REF` (`repo:tag`,
+  `repo` for `:latest`, or an id prefix of at least 12 characters) or an
+  interactive yes for that image.
 - **Running containers** are never stopped, restarted or removed. They are
   scanned and cleaned from the inside through `docker exec`, with the same
   rules and liveness checks as the host.

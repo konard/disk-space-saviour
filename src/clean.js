@@ -26,10 +26,11 @@ import {
   investigationBlocker,
   runningBindMounts,
 } from './docker/containers.js';
+import { imageNamed } from './docker/images.js';
 import { resolveEnvironment } from './env/resolve.js';
 import { GitInspector } from './git.js';
 import { HealthWatch } from './health.js';
-import { dropNested, selectByTier, tierRank } from './items.js';
+import { consentFlag, dropNested, selectByTier, tierRank } from './items.js';
 import { LivenessProbe } from './liveness.js';
 import { resolveOptions } from './options.js';
 import { isWithin } from './paths.js';
@@ -61,10 +62,6 @@ export function cleanOrder(a, b) {
     rank(a) - rank(b) ||
     b.bytes - a.bytes
   );
-}
-
-function flagName(key) {
-  return `--${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
 }
 
 function sumBytes(usages, paths = [...usages.keys()]) {
@@ -192,7 +189,7 @@ export class Cleaner {
       return;
     }
     if (!(await this.#confirmed(item))) {
-      entry.reason = `needs ${flagName(item.requiresConfirmation)} or an interactive yes`;
+      entry.reason = `needs ${consentFlag(item)} or an interactive yes`;
       return;
     }
     const ctx = this.context(item.env);
@@ -219,7 +216,7 @@ export class Cleaner {
 
   async #confirmed(item) {
     const flag = item.requiresConfirmation;
-    if (!flag || this.options[flag]) {
+    if (!flag || this.options[flag] === true) {
       return true;
     }
     return this.options.confirm
@@ -593,9 +590,14 @@ export function wantedItems(report, options) {
   const approved = options.approvedIds ? new Set(options.approvedIds) : null;
   return filterItems(report.items, { ...options, minSizeBytes: 0 }, [], path)
     .filter((item) => !approved || approved.has(item.id))
-    .map((item) =>
-      item.action?.type === 'docker-rm' ? containerConsent(item, options) : item
-    );
+    .map((item) => {
+      if (item.action?.type === 'docker-rm') {
+        return containerConsent(item, options);
+      }
+      return item.image && imageNamed(options.removeImages, item.image)
+        ? { ...item, requiresConfirmation: null }
+        : item;
+    });
 }
 
 /**
@@ -635,7 +637,7 @@ export function planItems(report, options) {
 export const CONFIRMATION_FLAGS = [
   'removeStoppedContainers',
   'removeContainers',
-  'removeUnusedImages',
+  'removeImages',
   'includeVolumes',
   'allowDirtyRepos',
   'allowDirtyContainers',

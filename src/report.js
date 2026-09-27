@@ -3,7 +3,7 @@
  * (`--json`) are the report and audit objects themselves.
  */
 
-import { TIERS } from './items.js';
+import { TIERS, consentFlag } from './items.js';
 import { formatBytes } from './units.js';
 
 const DEFAULT_LIMIT = 25;
@@ -49,13 +49,9 @@ function itemLocation(item) {
 function itemLine(item, showEnv) {
   const env = showEnv ? `[${item.envLabel}] ` : '';
   const confirm = item.requiresConfirmation
-    ? `  (needs --${kebab(item.requiresConfirmation)})`
+    ? `  (needs ${consentFlag(item)})`
     : '';
   return `  ${pad(formatBytes(item.bytes), 10)}  ${env}${item.rule}  ${itemLocation(item)}${confirm}`;
-}
-
-function kebab(name) {
-  return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
 function limited(lines, limit) {
@@ -168,6 +164,34 @@ function containerLines(container, stoppedItems) {
   return lines;
 }
 
+function lastUseText(user) {
+  if (!user) {
+    return 'last use unknown';
+  }
+  const details = [
+    user.session && `session ${user.session}`,
+    user.taskUrl && `task ${user.taskUrl}`,
+    user.finishedAt && `ended ${user.finishedAt}`,
+  ].filter(Boolean);
+  const more = details.length > 0 ? ` (${details.join(', ')})` : '';
+  return `last used by container ${user.container}${more}`;
+}
+
+/** Size, creation date, last user and the flag of an unused image. */
+function imageLine(item) {
+  const { image } = item;
+  const created = image.createdAt ? `created ${image.createdAt}, ` : '';
+  const consent = item.requiresConfirmation
+    ? `, needs ${consentFlag(item)}`
+    : '';
+  return `  image ${image.ref} (${String(image.id)
+    .replace(/^sha256:/, '')
+    .slice(
+      0,
+      12
+    )}) unused, ${formatBytes(image.bytes)}, ${created}${lastUseText(image.lastUsedBy)}${consent}`;
+}
+
 function dockerSection(report) {
   const docker = report.docker;
   if (!docker || docker.daemons.length === 0) {
@@ -186,6 +210,9 @@ function dockerSection(report) {
   }
   for (const container of docker.containers) {
     lines.push(...containerLines(container, stoppedItems));
+  }
+  for (const item of report.items.filter((entry) => entry.image)) {
+    lines.push(imageLine(item));
   }
   for (const hint of docker.hints ?? []) {
     lines.push(

@@ -56,7 +56,8 @@ Consent:
   --remove-stopped-containers  allow docker rm of verified stopped containers
   --remove-container ID|NAME  remove this stopped container, even one kept
                              for investigation (repeat)
-  --remove-unused-images     allow removal of unused tagged images
+  --remove-image REF         remove this unused image (repo:tag or id;
+                             repeat), never implied by a tier
   --include-volumes          list unattached volumes for manual review
   --allow-dirty-repos        allow dirty host repositories (dangerous)
   --allow-dirty-container ID  override verified Git work in this container
@@ -94,6 +95,7 @@ const OPTIONS = {
   'dry-run': { type: 'boolean' },
   'remove-stopped-containers': { type: 'boolean' },
   'remove-container': { type: 'string', multiple: true },
+  'remove-image': { type: 'string', multiple: true },
   'remove-unused-images': { type: 'boolean' },
   'include-volumes': { type: 'boolean' },
   'allow-dirty-repos': { type: 'boolean' },
@@ -167,7 +169,7 @@ export function toOptions(values, paths = []) {
     path: values.path,
     removeStoppedContainers: values['remove-stopped-containers'],
     removeContainers: values['remove-container'],
-    removeUnusedImages: values['remove-unused-images'],
+    removeImages: values['remove-image'],
     includeVolumes: values['include-volumes'],
     allowDirtyRepos: values['allow-dirty-repos'],
     allowDirtyContainers: values['allow-dirty-container'],
@@ -194,6 +196,11 @@ export function parseCli(argv) {
     throw new UsageError(error.message);
   }
   const { values, positionals } = parsed;
+  if (values['remove-unused-images']) {
+    throw new UsageError(
+      '--remove-unused-images is not supported: approve each image with --remove-image REF'
+    );
+  }
   let [command = 'help', ...rest] = positionals;
   if (values.version) {
     command = 'version';

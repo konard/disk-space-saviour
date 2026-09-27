@@ -53,6 +53,21 @@ export function makeItem(env, fields) {
 }
 
 /**
+ * The option that approves an item, as a command-line flag. An unused image
+ * is approved one at a time with `--remove-image REF`.
+ */
+export function consentFlag(item) {
+  if (item.requiresConfirmation === 'removeImages' && item.image) {
+    return `--remove-image ${item.image.ref}`;
+  }
+  const kebab = item.requiresConfirmation.replace(
+    /[A-Z]/g,
+    (letter) => `-${letter.toLowerCase()}`
+  );
+  return `--${kebab}`;
+}
+
+/**
  * Adds a blocker reason to an item (idempotent).
  */
 export function block(item, reason) {

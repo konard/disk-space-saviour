@@ -138,6 +138,7 @@ export class FakeDockerWorld {
       cp: () => fail('Could not find the file in the container'),
       history: () => ok(''),
       rm: () => this.#remove(daemon, name, args),
+      image: () => this.#image(daemon, sub, args),
       builder: () => {
         daemon.buildCache = '0B';
         return ok('Total reclaimed space: 2GB\n');
@@ -168,6 +169,19 @@ export class FakeDockerWorld {
         Reclaimable: daemon.buildCache ?? '0B',
       })
     );
+  }
+
+  #image(daemon, sub, args) {
+    if (sub !== 'rm') {
+      return fail(`unsupported: docker image ${sub}`);
+    }
+    const images = daemon.images ?? [];
+    const image = images.find((entry) => entry.ID === args[2]);
+    if (!image) {
+      return fail(`No such image: ${args[2]}`);
+    }
+    images.splice(images.indexOf(image), 1);
+    return ok(`Deleted: sha256:${image.ID}\n`);
   }
 
   #remove(daemon, name, args) {
@@ -255,6 +269,8 @@ export function fakeHostEnv(world) {
     executor,
     run: (argv, options) => executor.run(argv, options),
     which: (command) => Promise.resolve(command === 'docker'),
+    processes: () => Promise.resolve([]),
+    openPaths: () => Promise.resolve(new Set()),
   };
 }
 
