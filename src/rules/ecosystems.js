@@ -88,6 +88,17 @@ export const ECOSYSTEMS = [
         paths: ['~/.cache/node-gyp', '~/Library/Caches/node-gyp'],
         busy: ['node-gyp', 'npm'],
       },
+      {
+        id: 'typescript-types-cache',
+        description:
+          'TypeScript automatic type acquisition cache (editor @types downloads)',
+        paths: [
+          '~/.cache/typescript',
+          '~/Library/Caches/typescript',
+          '{LOCALAPPDATA}/Microsoft/TypeScript',
+        ],
+        busy: ['npm'],
+      },
     ],
     projects: [
       {
@@ -246,6 +257,16 @@ export const ECOSYSTEMS = [
           '{LOCALAPPDATA}/Mozilla/sccache',
         ],
         busy: ['sccache', ...RUST_BUSY],
+      },
+      {
+        id: 'rust-script-cache',
+        description: 'rust-script compiled scripts and generated projects',
+        paths: [
+          '~/.cache/rust-script',
+          '~/Library/Caches/rust-script',
+          '{LOCALAPPDATA}/rust-script',
+        ],
+        busy: ['rust-script', ...RUST_BUSY],
       },
     ],
     projects: [
