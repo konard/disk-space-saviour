@@ -180,9 +180,12 @@ async function getVersion(source = 'local') {
  * would land on main unnoticed and fail only after the tag exists.
  */
 async function checkStagedFormatting() {
-  const stagedResult = await $`git diff --cached --name-only`.run({
-    capture: true,
-  });
+  // Deleted paths (the changesets `changeset version` consumed) no longer
+  // exist, and prettier fails on a path it cannot find.
+  const stagedResult =
+    await $`git diff --cached --name-only --diff-filter=d`.run({
+      capture: true,
+    });
   const formattable = stagedResult.stdout
     .split('\n')
     .map((file) => file.trim())

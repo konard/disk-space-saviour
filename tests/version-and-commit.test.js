@@ -24,6 +24,10 @@ describe('version-and-commit.mjs formats the release commit', () => {
     expect(script).toContain('/\\.(m?js|json|md|ts)$/');
   });
 
+  it('leaves deleted staged files, such as consumed changesets, out of the check', () => {
+    expect(script).toContain('git diff --cached --name-only --diff-filter=d');
+  });
+
   it('skips the check when nothing formattable is staged', () => {
     expect(script).toContain('formattable.length > 0');
   });
