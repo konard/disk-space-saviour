@@ -25,8 +25,8 @@ describe('publishable package metadata', () => {
 
   it('defines globally installable dss and disk-space-saviour commands', () => {
     expect(packageJson.bin).toEqual({
-      dss: './bin/dss.js',
-      'disk-space-saviour': './bin/dss.js',
+      dss: 'bin/dss.js',
+      'disk-space-saviour': 'bin/dss.js',
     });
     expect(existsSync('bin/dss.js')).toBe(true);
   });
