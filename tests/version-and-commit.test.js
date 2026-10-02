@@ -15,6 +15,7 @@ import {
   formattableFiles,
   STAGED_FILES_ARGS,
 } from '../scripts/staged-formattable.mjs';
+import { readOnlyRuntime } from './helpers/fixtures.js';
 
 const prettierBin = createRequire(import.meta.url).resolve(
   'prettier/bin/prettier.cjs'
@@ -51,6 +52,9 @@ describe('version-and-commit.mjs formats the release commit', () => {
   it('leaves consumed changesets out of the check, so prettier passes', () => {
     // Regression for #7: prettier failed with "No files matching the pattern
     // were found" on the changesets `changeset version` had deleted.
+    if (readOnlyRuntime()) {
+      return;
+    }
     const repo = mkdtempSync(join(tmpdir(), 'dss-release-'));
     const git = (...args) =>
       execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
