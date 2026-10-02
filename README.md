@@ -148,7 +148,9 @@ three kinds of Docker data:
   of containers dss removed), when known. No tier removes them, emergency
   mode included: approve each one with `--remove-image REF` (`repo:tag`,
   `repo` for `:latest`, or an id prefix of at least 12 characters) or an
-  interactive yes for that image.
+  interactive yes for that image. The summary line counts them, and
+  stopped containers that need consent, as `needs explicit consent`, so
+  the tier totals match what `clean --tier … --yes` removes.
 - **Running containers** are never stopped, restarted or removed. They are
   scanned and cleaned from the inside through `docker exec`, with the same
   rules and liveness checks as the host.

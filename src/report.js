@@ -216,7 +216,7 @@ function dockerSection(report) {
   }
   for (const hint of docker.hints ?? []) {
     lines.push(
-      `  hint ${hint.image}: ${formatBytes(hint.bytes)} layer, ${hint.hint}`
+      `  hint ${(hint.images ?? [hint.image]).join(', ')}: ${formatBytes(hint.bytes)} layer, ${hint.hint}`
     );
   }
   for (const volume of docker.volumes ?? []) {
@@ -231,9 +231,12 @@ function totalsSection(report) {
   const parts = TIERS.map(
     (tier) => `${tier} ${formatBytes(report.totals[tier].bytes)}`
   );
+  const consent = report.totals.consent?.bytes
+    ? `; needs explicit consent ${formatBytes(report.totals.consent.bytes)}`
+    : '';
   return [
     '',
-    `Reclaimable (cumulative): ${parts.join(' · ')}; blocked ${formatBytes(report.totals.blocked.bytes)}`,
+    `Reclaimable (cumulative): ${parts.join(' · ')}${consent}; blocked ${formatBytes(report.totals.blocked.bytes)}`,
   ];
 }
 

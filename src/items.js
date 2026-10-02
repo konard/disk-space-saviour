@@ -84,13 +84,22 @@ export function block(item, reason) {
  */
 export function tierTotals(items) {
   const totals = {};
+  // A tier total is what `clean --tier <tier> --yes` removes: items that
+  // need a per-object flag or an interactive yes are counted apart.
+  const sum = (selected) => ({
+    items: selected.length,
+    bytes: selected.reduce((total, item) => total + item.bytes, 0),
+  });
   for (const tier of TIERS) {
-    const selected = selectByTier(items, tier);
-    totals[tier] = {
-      items: selected.length,
-      bytes: selected.reduce((sum, item) => sum + item.bytes, 0),
-    };
+    totals[tier] = sum(
+      selectByTier(items, tier, (item) => !item.requiresConfirmation)
+    );
   }
+  totals.consent = sum(
+    selectByTier(items, 'aggressive', (item) =>
+      Boolean(item.requiresConfirmation)
+    )
+  );
   totals.blocked = {
     items: items.filter((item) => item.blockers.length > 0).length,
     bytes: items

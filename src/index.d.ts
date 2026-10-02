@@ -151,7 +151,8 @@ export interface Report {
   options: Record<string, unknown>;
   environments: EnvironmentDescriptor[];
   items: Item[];
-  totals: Record<Tier | 'blocked', TierTotal>;
+  /** Tier totals exclude items that need explicit consent (`consent`). */
+  totals: Record<Tier | 'blocked' | 'consent', TierTotal>;
   docker: {
     daemons: Array<Record<string, unknown>>;
     containers: Array<Record<string, unknown>>;

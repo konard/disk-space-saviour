@@ -28,6 +28,7 @@ import {
 import { bootstrapDependencies } from './bootstrap-dependencies.mjs';
 import { loadCommandStream, loadLinoArguments } from './use-module.mjs';
 import { printUntrusted } from './github-actions-log.mjs';
+import { formattableFiles, STAGED_FILES_ARGS } from './staged-formattable.mjs';
 
 // Import link-foundation libraries
 // Loaded through bootstrapDependencies: when the use-m CDN is unreachable,
@@ -180,16 +181,10 @@ async function getVersion(source = 'local') {
  * would land on main unnoticed and fail only after the tag exists.
  */
 async function checkStagedFormatting() {
-  // Deleted paths (the changesets `changeset version` consumed) no longer
-  // exist, and prettier fails on a path it cannot find.
-  const stagedResult =
-    await $`git diff --cached --name-only --diff-filter=d`.run({
-      capture: true,
-    });
-  const formattable = stagedResult.stdout
-    .split('\n')
-    .map((file) => file.trim())
-    .filter((file) => /\.(m?js|json|md|ts)$/.test(file));
+  const stagedResult = await $`git ${STAGED_FILES_ARGS}`.run({
+    capture: true,
+  });
+  const formattable = formattableFiles(stagedResult.stdout);
 
   if (formattable.length > 0) {
     console.log(
