@@ -1,6 +1,6 @@
 {
   "name": "disk-space-saviour",
-  "version": "0.11.30",
+  "version": "0.12.0",
   "description": "Safely reclaims disk space: caches and build outputs of 20+ ecosystems, forgotten projects, and Docker (running, stopped and nested containers), with an emergency mode",
   "type": "module",
   "main": "src/index.js",

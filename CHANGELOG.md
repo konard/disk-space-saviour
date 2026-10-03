@@ -1,5 +1,86 @@
 # Changelog
 
+## 0.12.0
+
+### Minor Changes
+
+- Add `disk-space-saviour` (`dss`): a CLI and library that safely reclaims disk
+  space. `dss scan` reports caches and build outputs of 20+ ecosystems, version
+  managers, browser/IDE/AI caches, agent snapshots, system logs and forgotten
+  projects, and recurses into Docker: host daemons, running containers (scanned
+  through `docker exec`, never stopped), stopped containers (inspected with
+  `docker cp`, git-verified, never removed without confirmation) and nested
+  Docker-in-Docker daemons. `dss clean --tier safe|moderate|aggressive` deletes
+  with liveness and git re-checks before every item, and `dss emergency --free
+20G | --until 80%` escalates tiers until the goal is met. Every run writes a
+  JSON audit log.
+
+  Liveness detection matches tools by executable name as well as process name,
+  so a Node.js tool whose main thread is renamed (for example `MainThread`) is
+  still seen as running. A Docker-in-Docker CI job (`npm run test:dind`) checks
+  recursion two daemons deep, cleaning inside running containers, and the
+  approval, Git and log-backup rules for stopped containers.
+
+  Open files are matched through symlinks (a scan of `/var/...` sees files that
+  `lsof` reports under `/private/var/...` on macOS), and process working
+  directories are read with `lsof` on macOS, so a tool running elsewhere does not
+  block a project it is not using.
+
+  The Security workflow checks that the repository's dependency graph is enabled
+  before the dependency review. When it is disabled, the review is skipped with a
+  warning that links to the setting, and `npm audit` still fails on high-severity
+  advisories in every lock. Before, every pull request failed on this setting.
+
+  Fix every open CI correctness and resilience issue in the pipeline: scope the
+  Docker buildx cache, retry transient fetch and download failures, make the
+  budget wrapper escalate to SIGKILL, add a terminal status gate to every
+  workflow with supersede detection, verify the husky install, make the jscpd
+  gate analyse real files, guard the package manager declaration, turn on
+  command-stream errexit, gate staged formatting before release commits, add
+  release-preflight credential checks, and sweep zizmor/actionlint/persisted
+  credentials/link-recheck fixes across the workflows.
+
+  Find more regenerable data on developer Macs. New rules cover app updates
+  staged by Sparkle and Squirrel (ShipIt), Chrome, Yandex Browser and Firefox
+  HTTP caches, the Discord cache, Cursor, Windsurf and Qoder caches, the
+  TypeScript type acquisition cache, the rust-script cache, old playwright-go
+  drivers, Claude Code MCP logs and abandoned Codex runtime installs. Each
+  browser and updater has its own busy check, so a running Chrome does not hold
+  back the Firefox cache. Browser, editor and Claude Code paths are also listed
+  for Linux (`~/.cache`, `~/.config`) and Windows (`%LOCALAPPDATA%`, `%APPDATA%`).
+
+  Extension folders of VS Code forks (`.windsurf`, `.codeium`, `.qoder`, `.kiro`,
+  `.trae`) are no longer searched for projects: their bundled `node_modules`
+  were reported as removable, and deleting them breaks the extension.
+
+  Restore the `cargo-superseded` rule and prune Rust leaf artifacts while cargo runs, keeping library artifacts. `dss clean` watches PID 1, agents and build tools in every environment and stops cleaning it when one of them disappears. Stopped containers show their owning session, task URL, exit code, OOM flag and end time; containers kept for investigation are removed only with `--remove-container ID`. Unused tagged images show size, creation date and last user, and are removed only with `--remove-image REF` or an interactive yes per image; `--remove-unused-images` is rejected.
+
+  List the browser HTTP caches, VS Code fork caches, Discord cache and staged
+  macOS app updates in the README's coverage summary.
+
+  Fix the release job: the formatting check before the release commit no longer
+  passes the changesets that `changeset version` deleted to prettier, which
+  failed on the missing files and stopped every release.
+
+  The `bin` paths in `package.json` drop the leading `./`, so `npm publish` no
+  longer warns that the `dss` commands were "invalid and removed" (npm only
+  normalized them; the commands were always installed).
+
+  Report fixes from #7: `dss docker scan` lists a layer shared by several
+  images and tags once, with every tag on one line; the summary counts items
+  that need `--remove-image` or another explicit consent as `needs explicit
+consent` instead of adding them to the tier totals; and a container is no
+  longer labelled with a session taken from a counter or flag such as `1`.
+
+  Recheck Git, liveness, Docker mounts, browser revisions, and saved scan reports before cleanup. Protect uncommitted work in stopped containers and agent snapshots, and limit emergency cleanup to the target filesystem.
+
+  Make protected-branch release fallbacks wait for real pull-request checks with
+  a dedicated automation token, and pin every Linux CI job to Ubuntu 24.04.
+
+  Harden CI verdicts, Docker manifest publication, timeout cleanup, broken-link
+  rechecks, and contributor-authored workflow logs, and refresh vulnerable
+  transitive development dependencies.
+
 ## 0.11.30
 
 ### Patch Changes
