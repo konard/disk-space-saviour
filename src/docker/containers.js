@@ -108,12 +108,19 @@ export function ownerOf(ps, inspected) {
   };
 }
 
+/** Counters and flags such as `1` or `true` are not session ids. */
+function sessionLike(value) {
+  const text = String(value).trim();
+  return text !== '' && !/^(\d+|true|false|yes|no)$/i.test(text);
+}
+
 function sessionOf(hints, name) {
-  const entries = Object.entries(hints);
+  const entries = Object.entries(hints).filter(([, value]) =>
+    sessionLike(value)
+  );
   const found =
     entries.find(([key]) => /HIVE_MIND_PARENT_SESSION_ID$/.test(key)) ??
-    entries.find(([key]) => /session/i.test(key)) ??
-    entries[0];
+    entries.find(([key]) => /session/i.test(key));
   if (found) {
     return found;
   }

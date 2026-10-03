@@ -24,3 +24,7 @@ https://medium\.com
 
 # Web Archive returns 502 to link checkers (bot protection)
 https://web\.archive\.org
+
+# GitHub's HTML renderer intermittently answers 503 for this large file from
+# CI runners (it exists: raw.githubusercontent.com serves it with 200)
+https://github\.com/link-assistant/hive-mind/blob/main/docs/CI-CD-BEST-PRACTICES\.md

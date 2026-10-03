@@ -6,8 +6,8 @@
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "bin": {
-    "dss": "./bin/dss.js",
-    "disk-space-saviour": "./bin/dss.js"
+    "dss": "bin/dss.js",
+    "disk-space-saviour": "bin/dss.js"
   },
   "files": [
     "bin/",

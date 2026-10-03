@@ -17,6 +17,7 @@ import { join } from 'node:path';
 
 import { clean } from '../src/clean.js';
 import { assertAllowed, repoRootsFromDiff } from '../src/docker/cli.js';
+import { imageHints } from '../src/docker/scan.js';
 import {
   containerGitState,
   gitBlockersForRemoval,
@@ -556,6 +557,58 @@ describe('cleaning stopped containers', () => {
       expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('owner sessions and layer hints', () => {
+  it('does not take a counter or flag for a session', () => {
+    const owner = ownerOf(
+      { Names: 'hive-mind', Image: 'img' },
+      { Config: { Env: ['ISSUE_RETRIES=1', 'TASK_ACTIVE=true'] } }
+    );
+    expect(owner.session).toBe(null);
+    expect(owner.sessionSource).toBe(null);
+  });
+
+  it('reports a layer shared by several images and tags once', async () => {
+    const layers = [
+      { ID: 'sha256:base', CreatedBy: 'RUN npm install', Size: '900MB' },
+      { ID: '<missing>', CreatedBy: 'RUN cargo build', Size: '600MB' },
+    ];
+    const docker = { history: async () => layers };
+    const hints = await imageHints(docker, {
+      Images: [
+        {
+          ID: 'aaa',
+          Repository: 'konard/hive-mind-dind',
+          Tag: '2.32.0',
+          Containers: '1',
+          Size: '9GB',
+        },
+        {
+          ID: 'aaa',
+          Repository: 'konard/hive-mind-dind',
+          Tag: 'latest',
+          Containers: '1',
+          Size: '9GB',
+        },
+        {
+          ID: 'bbb',
+          Repository: 'hive-mind-configured',
+          Tag: 'latest',
+          Containers: '1',
+          Size: '8GB',
+        },
+      ],
+    });
+    expect(hints.length).toBe(2);
+    for (const hint of hints) {
+      expect(hint.images).toEqual([
+        'konard/hive-mind-dind:2.32.0',
+        'konard/hive-mind-dind:latest',
+        'hive-mind-configured:latest',
+      ]);
     }
   });
 });

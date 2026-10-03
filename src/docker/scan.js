@@ -201,22 +201,58 @@ function layerAdvice(command, bytes) {
     : null;
 }
 
-async function imageHints(docker, verbose) {
-  const largest = [...(verbose.Images ?? [])]
-    .filter((image) => image.Containers !== '0')
-    .sort((a, b) => parseDockerSize(b.Size) - parseDockerSize(a.Size))
-    .slice(0, LAYER_HINT_IMAGES);
-  const hints = [];
-  for (const image of largest) {
+/** Every tag of each image id, largest images first. */
+function imagesById(rows) {
+  const byId = new Map();
+  for (const image of rows) {
     const name =
       image.Tag === '<none>' ? image.ID : `${image.Repository}:${image.Tag}`;
+    const entry = byId.get(image.ID) ?? { id: image.ID, names: [], image };
+    entry.names.push(name);
+    byId.set(image.ID, entry);
+  }
+  return [...byId.values()];
+}
+
+/** The same layer, whichever image's history it was read from. */
+function layerKey(layer) {
+  return layer.ID && layer.ID !== '<missing>'
+    ? layer.ID
+    : `${layer.CreatedBy ?? ''}\0${layer.Size ?? ''}`;
+}
+
+export async function imageHints(docker, verbose) {
+  const largest = imagesById(
+    [...(verbose.Images ?? [])].filter((image) => image.Containers !== '0')
+  )
+    .sort(
+      (a, b) => parseDockerSize(b.image.Size) - parseDockerSize(a.image.Size)
+    )
+    .slice(0, LAYER_HINT_IMAGES);
+  const byLayer = new Map();
+  for (const { id, names } of largest) {
+    let history;
     try {
-      hints.push(...layerHints(name, await docker.history(image.ID)));
+      history = await docker.history(id);
     } catch (error) {
-      trace('history failed', name, error.message);
+      trace('history failed', names[0], error.message);
+      continue;
+    }
+    for (const layer of history) {
+      const [hint] = layerHints(names[0], [layer]);
+      if (!hint) {
+        continue;
+      }
+      const key = layerKey(layer);
+      const shared = byLayer.get(key);
+      if (shared) {
+        shared.images.push(...names.filter((n) => !shared.images.includes(n)));
+      } else {
+        byLayer.set(key, { ...hint, images: [...names] });
+      }
     }
   }
-  return hints;
+  return [...byLayer.values()];
 }
 
 async function stoppedItem(daemon, ps, inspected, options) {

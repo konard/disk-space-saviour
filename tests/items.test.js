@@ -76,6 +76,16 @@ describe('tier selection', () => {
     expect(totals.blocked).toEqual({ items: 1, bytes: 7 });
   });
 
+  it('counts items that need explicit consent apart from the tiers', () => {
+    const image = item('/img', 'moderate', 900, {
+      requiresConfirmation: 'removeImages',
+    });
+    const totals = tierTotals([...items, image]);
+    expect(totals.moderate).toEqual({ items: 2, bytes: 110 });
+    expect(totals.aggressive).toEqual({ items: 3, bytes: 1110 });
+    expect(totals.consent).toEqual({ items: 1, bytes: 900 });
+  });
+
   it('adds each blocker once', () => {
     const target = item('/t', 'safe', 1);
     block(target, 'dirty');
