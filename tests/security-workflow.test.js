@@ -167,7 +167,7 @@ describe('security workflow', () => {
     );
   });
 
-  it('fails closed on high-severity advisories in every npm lock', () => {
+  it('fails closed on fixable high-severity advisories in every npm lock', () => {
     const audit = getJobBlock('npm-audit');
     const directoryList = audit.match(/directory: \[([^\]]+)\]/)?.[1] ?? '';
     const auditedLocks = directoryList
@@ -187,7 +187,7 @@ describe('security workflow', () => {
     expect(audit).toContain('node-version: 24');
     expect(audit).toContain('working-directory: ${{ matrix.directory }}');
     expect(audit).toContain(
-      'run: npm audit --package-lock-only --audit-level=high'
+      'run: node "$GITHUB_WORKSPACE/scripts/audit-fixable.mjs"'
     );
   });
 });
