@@ -180,3 +180,41 @@ describe('application and agent cache rules', () => {
     }
   });
 });
+
+describe('browser cache rules', () => {
+  it('reports caches of other browsers, including single-profile Opera', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const caches = 'Library/Caches';
+    const { root, home, report } = await scanHome([
+      `${caches}/Microsoft Edge/Profile 1/Cache/Cache_Data/data_0`,
+      `${caches}/com.operasoftware.Opera/Cache/Cache_Data/data_0`,
+      `${caches}/com.operasoftware.Opera/Code Cache/js/index`,
+      `${caches}/com.operasoftware.Opera/Session Storage/state`,
+      `${caches}/Vivaldi/Default/Cache/Cache_Data/data_0`,
+      `${caches}/librewolf/Profiles/abc.default/cache2/entries/x`,
+    ]);
+    const paths = [
+      'edge-http-caches',
+      'opera-http-caches',
+      'vivaldi-http-caches',
+      'firefox-fork-http-caches',
+    ]
+      .flatMap((rule) => byRule(report, rule))
+      .map((item) => item.path)
+      .sort();
+    expect(paths).toEqual(
+      [
+        `${caches}/Microsoft Edge/Profile 1/Cache`,
+        `${caches}/Vivaldi/Default/Cache`,
+        `${caches}/com.operasoftware.Opera/Cache`,
+        `${caches}/com.operasoftware.Opera/Code Cache`,
+        `${caches}/librewolf/Profiles/abc.default/cache2`,
+      ]
+        .map((path) => join(home, path))
+        .sort()
+    );
+    removeRoot(root);
+  });
+});

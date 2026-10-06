@@ -107,9 +107,11 @@ jobs:
         with:
           node-version: 24
 
+      # Blocks only high or critical advisories a newer release fixes; the
+      # ones without a fixed release yet are reported as warnings.
       - name: Audit current lock
         working-directory: ${{ matrix.directory }}
-        run: npm audit --package-lock-only --audit-level=high
+        run: node "$GITHUB_WORKSPACE/scripts/audit-fixable.mjs"
 
   # Terminal status gate: runs even when the jobs above fail or are
   # cancelled, and turns a `timeout-minutes` kill (reported as cancelled)

@@ -93,10 +93,12 @@ Go, C/C++ (CMake, ccache, vcpkg, Conan), .NET, PHP, Ruby, Swift/Xcode, Dart,
 Haskell, Scala, Elixir, OCaml, Lean, Julia, R, Zig, and scripting languages.
 Also covered: version managers (nvm, pyenv, rbenv, SDKMAN!, rustup, elan,
 ghcup, opam, swiftly, VS Code Server), Playwright, playwright-go, Puppeteer
-and Cypress browsers, Chrome, Yandex Browser and Firefox HTTP caches, IDE
-caches (JetBrains, VS Code, Cursor, Windsurf, Qoder), AI agent caches and logs,
-the Discord cache, macOS app updates staged by Sparkle and Squirrel, package
-manager archives, trash, crash reports, core dumps and journald logs.
+and Cypress browsers, HTTP caches of Chrome, Chromium, Edge, Brave, Opera,
+Opera GX, Vivaldi, Arc, Yandex Browser, Naver Whale, 360, QQ Browser, Firefox,
+LibreWolf, Waterfox, Zen and Floorp, IDE caches (JetBrains, VS Code, Cursor,
+Windsurf, Qoder), AI agent caches and logs, the Discord cache, macOS app
+updates staged by Sparkle and Squirrel, package manager archives, trash, crash
+reports, core dumps and journald logs.
 
 ## Safety
 
