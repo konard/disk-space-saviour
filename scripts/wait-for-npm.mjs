@@ -164,9 +164,12 @@ export async function checkNpmVersion(
   }
 
   try {
-    const response = await fetchFn(url, {
+    // A unique query parameter skips the registry CDN's cached answers.
+    const response = await fetchFn(`${url}?_=${Date.now()}`, {
+      cache: 'no-store',
       headers: {
         accept: 'application/json',
+        'cache-control': 'no-cache',
         // Some registries reject requests without a User-Agent with 403.
         'user-agent': NPM_REGISTRY_USER_AGENT,
       },

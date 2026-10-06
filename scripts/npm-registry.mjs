@@ -59,11 +59,14 @@ export function buildPackageMetadataUrl(
 /**
  * Check whether a package version exists in npm registry metadata.
  * HTTP 404 means the package has not been published yet and is not an error.
+ * The registry CDN serves metadata cached for up to five minutes, so every
+ * request carries a unique query parameter and asks for an uncached answer.
  * @param {string} packageName
  * @param {string} version
  * @param {object} options
  * @param {Function} [options.fetchFn]
  * @param {string} [options.registryUrl]
+ * @param {Function} [options.now]
  * @returns {Promise<boolean>}
  */
 export async function isPackageVersionPublished(
@@ -72,6 +75,7 @@ export async function isPackageVersionPublished(
   {
     fetchFn = fetch,
     registryUrl = getNpmRegistryFromEnv() || DEFAULT_NPM_REGISTRY_URL,
+    now = Date.now,
   } = {}
 ) {
   if (typeof version !== 'string' || version.trim() === '') {
@@ -79,9 +83,11 @@ export async function isPackageVersionPublished(
   }
 
   const metadataUrl = buildPackageMetadataUrl(packageName, registryUrl);
-  const response = await fetchFn(metadataUrl, {
+  const response = await fetchFn(`${metadataUrl}?_=${now()}`, {
+    cache: 'no-store',
     headers: {
       accept: 'application/json',
+      'cache-control': 'no-cache',
     },
   });
 
