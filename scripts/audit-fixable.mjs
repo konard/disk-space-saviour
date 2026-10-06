@@ -47,6 +47,17 @@ export function registryVersions(name, range) {
   return asList(npmJson(['view', `${name}@${range}`, 'version', '--json']));
 }
 
+/**
+ * Orders release versions (`major.minor.patch`, as range lookups return them;
+ * the registry lists them in publish order, so a backport can follow a newer
+ * major).
+ */
+export function compareVersions(left, right) {
+  const parts = (version) => version.split(/[.+-]/).slice(0, 3).map(Number);
+  const [a, b] = [parts(left), parts(right)];
+  return a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+}
+
 /** Blocking advisories of an `npm audit --json` report, one per advisory URL. */
 export function blockingAdvisories(report) {
   const advisories = new Map();
@@ -73,19 +84,27 @@ export function installedVersions(lock, name) {
 }
 
 /**
- * A version newer than every installed one that is outside the advisory's
- * vulnerable range, or null when the registry has none yet.
+ * The closest version newer than every installed one that is outside the
+ * advisory's vulnerable range (so an upgrade within the same major wins over
+ * the latest release), or null when the registry has none yet.
  */
 export function fixedVersion(
   advisory,
   installed,
   versionsIn = registryVersions
 ) {
-  const newer = new Set(
-    installed.flatMap((version) => versionsIn(advisory.name, `>${version}`))
+  const [first = [], ...rest] = installed.map((version) =>
+    versionsIn(advisory.name, `>${version}`)
+  );
+  const newer = first.filter((version) =>
+    rest.every((versions) => versions.includes(version))
   );
   const vulnerable = new Set(versionsIn(advisory.name, advisory.range));
-  return [...newer].filter((version) => !vulnerable.has(version)).pop() ?? null;
+  return (
+    newer
+      .filter((version) => !vulnerable.has(version))
+      .sort(compareVersions)[0] ?? null
+  );
 }
 
 /** Splits blocking advisories into fixable and not yet fixable ones. */

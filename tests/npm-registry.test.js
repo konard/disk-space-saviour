@@ -58,6 +58,23 @@ describe('npm registry package version checks', () => {
     expect(isPublished).toBe(false);
   });
 
+  it('asks the registry for an uncached answer every time', async () => {
+    const requests = [];
+    await isPackageVersionPublished('@scope/real-package', '1.2.3', {
+      now: () => 42,
+      fetchFn: async (url, init) => {
+        requests.push({ url, init });
+        return jsonResponse(200, { versions: {} });
+      },
+    });
+
+    expect(requests[0].url).toBe(
+      'https://registry.npmjs.org/@scope%2Freal-package?_=42'
+    );
+    expect(requests[0].init.cache).toBe('no-store');
+    expect(requests[0].init.headers['cache-control']).toBe('no-cache');
+  });
+
   it('treats package 404 as an expected unpublished result', async () => {
     const isPublished = await isPackageVersionPublished(
       '@scope/missing-package',

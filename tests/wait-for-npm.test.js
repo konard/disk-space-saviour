@@ -89,6 +89,23 @@ describe('checkNpmVersion', () => {
     expect(seen.headers['user-agent'].length > 0).toBe(true);
   });
 
+  it('asks the registry for an uncached answer', async () => {
+    let seenUrl;
+    let seen;
+    await checkNpmVersion('react', '1.0.0', {
+      fetchFn: async (url, init) => {
+        seenUrl = url;
+        seen = init;
+        return response(200, { version: '1.0.0' });
+      },
+      registryUrl: REGISTRY,
+    });
+
+    expect(seenUrl.startsWith(`${REGISTRY}/react/1.0.0?_=`)).toBe(true);
+    expect(seen.cache).toBe('no-store');
+    expect(seen.headers['cache-control']).toBe('no-cache');
+  });
+
   it('reports HTTP 404 as genuinely not published', async () => {
     const result = await checkNpmVersion('react', '999.0.0', {
       fetchFn: async () => response(404, {}, 'Not Found'),

@@ -12,7 +12,9 @@
  * failure.
  */
 
-export const DEFAULT_VERIFY_ATTEMPTS = 7;
+// About five minutes in all: npm can take over two minutes to list a new
+// version published with provenance.
+export const DEFAULT_VERIFY_ATTEMPTS = 13;
 export const DEFAULT_VERIFY_INITIAL_DELAY = 2000;
 export const DEFAULT_VERIFY_MAX_DELAY = 30000;
 

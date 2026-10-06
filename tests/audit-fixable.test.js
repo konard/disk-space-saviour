@@ -23,7 +23,7 @@ const advisory = (name, range, severity = 'high') => ({
 // vulnerable range lists the published versions inside it.
 function registry(published, vulnerable) {
   return (name, range) => {
-    if (range.startsWith('>')) {
+    if (/^>\d/.test(range)) {
       const floor = range.slice(1);
       return published[name].filter(
         (version) => version.localeCompare(floor, 'en', { numeric: true }) > 0
@@ -72,6 +72,34 @@ describe('audit-fixable', () => {
       fixedVersion(
         advisory('http-cache-semantics', '<=4.2.0'),
         ['4.2.0'],
+        versionsIn
+      )
+    ).toBe('4.3.0');
+  });
+
+  it('prefers the closest fixed release to the latest one', () => {
+    const versionsIn = registry(
+      { '@capacitor/ios': ['7.6.4', '7.6.8', '7.6.9', '8.5.2'] },
+      { '@capacitor/ios': ['7.6.4', '7.6.8'] }
+    );
+    expect(
+      fixedVersion(
+        advisory('@capacitor/ios', '>=7.0.0 <7.6.9'),
+        ['7.6.4'],
+        versionsIn
+      )
+    ).toBe('7.6.9');
+  });
+
+  it('needs a fix newer than every installed copy', () => {
+    const versionsIn = registry(
+      { 'http-cache-semantics': ['4.1.1', '4.2.0', '4.3.0'] },
+      { 'http-cache-semantics': ['4.1.1'] }
+    );
+    expect(
+      fixedVersion(
+        advisory('http-cache-semantics', '<=4.1.1'),
+        ['4.1.1', '4.2.0'],
         versionsIn
       )
     ).toBe('4.3.0');
