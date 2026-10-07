@@ -113,7 +113,7 @@ describe('release-preflight workflow wiring (issues #176, #181)', () => {
   it('passes the publishing credentials to the probe', () => {
     const preflightBlock = getJobBlock(WORKFLOW, 'release-preflight');
 
-    expect(preflightBlock).toContain('NPM_TOKEN: ${{ secrets.NPM_TOKEN }}');
+    expect(preflightBlock).not.toContain('NPM_TOKEN');
     expect(preflightBlock).toContain(
       'DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE }}'
     );
@@ -247,33 +247,35 @@ describe('release-preflight probe behaviour (offline, curl stub)', () => {
     expect(stdout).toContain('rate-limited the write probe (429)');
   });
 
-  it('fails in release mode when npm rejects the token', async () => {
-    const fixtures = makeFixtures({ whoamiStatus: 401 });
+  it('fails in release mode when an npm token secret is present', async () => {
+    const fixtures = makeFixtures();
     const { code, stdout } = await runPreflight(
       {
         PREFLIGHT_MODE: 'release',
         ACTIONS_ID_TOKEN_REQUEST_URL: OIDC_URL,
-        NPM_TOKEN: 'stub-expired-token',
+        NPM_TOKEN: 'stub-token',
       },
       fixtures
     );
 
     expect(code).toBe(1);
     expect(stdout).toContain('::error::');
-    expect(stdout).toContain('npm rejected NPM_TOKEN (401 Unauthorized)');
+    expect(stdout).toContain(
+      'npm publishes only through trusted publishing -- delete the secret'
+    );
   });
 
-  it('fails in release mode when it verified nothing', async () => {
-    // No OIDC URL, an unknown-answering registry (500 has not said the token
-    // is broken), and Docker publishing disabled: zero verified probes.
-    const fixtures = makeFixtures({ whoamiStatus: 500 });
+  it('fails in release mode without the OIDC permission npm needs', async () => {
+    // npm publishes only through trusted publishing, so a job without
+    // id-token: write has no way to publish at all.
+    const fixtures = makeFixtures();
     const { code, stdout } = await runPreflight(
-      { PREFLIGHT_MODE: 'release', NPM_TOKEN: 'stub-token' },
+      { PREFLIGHT_MODE: 'release' },
       fixtures
     );
 
     expect(code).toBe(1);
     expect(stdout).toContain('::error::');
-    expect(stdout).toContain('verified nothing');
+    expect(stdout).toContain('npm has no publish path');
   });
 });
