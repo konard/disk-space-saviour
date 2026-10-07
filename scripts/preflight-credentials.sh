@@ -29,7 +29,6 @@
 set -u
 
 MODE="${PREFLIGHT_MODE:-report}"
-NPM_REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
 DOCKER_REGISTRY="${DOCKER_REGISTRY:-https://registry-1.docker.io}"
 DOCKER_AUTH="${DOCKER_AUTH:-https://auth.docker.io}"
 CURL_TIMEOUT="${PREFLIGHT_CURL_TIMEOUT:-15}"
@@ -74,67 +73,19 @@ node_read() {
 }
 
 check_npm() {
-  local oidc_url="${ACTIONS_ID_TOKEN_REQUEST_URL:-}"
-  local token="${NPM_TOKEN:-}"
-
   printf 'npm:\n'
 
-  if [ -n "$oidc_url" ]; then
+  # npm publishes only through trusted publishing (OIDC); a stored npm token
+  # is never used, so one that is present is reported for deletion.
+  if [ -n "${NPM_TOKEN:-}" ]; then
+    bad 'NPM_TOKEN is set, but npm publishes only through trusted publishing -- delete the secret'
+  fi
+
+  if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
     ok 'npm OIDC trusted publishing is available (ACTIONS_ID_TOKEN_REQUEST_URL is set)'
   else
-    unknown 'npm OIDC trusted publishing is not available (ACTIONS_ID_TOKEN_REQUEST_URL is not set; the job needs id-token: write)'
+    bad 'npm has no publish path: ACTIONS_ID_TOKEN_REQUEST_URL is not set (the job needs id-token: write)'
   fi
-
-  if [ -z "$token" ]; then
-    if [ -n "$oidc_url" ]; then
-      printf '  SKIP: NPM_TOKEN is not set; OIDC trusted publishing is the publish path (NPM_TOKEN is the documented bootstrap fallback, issue #77)\n'
-    else
-      bad 'npm has no publish path: ACTIONS_ID_TOKEN_REQUEST_URL is not set and NPM_TOKEN is not set'
-    fi
-    return 0
-  fi
-
-  local response status payload login
-  response=$(http -H "Authorization: Bearer $token" "$NPM_REGISTRY/-/whoami")
-  status="${response##*"$NEWLINE"}"
-  payload="${response%"${NEWLINE}"*}"
-
-  case "$status" in
-    200)
-      login=$(printf '%s' "$payload" | node_read 'let d="";process.stdin.on("data",(c)=>{d+=c});process.stdin.on("end",()=>{try{process.stdout.write(String(JSON.parse(d).username||""))}catch{process.stdout.write("")}})')
-      if [ -z "$login" ]; then
-        ok 'npm accepted NPM_TOKEN (whoami returned 200)'
-        return 0
-      fi
-      if node_read '
-          const fs = require("fs");
-          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-          const maintainers = (pkg.maintainers || [])
-            .map((entry) =>
-              typeof entry === "string"
-                ? entry.replace(/\s*<[^>]*>\s*$/, "").trim().toLowerCase()
-                : entry && String(entry.name || "").trim().toLowerCase()
-            )
-            .filter(Boolean);
-          const login = String(process.argv[1] || "").toLowerCase();
-          process.exit(maintainers.length === 0 || maintainers.includes(login) ? 0 : 1);
-        ' "$login"; then
-        ok "npm accepted NPM_TOKEN (logged in as ${login})"
-      else
-        bad "npm accepted NPM_TOKEN, but account '${login}' is not a maintainer of this package -- the publish would fail"
-      fi
-      ;;
-    401)
-      bad 'npm rejected NPM_TOKEN (401 Unauthorized) -- the token is missing, invalid or expired'
-      ;;
-    '')
-      unknown 'npm registry unreachable during the whoami probe'
-      ;;
-    *)
-      unknown "npm registry answered ${status} to the whoami probe (no verdict on the token)"
-      ;;
-  esac
-
   return 0
 }
 

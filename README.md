@@ -367,14 +367,14 @@ The release workflow uses [Changesets](https://github.com/changesets/changesets)
 5. **Optional Docker Hub publishing**: When configured, waits for the exact npm version and tags the Docker image with that version
 6. **GitHub releases**: Auto-created with formatted release notes
 
-> **First release of a brand-new package**: OIDC trusted publishing cannot
-> create a package that does not exist yet (the first publish fails with
-> `E404`, because a trusted publisher can only be configured for an existing
-> package). To bootstrap, add a repository secret named `NPM_TOKEN` (a
-> granular/automation token with publish access). The release workflow passes
-> it as `NODE_AUTH_TOKEN` automatically. Once the package exists and OIDC
-> trusted publishing is configured on npmjs.com, the token becomes optional and
-> can be removed.
+> **First release of a brand-new package**: npm publishes only through
+> trusted publishing, and a trusted publisher can only be attached to a package
+> that already exists (the first publish from CI fails with `E404`). Publish the
+> first version once with
+> [package-registry-manager](https://github.com/link-foundation/package-registry-manager):
+> `npx package-registry-manager setup --registry npm --execute`. It signs in
+> through the browser, publishes, attaches this workflow as the trusted
+> publisher and signs out again. No npm token is ever stored.
 
 #### Manual Releases
 

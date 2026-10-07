@@ -68,12 +68,13 @@ describe('publish failure classifier', () => {
     }
   });
 
-  it('builds actionable guidance naming the package and the bootstrap token', () => {
+  it('builds actionable guidance naming the package and the token-free bootstrap', () => {
     const guidance = buildAuthFailureGuidance('@scope/pkg');
 
     expect(guidance).toContain('@scope/pkg');
-    expect(guidance).toContain('NPM_TOKEN');
-    expect(guidance).toContain('NODE_AUTH_TOKEN');
+    expect(guidance).toContain('package-registry-manager setup --registry npm');
+    expect(guidance).not.toContain('NPM_TOKEN');
+    expect(guidance).not.toContain('NODE_AUTH_TOKEN');
     expect(guidance.toLowerCase()).toContain('trusted publish');
     expect(guidance).toContain('https://docs.npmjs.com/trusted-publishers');
   });
