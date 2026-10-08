@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.0
+
+### Minor Changes
+
+- Make Docker cleanup reports resilient to size-query races and count writable-layer cache bytes separately from immutable image data. Improve process matching, privileged read-only liveness inspection, per-hash npx protection, stopped-container Git inspection and recovery-ref recognition. Add aged isolation-log, sanitized-upload, Claude Code and Copilot CLI cleanup candidates, direct opam download-cache removal, investigation-hold age controls, and complete scan audits with grouped hints and watched processes.
+
+  Release: npm publishes only through trusted publishing. The workflow no longer reads an `NPM_TOKEN` secret, the credential preflight requires the OIDC permission and flags any npm token, and the first-publish guidance points to package-registry-manager instead of a token.
+
 ## 0.13.1
 
 ### Patch Changes
