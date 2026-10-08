@@ -161,6 +161,7 @@ export function containerExecutor(parent, containerId, options = {}) {
     docker,
     'exec',
     ...(interactive ? ['-i'] : []),
+    ...(options.privileged ? ['--privileged'] : []),
     ...(options.user ? ['--user', options.user] : []),
     containerId,
     ...argv,

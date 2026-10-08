@@ -92,7 +92,7 @@ framework build caches), Python, Rust, JVM (Gradle, Maven, Kotlin, Android),
 Go, C/C++ (CMake, ccache, vcpkg, Conan), .NET, PHP, Ruby, Swift/Xcode, Dart,
 Haskell, Scala, Elixir, OCaml, Lean, Julia, R, Zig, and scripting languages.
 Also covered: version managers (nvm, pyenv, rbenv, SDKMAN!, rustup, elan,
-ghcup, opam, swiftly, VS Code Server), Playwright, playwright-go, Puppeteer
+ghcup, opam, swiftly, VS Code Server, Claude Code and Copilot CLI), Playwright, playwright-go, Puppeteer
 and Cypress browsers, HTTP caches of Chrome, Chromium, Edge, Brave, Opera,
 Opera GX, Vivaldi, Arc, Yandex Browser, Naver Whale, 360, QQ Browser, Firefox,
 LibreWolf, Waterfox, Zen and Floorp, IDE caches (JetBrains, VS Code, Cursor,
@@ -130,12 +130,28 @@ reports, core dumps and journald logs.
   process was lost. A build that simply finishes during the cleanup also
   stops it: an exit cannot be told apart from a crash.
 - **Git awareness.** A project or container is not touched while it has
-  uncommitted changes, unpushed commits or stashes. The blocker is shown in
-  the report. Stopped containers with Git work require an exact
+  unsaved changes, unpushed commits or stashes. Stopped-container scans show
+  Git state before cleanup. Unstaged and untracked files can be recognized
+  as preserved when their bytes and modes all match one cached remote ref,
+  such as `origin/recovery/<branch>`. No remote fetch is performed; missing
+  refs, staged work and unreadable files remain blockers. Detached upstream
+  checkouts are accepted only when their commit is reachable from a remote
+  ref. Nested Docker layer copies and temporary Codex plugin checkouts are
+  excluded from this inspection. Unsaved container work requires an exact
   `--allow-dirty-container ID` override.
 - **Audit log on every run.** Each run, dry runs included, writes
   `dss-<command>-<time>-<pid>.json` with every decision, the bytes freed
-  and left per environment, and disk usage before and after.
+  and left per environment, and disk usage before and after. Scan audits
+  include every candidate and its blockers; blocked candidates do not
+  contribute to reclaimable tier totals.
+
+Long-lived `npm exec`/`npx` servers allow idle npm download and node-gyp
+header caches to be cleaned. Active npx hashes remain protected through
+their child command paths, working directories and open files; other
+hashes are separate candidates subject to the age window. Install commands
+still block relevant caches. Old isolation logs and sanitized upload staging
+are moderate-tier candidates. Opam download cleanup removes its cache
+directory directly and does not invoke `opam clean` or migrate the root.
 
 ## Docker
 
@@ -155,7 +171,11 @@ three kinds of Docker data:
   the tier totals match what `clean --tier … --yes` removes.
 - **Running containers** are never stopped, restarted or removed. They are
   scanned and cleaned from the inside through `docker exec`, with the same
-  rules and liveness checks as the host.
+  rules and liveness checks as the host. An unreadable `/proc` probe is
+  retried with a read-only root `docker exec --privileged` inspection. If
+  this is denied or incomplete, cleanup stays blocked and names the
+  unreadable processes. This also applies when dss runs inside a container
+  with access to its Docker daemon.
 - **Stopped containers** are listed with their size, image, command, owner
   session (`HIVE_MIND_PARENT_SESSION_ID` and other session labels or
   environment variables, else a session id in the container name), task
@@ -169,6 +189,24 @@ three kinds of Docker data:
   killed) are never removed by a tier or by `--remove-stopped-containers`,
   in emergency mode too. Name each one with `--remove-container ID|NAME`
   (a full name, or an id prefix of at least 12 characters) to remove it.
+  Alternatively, `--investigation-max-age 7d` lifts holds for containers
+  that ended at least seven days ago; removal still requires consent and
+  Git checks. The default keeps investigation holds indefinitely.
+
+Container cache sizes count changed writable-layer file blocks and mounted
+data. Immutable image data is reported separately as `imageBytes` and is
+excluded from reclaimable totals, including the host scan when dss runs
+inside an identifiable container. Image-only caches stay visible and blocked;
+rebuild the image to remove that data. These estimates exclude directory
+metadata overhead. A small stopped container pinning a large image is shown
+even below `--min-size`; its potential image bytes require a separate image
+removal after the container is removed.
+
+Docker discovery uses a size-free container listing and measures each
+container independently. Failed size queries are retried once; objects
+remain visible with `sizeUnknown` when measurement fails. Scans continue
+through other objects and nested daemons, report partial errors, and return
+a nonzero CLI exit status when discovery is incomplete.
 
 `--recursive` follows Docker-in-Docker: a container that runs its own daemon
 is scanned as a new environment, down to `--depth` levels (default 3). The

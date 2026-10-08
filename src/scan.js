@@ -3,6 +3,7 @@
  * Docker, inside running containers and nested daemons. Never deletes.
  */
 
+import { configureContainerHost } from './docker/writable.js';
 import { scanDocker } from './docker/scan.js';
 import { LocalEnv } from './env/local.js';
 import { block, tierTotals } from './items.js';
@@ -43,6 +44,7 @@ const RESCAN_OPTIONS = new Set([
   'exclude',
   'includeVolumes',
   'removeStoppedContainers',
+  'investigationMaxAge',
   'removeContainers',
   'removeImages',
   'allowDirtyRepos',
@@ -164,6 +166,32 @@ export async function scanEnvironment(env, options, extra = {}) {
     }
     trace('scanner', name, 'in', env.id, `${Date.now() - started}ms`);
   }
+  if (env.writableLayer) {
+    const usages = await env.usageMany([
+      ...new Set(items.flatMap((item) => item.paths)),
+    ]);
+    for (const item of items.filter((entry) => entry.paths.length > 0)) {
+      const measured = item.paths
+        .map((target) => usages.get(target))
+        .filter(Boolean);
+      item.bytes = measured.reduce((sum, usage) => sum + usage.bytes, 0);
+      item.totalBytes = measured.reduce(
+        (sum, usage) => sum + (usage.totalBytes ?? usage.bytes),
+        0
+      );
+      item.imageBytes = measured.reduce(
+        (sum, usage) => sum + (usage.imageBytes ?? 0),
+        0
+      );
+      item.sizeUnknown = measured.some((usage) => usage.sizeUnknown);
+      if (!item.sizeUnknown && item.bytes === 0 && item.imageBytes > 0) {
+        block(
+          item,
+          'all bytes are in the image layer; rebuild the image to reclaim them'
+        );
+      }
+    }
+  }
   return items;
 }
 
@@ -173,7 +201,7 @@ export async function scanEnvironment(env, options, extra = {}) {
  * @returns {Promise<string[]>}
  */
 export async function selfContainerIds(env) {
-  if (env.platform !== 'linux') {
+  if (env.platform !== 'linux' || typeof env.readText !== 'function') {
     return [];
   }
   const ids = new Set();
@@ -237,7 +265,10 @@ function underDaemonRoot(item, daemons, pathApi) {
 export function filterItems(items, options, daemons = [], pathApi) {
   return items.filter(
     (item) =>
-      item.bytes >= options.minSizeBytes &&
+      (item.bytes >= options.minSizeBytes ||
+        item.sizeUnknown ||
+        item.imageBytes >= options.minSizeBytes ||
+        item.container?.pinnedImage?.bytes >= options.minSizeBytes) &&
       matchesOnly(item, options.only) &&
       !excluded(item, options.exclude, pathApi) &&
       !underDaemonRoot(item, daemons, pathApi)
@@ -269,6 +300,7 @@ async function dockerSection(env, options, errors) {
       { ...options, selfContainerIds: await selfContainerIds(env) },
       (inner) => scanEnvironment(inner, options, { errors })
     );
+    errors.push(...result.errors);
     if (options.docker === true && result.daemons.length === 0) {
       errors.push({
         env: env.id,
@@ -314,6 +346,7 @@ export async function scan(input = {}) {
   const env = input.env ?? new LocalEnv();
   const startedAt = options.now();
   const errors = [];
+  await configureContainerHost(env, await selfContainerIds(env));
   const hostItems =
     options.host === false
       ? []

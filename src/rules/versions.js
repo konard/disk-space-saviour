@@ -102,6 +102,29 @@ export function compareVersions(left, right) {
 
 export const VERSION_RULES = [
   {
+    id: 'claude-code-versions',
+    ecosystem: 'agents',
+    manager: 'Claude Code',
+    description: 'Claude Code binary',
+    dirs: ['~/.local/share/claude/versions/*'],
+    installTypes: ['file'],
+    defaultLinks: ['~/.local/bin/claude'],
+    busy: ['claude'],
+    recheck: true,
+  },
+  {
+    id: 'copilot-cli-versions',
+    ecosystem: 'agents',
+    manager: 'Copilot CLI',
+    description: 'Copilot CLI package',
+    dirs: ['~/.cache/copilot/pkg/*/*'],
+    defaultLinks: ['~/.local/bin/copilot'],
+    linkVersion: (target) => /\/pkg\/[^/]+\/([^/]+)/.exec(target ?? '')?.[1],
+    busy: ['copilot'],
+    recheck: true,
+  },
+
+  {
     id: 'nvm-node',
     ecosystem: 'javascript',
     manager: 'nvm',

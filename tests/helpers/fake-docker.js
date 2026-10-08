@@ -10,6 +10,7 @@ import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 import { setImmediate } from 'node:timers';
 
+import { parseDockerSize } from '../../src/docker/cli.js';
 import { scanDocker } from '../../src/docker/scan.js';
 import { makeItem } from '../../src/items.js';
 import { resolveOptions } from '../../src/options.js';
@@ -120,15 +121,32 @@ export class FakeDockerWorld {
       info: () => ok(JSON.stringify(daemon.info)),
       system: () => this.#systemDf(daemon, sub, args),
       ps: () =>
-        ok(daemon.containers.map((c) => JSON.stringify(psRow(c))).join('\n')),
+        ok(
+          daemon.containers
+            .map((c) => {
+              const row = psRow(c);
+              return [row.ID, row.Names, row.State, row.Status, row.Image].join(
+                '\t'
+              );
+            })
+            .join('\n')
+        ),
       inspect: () =>
         ok(
           JSON.stringify(
             args
-              .slice(3)
+              .slice(args.includes('--size') ? 4 : 3)
               .map((id) => this.#find(name, id))
               .filter(Boolean)
-              .map(inspectObject)
+              .map((container) => ({
+                ...inspectObject(container),
+                ...(args.includes('--size')
+                  ? {
+                      SizeRw: parseDockerSize(container.size),
+                      SizeRootFs: 80e6,
+                    }
+                  : {}),
+              }))
           )
         ),
       diff: () => {
@@ -172,6 +190,11 @@ export class FakeDockerWorld {
   }
 
   #image(daemon, sub, args) {
+    if (sub === 'ls') {
+      return ok(
+        (daemon.images ?? []).map((image) => JSON.stringify(image)).join('\n')
+      );
+    }
     if (sub !== 'rm') {
       return fail(`unsupported: docker image ${sub}`);
     }
@@ -248,6 +271,7 @@ function inspectObject(container) {
       Error: container.error ?? '',
       FinishedAt: container.finishedAt ?? '2026-09-20T10:00:00Z',
     },
+    Image: container.imageId ?? container.image ?? 'ubuntu:24.04',
     Config: {
       Labels: container.labels ?? {},
       Env: container.env ?? [],
@@ -316,7 +340,7 @@ export async function scanWorld(fake, input = {}) {
       ...result.environments,
     ],
     docker: result,
-    errors: [],
+    errors: result.errors,
     startedAt: options.now(),
   });
   return { env, result, report, scanned };

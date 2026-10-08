@@ -164,11 +164,17 @@ function gitEnv() {
 }
 
 export function git(cwd, ...args) {
-  return execFileSync('git', ['-c', 'init.defaultBranch=main', ...args], {
-    cwd,
-    env: gitEnv(),
-    stdio: ['ignore', 'pipe', 'pipe'],
-  }).toString();
+  // Stopped-repository fixtures must have no background writers: detached
+  // maintenance can remove objects/maintenance.lock during a recursive copy.
+  return execFileSync(
+    'git',
+    ['-c', 'init.defaultBranch=main', '-c', 'maintenance.auto=false', ...args],
+    {
+      cwd,
+      env: gitEnv(),
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }
+  ).toString();
 }
 
 /**
@@ -179,6 +185,7 @@ export function pushedRepo(dir) {
   const remote = `${dir}-remote.git`;
   mkdirSync(dir, { recursive: true });
   git(dirname(dir), 'init', '-q', '--bare', remote);
+  git(remote, 'config', 'maintenance.auto', 'false');
   git(dir, 'init', '-q');
   writeFileSync(join(dir, 'README.md'), 'fixture\n');
   writeFileSync(join(dir, '.gitignore'), 'node_modules/\n');

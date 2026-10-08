@@ -222,6 +222,7 @@ export class LocalEnv {
       size: stats.size,
       bytes: diskBytes(stats),
       mtimeMs: stats.mtimeMs,
+      inode: `${stats.dev}:${stats.ino}`,
     };
   }
 
@@ -290,6 +291,17 @@ export class LocalEnv {
    * file mtime.
    */
   async usage(target) {
+    return (await this.usageMany([target])).get(target) ?? null;
+  }
+
+  async statMany(targets) {
+    const entries = await Promise.all(
+      targets.map(async (target) => [target, await this.stat(target)])
+    );
+    return new Map(entries.filter(([, stat]) => stat));
+  }
+
+  async rawUsage(target) {
     const root = await safeLstat(target);
     if (!root) {
       return null;
@@ -447,9 +459,16 @@ export class LocalEnv {
   }
 
   async usageMany(targets) {
+    const usages = await this.rawUsageMany(targets);
+    return this.writableLayer
+      ? this.writableLayer.measure(this, usages)
+      : usages;
+  }
+
+  async rawUsageMany(targets) {
     const usages = new Map();
     for (const target of targets) {
-      usages.set(target, await this.usage(target));
+      usages.set(target, await this.rawUsage(target));
     }
     return usages;
   }
@@ -492,6 +511,13 @@ export class LocalEnv {
 
   async processes() {
     const selfPids = new Set([process.pid, process.ppid]);
+    if (this.processInspector?.probeExecutor) {
+      return (
+        (await this.processInspector.processes())?.filter(
+          (proc) => !selfPids.has(proc.pid)
+        ) ?? null
+      );
+    }
     if (this.platform === 'linux') {
       return (await this.#linuxProcesses()).filter(
         (proc) => !selfPids.has(proc.pid)
@@ -530,15 +556,18 @@ export class LocalEnv {
   }
 
   async #linuxProcesses() {
-    let pids = [];
-    try {
-      pids = (await fsp.readdir('/proc')).filter((name) => /^\d+$/.test(name));
-    } catch {
-      return [];
-    }
+    const pids = (await fsp.readdir('/proc')).filter((name) =>
+      /^\d+$/.test(name)
+    );
     const processes = [];
     for (const pid of pids) {
       const base = `/proc/${pid}`;
+      const stat = parseProcStat(
+        await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
+      );
+      if (stat.state === 'Z') {
+        continue;
+      }
       let name;
       try {
         name = (await fsp.readFile(`${base}/comm`, 'utf8')).trim();
@@ -550,12 +579,6 @@ export class LocalEnv {
       const cmdline = await fsp
         .readFile(`${base}/cmdline`, 'utf8')
         .catch(() => '');
-      const stat = parseProcStat(
-        await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
-      );
-      if (stat.state === 'Z') {
-        continue;
-      }
       processes.push({
         pid: Number(pid),
         name,
@@ -563,6 +586,7 @@ export class LocalEnv {
         cwd,
         aliases: processAliases(exe, cmdline.split('\0')[0]),
         command: cmdline.replaceAll('\0', ' '),
+        argv: cmdline.split('\0').filter(Boolean),
       });
     }
     return processes;
@@ -574,6 +598,20 @@ export class LocalEnv {
    * @returns {Promise<Set<string>|null>}
    */
   async openPaths({ strict = true } = {}) {
+    try {
+      return await this.rawOpenPaths({ strict });
+    } catch (error) {
+      if (this.processInspector) {
+        const paths = await this.processInspector.openPaths();
+        this.probeDiagnostic = this.processInspector.probeDiagnostic;
+        return paths;
+      }
+      this.probeDiagnostic = error.message;
+      throw error;
+    }
+  }
+
+  async rawOpenPaths({ strict = true } = {}) {
     if (this.platform === 'linux') {
       const paths = new Set();
       let pids = [];
@@ -584,6 +622,12 @@ export class LocalEnv {
       }
       for (const pid of pids) {
         const base = `/proc/${pid}`;
+        const state = parseProcStat(
+          await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
+        );
+        if (state.state === 'Z') {
+          continue;
+        }
         for (const link of ['cwd', 'exe']) {
           const target = await fsp
             .readlink(`${base}/${link}`)

@@ -37,6 +37,7 @@ function cacheScan() {
       const pattern = rule.paths.find((p) => p.startsWith('~/'));
       const dir = join(home, pattern.slice(2).replaceAll('*', 'x'));
       writeBlob(join(dir, `${rule.id}.bin`), 32 * 1024);
+      age(dir, 3 * DAY_MS);
       dirs.set(rule.id, dir);
     }
     const report = await scan(

@@ -417,7 +417,7 @@ describe('cleaning stopped containers', () => {
     });
 
     const entries = audit.entries.filter((e) => e.kind === 'container');
-    expect(entries.length).toBe(3);
+    expect(entries.length).toBe(2);
     for (const entry of entries) {
       expect(entry.status).toBe('skipped');
       expect(entry.reason).toContain('--remove-stopped-containers');
@@ -552,7 +552,7 @@ describe('cleaning stopped containers', () => {
         },
       });
 
-      expect(asked).toEqual(['s-3', 's-2']);
+      expect(asked).toEqual(['s-2']);
       expect(audit.entries.every((e) => e.status === 'skipped')).toBe(true);
       expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
     } finally {

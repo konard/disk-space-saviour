@@ -4,7 +4,7 @@
  */
 
 import { TIERS, consentFlag } from './items.js';
-import { formatBytes } from './units.js';
+import { formatBytes, formatDuration } from './units.js';
 
 const DEFAULT_LIMIT = 25;
 
@@ -51,7 +51,12 @@ function itemLine(item, showEnv) {
   const confirm = item.requiresConfirmation
     ? `  (needs ${consentFlag(item)})`
     : '';
-  return `  ${pad(formatBytes(item.bytes), 10)}  ${env}${item.rule}  ${itemLocation(item)}${confirm}`;
+  const storage = item.sizeUnknown
+    ? '  (reclaimable size unknown)'
+    : item.imageBytes
+      ? `  (${formatBytes(item.imageBytes)} in image; rebuild the image to reclaim)`
+      : '';
+  return `  ${pad(formatBytes(item.bytes), 10)}  ${env}${item.rule}  ${itemLocation(item)}${confirm}${storage}`;
 }
 
 function limited(lines, limit) {
@@ -108,7 +113,12 @@ function repoSummary(repo) {
   }
   const parts = [];
   if (repo.dirty) {
-    parts.push(`${repo.dirty} uncommitted`);
+    parts.push(
+      `${repo.dirty} uncommitted${repo.untracked ? ` (${repo.untracked} untracked)` : ''}`
+    );
+    if (repo.preservedOn) {
+      parts.push(`uncommitted work preserved on ${repo.preservedOn}`);
+    }
   }
   if (repo.unpushed) {
     parts.push(`${repo.unpushed} unpushed`);
@@ -155,6 +165,14 @@ function containerLines(container, stoppedItems) {
     lines.push(`      ${ended}`);
   }
   const item = stoppedItems.get(container.id);
+  if (container.sizeUnknown) {
+    lines.push('      writable layer size unknown');
+  }
+  if (container.pinnedImage) {
+    lines.push(
+      `      ${formatBytes(container.pinnedImage.bytes)} unique image bytes pinned by this container (${container.pinnedImage.ref}); after removing it, approve the unused image separately with --remove-image ${container.pinnedImage.ref}`
+    );
+  }
   if (item?.container?.investigation) {
     lines.push(`      ${item.container.investigation}`);
   }
@@ -192,6 +210,25 @@ function imageLine(item) {
     )}) unused, ${formatBytes(image.bytes)}, ${created}${lastUseText(image.lastUsedBy)}${consent}`;
 }
 
+function investigationSummary(docker, stoppedItems, createdAt) {
+  const lines = [];
+  const kept = docker.containers.filter(
+    (container) => stoppedItems.get(container.id)?.container?.investigation
+  );
+  if (kept.length) {
+    const dates = kept
+      .map((container) => Date.parse(container.owner?.finishedAt))
+      .filter(Number.isFinite);
+    const age = dates.length
+      ? `, oldest ${formatDuration(Math.max(0, Date.parse(createdAt) - Math.min(...dates)))}`
+      : '';
+    lines.push(
+      `  ${formatBytes(kept.reduce((sum, container) => sum + container.bytes, 0))} in ${kept.length} containers kept for investigation${age}`
+    );
+  }
+  return lines;
+}
+
 function dockerSection(report) {
   const docker = report.docker;
   if (!docker || docker.daemons.length === 0) {
@@ -202,7 +239,11 @@ function dockerSection(report) {
       .filter((item) => item.container)
       .map((item) => [item.container.id, item])
   );
-  const lines = ['', 'DOCKER'];
+  const lines = [
+    '',
+    'DOCKER',
+    ...investigationSummary(docker, stoppedItems, report.createdAt),
+  ];
   for (const daemon of docker.daemons) {
     lines.push(
       `  daemon ${daemon.name} (depth ${daemon.depth}, ${daemon.serverVersion}, ${daemon.driver}) via ${daemon.env}`
@@ -214,9 +255,20 @@ function dockerSection(report) {
   for (const item of report.items.filter((entry) => entry.image)) {
     lines.push(imageLine(item));
   }
+  const grouped = new Map();
   for (const hint of docker.hints ?? []) {
+    const key = `${(hint.images ?? [hint.image]).join(', ')}\0${hint.hint}`;
+    const group = grouped.get(key);
+    if (group) {
+      group.bytes += hint.bytes;
+      group.layers += 1;
+    } else {
+      grouped.set(key, { ...hint, layers: 1 });
+    }
+  }
+  for (const hint of grouped.values()) {
     lines.push(
-      `  hint ${(hint.images ?? [hint.image]).join(', ')}: ${formatBytes(hint.bytes)} layer, ${hint.hint}`
+      `  hint ${(hint.images ?? [hint.image]).join(', ')}: ${formatBytes(hint.bytes)} in ${hint.layers} layer${hint.layers === 1 ? '' : 's'}, ${hint.hint}`
     );
   }
   for (const volume of docker.volumes ?? []) {
@@ -246,7 +298,7 @@ function errorsSection(errors) {
   }
   return [
     '',
-    'ERRORS',
+    'ERRORS (scan incomplete)',
     ...errors.map(
       (error) => `  ${error.env} ${error.scanner}: ${error.message}`
     ),
@@ -310,7 +362,7 @@ function healthLines(records) {
     if (!record.available) {
       return `  ${record.envLabel}: processes could not be listed`;
     }
-    return `  ${record.envLabel}: ${record.watched.length} watched processes still running`;
+    return `  ${record.envLabel}: ${record.watched.length} watched processes still running: ${record.watched.map((proc) => `${proc.name} (pid ${proc.pid})`).join(', ')}`;
   });
   return lines.length > 0 ? ['', 'Task health:', ...lines] : [];
 }

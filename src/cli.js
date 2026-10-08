@@ -54,6 +54,7 @@ Consent:
   -y, --yes                  delete without asking (non-interactive use)
   --dry-run                  never delete, show the plan
   --remove-stopped-containers  allow docker rm of verified stopped containers
+  --investigation-max-age AGE  lift investigation holds older than AGE (opt-in)
   --remove-container ID|NAME  remove this stopped container, even one kept
                              for investigation (repeat)
   --remove-image REF         remove this unused image (repo:tag or id;
@@ -94,6 +95,7 @@ const OPTIONS = {
   yes: { type: 'boolean', short: 'y' },
   'dry-run': { type: 'boolean' },
   'remove-stopped-containers': { type: 'boolean' },
+  'investigation-max-age': { type: 'string' },
   'remove-container': { type: 'string', multiple: true },
   'remove-image': { type: 'string', multiple: true },
   'remove-unused-images': { type: 'boolean' },
@@ -168,6 +170,7 @@ export function toOptions(values, paths = []) {
     until: values.until,
     path: values.path,
     removeStoppedContainers: values['remove-stopped-containers'],
+    investigationMaxAge: values['investigation-max-age'],
     removeContainers: values['remove-container'],
     removeImages: values['remove-image'],
     includeVolumes: values['include-volumes'],
@@ -240,6 +243,7 @@ export function scanAudit(report) {
       totals: report.totals,
       environments: report.environments.map((env) => env.id),
       errors: report.errors,
+      items: report.items,
     },
     entries: report.items.map((item) => ({
       id: item.id,
@@ -301,7 +305,7 @@ class Cli {
         'Run `dss clean --tier safe` to see the plan, add --yes to delete.',
       ].join('\n')
     );
-    return 0;
+    return report.errors.length > 0 ? 1 : 0;
   }
 
   async loadReport(options, values) {
