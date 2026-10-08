@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'test-anywhere';
+import { promises as fsp } from 'node:fs';
 import path from 'node:path';
 import { LivenessProbe, matchingName } from '../src/liveness.js';
 import { ShellEnv } from '../src/env/shell.js';
@@ -129,6 +130,57 @@ describe('issue 14 process matching', () => {
 });
 
 describe('issue 14 Docker process inspection', () => {
+  it('skips zombie metadata while retaining command paths of live processes', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const zombie = '/proc/2147483600';
+    const live = '/proc/2147483601';
+    const original = {
+      readdir: fsp.readdir,
+      readFile: fsp.readFile,
+      readlink: fsp.readlink,
+    };
+    const reads = [];
+    fsp.readdir = async (target, ...args) =>
+      target === '/proc'
+        ? ['2147483600', '2147483601']
+        : original.readdir(target, ...args);
+    fsp.readFile = async (target, ...args) => {
+      if (target.startsWith(zombie) || target.startsWith(live)) {
+        reads.push(target);
+        if (target.endsWith('/stat')) {
+          const state = target.startsWith(zombie) ? 'Z' : 'S';
+          return `1 (agent) ${state} ${Array(18).fill('0').join(' ')} 123`;
+        }
+        return target.endsWith('/comm')
+          ? 'node\n'
+          : '/usr/bin/node\0/cache/active/server.js\0';
+      }
+      return original.readFile(target, ...args);
+    };
+    fsp.readlink = async (target, ...args) => {
+      if (target.startsWith(zombie) || target.startsWith(live)) {
+        reads.push(target);
+        return target.endsWith('/cwd') ? '/cache/active' : '/usr/bin/node';
+      }
+      return original.readlink(target, ...args);
+    };
+    try {
+      const processes = await new LocalEnv({ platform: 'linux' }).processes();
+      expect(processes.length).toBe(1);
+      expect(processes[0].argv).toEqual([
+        '/usr/bin/node',
+        '/cache/active/server.js',
+      ]);
+      expect(reads.filter((target) => target.startsWith(zombie))).toEqual([
+        `${zombie}/stat`,
+      ]);
+    } finally {
+      Object.assign(fsp, original);
+    }
+  });
+
   it('uses the same read-only fallback when dss runs inside the container', async () => {
     if (readOnlyRuntime()) {
       return;

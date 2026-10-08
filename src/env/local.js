@@ -562,6 +562,12 @@ export class LocalEnv {
     const processes = [];
     for (const pid of pids) {
       const base = `/proc/${pid}`;
+      const stat = parseProcStat(
+        await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
+      );
+      if (stat.state === 'Z') {
+        continue;
+      }
       let name;
       try {
         name = (await fsp.readFile(`${base}/comm`, 'utf8')).trim();
@@ -573,12 +579,6 @@ export class LocalEnv {
       const cmdline = await fsp
         .readFile(`${base}/cmdline`, 'utf8')
         .catch(() => '');
-      const stat = parseProcStat(
-        await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
-      );
-      if (stat.state === 'Z') {
-        continue;
-      }
       processes.push({
         pid: Number(pid),
         name,
