@@ -95,8 +95,7 @@ export function ownerOf(ps, inspected) {
   return {
     name,
     image: ps.Image,
-    command: ps.Command ? ps.Command.replace(/^"|"$/g, '') : null,
-    createdAt: ps.CreatedAt ?? null,
+    ...containerMetadata(ps, inspected),
     finishedAt: inspected?.State?.FinishedAt ?? null,
     exitCode: typeof state?.ExitCode === 'number' ? state.ExitCode : null,
     oomKilled: Boolean(state?.OOMKilled),
@@ -105,6 +104,18 @@ export function ownerOf(ps, inspected) {
     session,
     sessionSource,
     hints,
+  };
+}
+
+function containerMetadata(ps, inspected) {
+  return {
+    command: ps.Command
+      ? ps.Command.replace(/^"|"$/g, '')
+      : [
+          ...(inspected?.Config?.Entrypoint ?? []),
+          ...(inspected?.Config?.Cmd ?? []),
+        ].join(' ') || null,
+    createdAt: ps.CreatedAt ?? inspected?.Created ?? null,
   };
 }
 
@@ -180,10 +191,28 @@ export function containerNamed(names, id, name) {
   );
 }
 
+export function investigationExpired(state, options = {}) {
+  const age = options.investigationMaxAgeMs;
+  const finished = Date.parse(state?.FinishedAt);
+  return (
+    age !== null &&
+    age !== undefined &&
+    Number.isFinite(age) &&
+    age >= 0 &&
+    Number.isFinite(finished) &&
+    finished > 0 &&
+    (options.now?.() ?? Date.now()) - finished >= age
+  );
+}
+
 /** Blocker of a container kept for investigation that was not named. */
 export function investigationBlocker(state, id, name, options = {}) {
   const reason = investigationReason(state);
-  if (!reason || containerNamed(options.removeContainers, id, name)) {
+  if (
+    !reason ||
+    investigationExpired(state, options) ||
+    containerNamed(options.removeContainers, id, name)
+  ) {
     return null;
   }
   return `${reason}; remove it only with --remove-container ${id.slice(0, SHORT_ID)}`;
@@ -294,6 +323,17 @@ function excludedWorkBlockers(checked, changed, blockers) {
 }
 
 export async function containerGitState(docker, id, options = {}) {
+  try {
+    return await inspectContainerGitState(docker, id, options);
+  } catch (error) {
+    return {
+      repos: [],
+      blockers: [`cannot verify Git work in the container: ${error.message}`],
+    };
+  }
+}
+
+async function inspectContainerGitState(docker, id, options) {
   const diff = await docker.diff(id);
   if (diff === null) {
     return {
@@ -301,13 +341,17 @@ export async function containerGitState(docker, id, options = {}) {
       blockers: ['cannot list the writable layer (`docker diff` failed)'],
     };
   }
-  const roots = new Set(repoRootsFromDiff(diff));
+  const relevantDiff = diff
+    .split('\n')
+    .filter((line) => !excludedRepoPath(line.slice(2)))
+    .join('\n');
+  const roots = new Set(repoRootsFromDiff(relevantDiff));
   const maxRepos = options.maxRepos ?? DEFAULT_MAX_REPOS;
   const blockers = [];
   if (roots.has('/')) {
     blockers.push('the container root is a Git repository');
   }
-  const changed = diff
+  const changed = relevantDiff
     .split('\n')
     .map((line) => /^[ACD] (\/.+)$/.exec(line.trim())?.[1])
     .filter(Boolean);
@@ -324,11 +368,21 @@ export async function containerGitState(docker, id, options = {}) {
     return { repos, blockers };
   }
   // `docker cp` copies to this machine, so Git always runs locally.
-  const git = new GitInspector(options.env ?? new LocalEnv());
+  const git = new GitInspector(options.env ?? new LocalEnv(), {
+    recognizePreserved: true,
+  });
   for (const root of checked) {
     const state = await copyAndCheck(docker, id, root, git);
     repos.push(state);
     blockers.push(...stateBlockers(`${root} (in container)`, state));
   }
   return { repos, blockers };
+}
+
+function excludedRepoPath(target) {
+  return (
+    /^\/var\/lib\/docker\/(?:overlay2|fuse-overlayfs|btrfs|containerd)\//.test(
+      target
+    ) || /\/\.codex\/(?:.*\/)?\.tmp\/plugins[^/]*(?:\/|$)/.test(target)
+  );
 }

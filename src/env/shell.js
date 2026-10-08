@@ -8,8 +8,9 @@
  */
 
 import path from 'node:path';
+import { WritableLayer } from '../docker/writable.js';
 
-import { shellQuote } from '../exec.js';
+import { containerExecutor, shellQuote, trace } from '../exec.js';
 import { DEFAULT_SKIP_NAMES, parseDf, processAliases } from './local.js';
 
 const STAT_FORMAT = '%F|%s|%b|%B|%Y|%n';
@@ -44,18 +45,26 @@ for p in /proc/[0-9]*; do
   e=$(readlink "$p/exe" 2>/dev/null)
   a=$(tr '\\000' '\\n' < "$p/cmdline" 2>/dev/null | head -n 1)
   w=$(readlink "$p/cwd" 2>/dev/null)
+  q=$(tr '\\000' ' ' < "$p/cmdline" 2>/dev/null)
   t=$(sed 's/.*) //' "$p/stat" 2>/dev/null | cut -d' ' -f1,20)
-  printf '%s|%s|%s|%s|%s|%s\\n' "\${p#/proc/}" "$t" "$c" "$e" "$a" "$w"
+  printf '%s|%s|%s|%s|%s|%s|%s\\n' "\${p#/proc/}" "$t" "$c" "$e" "$a" "$w" "$q"
 done`;
 
 const OPEN_PATHS_SCRIPT = `failed=0
 for p in /proc/[0-9]*; do
   [ -d "$p" ] || continue
-  ls "$p/fd" >/dev/null 2>&1 || { [ -d "$p" ] && failed=1; continue; }
+  state=$(sed 's/.*) //' "$p/stat" 2>/dev/null | cut -d' ' -f1)
+  [ "$state" = Z ] && continue
+  unreadable=0
+  ls "$p/fd" >/dev/null 2>&1 || unreadable=1
   for l in "$p/cwd" "$p/exe" "$p"/fd/*; do
     [ -L "$l" ] || continue
-    readlink "$l" 2>/dev/null || failed=1
+    readlink "$l" 2>/dev/null || { [ -L "$l" ] && unreadable=1; }
   done
+  if [ "$unreadable" = 1 ] && [ -d "$p" ]; then
+    printf 'unreadable pid %s (%s)\\n' "\${p#/proc/}" "$(cat "$p/comm" 2>/dev/null)" >&2
+    failed=1
+  fi
 done
 exit "$failed"`;
 
@@ -156,6 +165,10 @@ export class ShellEnv {
    */
   constructor(executor, options = {}) {
     this.executor = executor;
+    this.writableLayer =
+      executor.parent && executor.containerId
+        ? new WritableLayer(executor.parent, executor.containerId)
+        : null;
     this.id = options.id ?? executor.label;
     this.kind = options.kind ?? 'container';
     this.label = options.label ?? executor.label;
@@ -289,6 +302,34 @@ export class ShellEnv {
    * @returns {Promise<Map<string, object>>}
    */
   async usageMany(targets) {
+    const usages = await this.rawUsageMany(targets);
+    return this.writableLayer
+      ? this.writableLayer.measure(this, usages)
+      : usages;
+  }
+
+  async statMany(targets) {
+    const stats = new Map();
+    for (const batch of batches(targets)) {
+      const result = await this.executor.run([
+        'stat',
+        '-c',
+        `${STAT_FORMAT}|%d:%i`,
+        '--',
+        ...batch,
+      ]);
+      for (const line of result.stdout.split('\n').filter(Boolean)) {
+        const end = line.lastIndexOf('|');
+        const stat = parseStatLine(line.slice(0, end));
+        if (stat) {
+          stats.set(stat.name, { ...stat, inode: line.slice(end + 1) });
+        }
+      }
+    }
+    return stats;
+  }
+
+  async rawUsageMany(targets) {
     const usages = new Map();
     for (const batch of batches(targets)) {
       const result = await this.sh(USAGE_MANY_SCRIPT, batch);
@@ -384,14 +425,18 @@ export class ShellEnv {
   }
 
   async processes() {
-    const result = await this.sh(PROCESS_SCRIPT);
+    const result = await (this.probeExecutor ?? this.executor).run([
+      'sh',
+      '-c',
+      PROCESS_SCRIPT,
+    ]);
     if (result.code !== 0) {
       return null;
     }
     const [selfPid, ...lines] = result.stdout.split('\n');
     return lines
       .map((line) =>
-        /^(\d+)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|(.*)$/.exec(line)
+        /^(\d+)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|(.*)$/.exec(line)
       )
       .filter((m) => m && !m[2].startsWith('Z '))
       .map((m) => ({
@@ -400,13 +445,43 @@ export class ShellEnv {
         name: m[3],
         aliases: processAliases(m[4], m[5]),
         cwd: m[6] || null,
+        command: m[7],
       }))
       .filter((proc) => String(proc.pid) !== selfPid.trim());
   }
 
   async openPaths() {
-    const result = await this.sh(OPEN_PATHS_SCRIPT);
+    let result = await (this.probeExecutor ?? this.executor).run([
+      'sh',
+      '-c',
+      OPEN_PATHS_SCRIPT,
+    ]);
+    this.probeDiagnostic = null;
+    if (
+      result.code !== 0 &&
+      this.executor.parent &&
+      this.executor.containerId
+    ) {
+      const diagnostic = result.stderr.trim();
+      trace(
+        'retrying process inspection as privileged root',
+        this.id,
+        diagnostic
+      );
+      const inspector = containerExecutor(
+        this.executor.parent,
+        this.executor.containerId,
+        { user: '0', privileged: true }
+      );
+      result = await inspector.run(['sh', '-c', OPEN_PATHS_SCRIPT]);
+      if (result.code !== 0) {
+        this.probeDiagnostic = `${diagnostic}; privileged inspection failed: ${result.stderr.trim()}`;
+      } else {
+        this.probeExecutor = inspector;
+      }
+    }
     if (result.code !== 0) {
+      this.probeDiagnostic ??= result.stderr.trim();
       return null;
     }
     return new Set(

@@ -178,8 +178,9 @@ function checkScan(report) {
   assert.deepEqual(stopped.blockers, []);
   assert.equal(stopped.requiresConfirmation, 'removeStoppedContainers');
   const unsaved = stoppedNamed(report.items, 'unsaved-work');
-  assert.equal(unsaved.container.gitCheckDeferred, true);
-  assert.deepEqual(unsaved.container.repos, []);
+  assert.notEqual(unsaved.container.gitCheckDeferred, true);
+  assert.ok(unsaved.container.repos.length > 0);
+  assert.ok(unsaved.blockers.length > 0);
   assert.ok(report.errors.length === 0, JSON.stringify(report.errors));
 }
 

@@ -34,6 +34,8 @@ export interface ScanOptions {
   exclude?: string[] | string;
   includeVolumes?: boolean;
   removeStoppedContainers?: boolean;
+  /** Opt-in age after which failed containers may pass the investigation hold. */
+  investigationMaxAge?: Duration | null;
   /**
    * Stopped containers (name, id or id prefix of 12+ characters) the
    * operator approves one by one, including ones kept for investigation.
@@ -97,6 +99,12 @@ export interface Item {
   path: string | null;
   paths: string[];
   bytes: number;
+  /** Merged filesystem bytes, including image data, when measured in Docker. */
+  totalBytes?: number;
+  /** Immutable image bytes excluded from reclaimable totals. */
+  imageBytes?: number;
+  /** The object was discovered but its reclaimable size could not be measured. */
+  sizeUnknown?: boolean;
   newestMtimeMs: number;
   tier: Tier;
   reason: string;

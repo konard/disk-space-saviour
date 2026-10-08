@@ -142,7 +142,7 @@ async function buildItem(context, rule, base, group) {
     checks: {
       busy: rule.busy ?? [],
       cwd: scope === 'tmp' ? paths[0] : null,
-      mtime: scope === 'tmp' || Boolean(rule.minAge),
+      mtime: rule.mtime ?? (scope === 'tmp' || Boolean(rule.minAge)),
     },
   });
   block(item, blocker);

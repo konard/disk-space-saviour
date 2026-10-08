@@ -18,12 +18,14 @@ import path from 'node:path';
 import { finished } from 'node:stream/promises';
 
 import { backupDirectory, startAudit, writeAudit } from './audit.js';
+import { configureContainerHost } from './docker/writable.js';
 import { DockerCli, assertAllowed, parseDockerSize } from './docker/cli.js';
 import {
   containerGitState,
   containerNamed,
   gitBlockersForRemoval,
   investigationBlocker,
+  investigationExpired,
   runningBindMounts,
 } from './docker/containers.js';
 import { imageNamed } from './docker/images.js';
@@ -35,9 +37,10 @@ import { LivenessProbe } from './liveness.js';
 import { resolveOptions } from './options.js';
 import { isWithin } from './paths.js';
 import { OTHER_RULES } from './rules/other.js';
-import { compareVersions } from './rules/versions.js';
+import { compareVersions, VERSION_RULES } from './rules/versions.js';
+import { scanVersions } from './scanners/versions.js';
 import { analyzeRustProfile } from './scanners/rust.js';
-import { filterItems, revalidateReport } from './scan.js';
+import { filterItems, revalidateReport, selfContainerIds } from './scan.js';
 
 const STOPPED = new Set(['exited', 'created', 'dead']);
 const COMMAND_TIMEOUT_MS = 30 * 60 * 1000;
@@ -121,6 +124,18 @@ async function browserRevisionBlocker(env, item) {
     }
   }
   return null;
+}
+
+async function configureStorage(env) {
+  if (env.kind === 'host' && !env.writableLayer) {
+    await configureContainerHost(env, await selfContainerIds(env));
+  }
+}
+
+function imageOnly(bytes, usages) {
+  return (
+    bytes === 0 && [...usages.values()].some((usage) => usage.imageBytes > 0)
+  );
 }
 
 export class Cleaner {
@@ -241,6 +256,7 @@ export class Cleaner {
     if (type === 'none' || item.paths.length === 0) {
       return { item };
     }
+    await configureStorage(ctx.env);
     let paths = item.paths;
     if (item.recheck?.type === 'rust') {
       const current = await analyzeRustProfile(ctx.env, item.recheck.profile, {
@@ -263,10 +279,16 @@ export class Cleaner {
     const fresh = {
       ...item,
       paths,
-      bytes: type === 'remove' ? sumBytes(usages, paths) : item.bytes,
+      bytes: sumBytes(usages, paths),
       newestMtimeMs: newest || item.newestMtimeMs,
       action: type === 'remove' ? { ...item.action, paths } : item.action,
     };
+    if (imageOnly(fresh.bytes, usages)) {
+      return {
+        reason:
+          'all bytes are in the image layer; rebuild the image to reclaim them',
+      };
+    }
     const staticBlocker = await this.#staticBlocker(ctx, fresh);
     if (staticBlocker) {
       return { reason: staticBlocker };
@@ -306,6 +328,27 @@ export class Cleaner {
   }
 
   async #staticBlocker(ctx, item) {
+    if (item.recheck?.type === 'version') {
+      const rule = VERSION_RULES.find(
+        (candidate) => candidate.id === item.rule
+      );
+      const candidates = await scanVersions(
+        {
+          ...ctx,
+          options: {
+            ...this.options,
+            homes: [item.recheck.home],
+            roots: this.report.options.roots ?? [],
+          },
+          now: this.options.now(),
+          liveness: null,
+        },
+        { rules: [rule] }
+      );
+      if (!candidates.some((candidate) => candidate.path === item.path)) {
+        return `${item.path} is now current, pinned, or the newest installed version`;
+      }
+    }
     if (
       item.recheck?.type === 'pyenv-envs' &&
       (await ctx.env.list(ctx.env.path.join(item.path, 'envs'))).length > 0
@@ -609,11 +652,15 @@ function containerConsent(item, options) {
   const { containerId, name } = item.action;
   const named = containerNamed(options.removeContainers, containerId, name);
   const dirtyAllowed = options.allowDirtyContainers?.includes(containerId);
-  if (!named && !dirtyAllowed) {
+  const expired = investigationExpired(
+    { FinishedAt: item.container?.owner?.finishedAt },
+    options
+  );
+  if (!named && !dirtyAllowed && !expired) {
     return item;
   }
   const lifted = (reason) =>
-    (named && reason === item.container?.investigation) ||
+    ((named || expired) && reason === item.container?.investigation) ||
     (dirtyAllowed &&
       item.container?.gitBlockers?.includes(reason) &&
       /^Git repository .+ has /.test(reason));
@@ -636,6 +683,7 @@ export function planItems(report, options) {
 /** Options that only the cleaning run itself may grant. */
 export const CONFIRMATION_FLAGS = [
   'removeStoppedContainers',
+  'investigationMaxAge',
   'removeContainers',
   'removeImages',
   'includeVolumes',

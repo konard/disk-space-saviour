@@ -26,7 +26,11 @@ async function installDirs(env, rule, home) {
       if ((rule.exclude ?? []).includes(name)) {
         continue;
       }
-      if ((await env.stat(candidate))?.type !== 'dir') {
+      if (
+        !(rule.installTypes ?? ['dir']).includes(
+          (await env.stat(candidate))?.type
+        )
+      ) {
         continue;
       }
       if (
@@ -86,7 +90,11 @@ async function managerRefs(env, rule, home, installs) {
     refs.push(...(await aliasRefs(env, expand(rule.aliasDir))));
   }
   for (const link of rule.defaultLinks ?? []) {
-    refs.push(...linkRefs(await env.readLink(expand(link))));
+    const target = await env.readLink(expand(link));
+    refs.push(...linkRefs(target));
+    if (rule.linkVersion) {
+      refs.push(rule.linkVersion(target));
+    }
   }
   if (rule.currentLink) {
     const parents = new Set(installs.map((dir) => env.path.dirname(dir)));
@@ -195,7 +203,11 @@ async function ruleItems(context, rule, home, pins) {
       tier: 'moderate',
       reason: `not the ${rule.manager} default, not pinned by a scanned project, not the newest`,
       checks: { busy: rule.busy ?? [], cwd: dir, mtime: true },
-      recheck: rule.id === 'pyenv-python' ? { type: 'pyenv-envs' } : null,
+      recheck: rule.recheck
+        ? { type: 'version', home }
+        : rule.id === 'pyenv-python'
+          ? { type: 'pyenv-envs' }
+          : null,
     });
     await blockPyenvEnvironments(env, rule, dir, item);
     const busy = scanTimeBusy(context, item);

@@ -21,6 +21,7 @@ export const DEFAULTS = {
   exclude: [],
   includeVolumes: false,
   removeStoppedContainers: false,
+  investigationMaxAge: null,
   removeContainers: [],
   removeImages: [],
   allowDirtyRepos: false,
@@ -77,6 +78,10 @@ export function resolveOptions(input = {}) {
     dockerDepth: Number(merged.dockerDepth),
     staleAgeMs: toMs(staleAge),
     inactiveMs: toMs(merged.inactive),
+    investigationMaxAgeMs:
+      merged.investigationMaxAge === null
+        ? null
+        : toMs(merged.investigationMaxAge),
     minSizeBytes: toBytes(merged.minSize),
     journalKeepBytes: toBytes(merged.journalKeep),
     containerFilter: toList(merged.containers),

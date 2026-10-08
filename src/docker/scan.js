@@ -27,7 +27,6 @@ import { block, makeItem } from '../items.js';
 import { DockerCli, parseDockerSize } from './cli.js';
 import {
   containerGitState,
-  containerNamed,
   gitBlockersForRemoval,
   investigationBlocker,
   isHostBindSource,
@@ -67,7 +66,9 @@ function daemonItems(daemon, verbose, df, options, users) {
   const unused = images.filter((image) => image.Containers === '0');
   const dangling = unused.filter((image) => image.Tag === '<none>');
   const danglingBytes = dangling.reduce(
-    (sum, image) => sum + parseDockerSize(image.UniqueSize ?? image.Size),
+    (sum, image) =>
+      sum +
+      (image.sizeUnknown ? 0 : parseDockerSize(image.UniqueSize ?? image.Size)),
     0
   );
   const measure = { volume: daemon.rootDir, parse: 'docker' };
@@ -80,6 +81,7 @@ function daemonItems(daemon, verbose, df, options, users) {
         description: `${dangling.length} dangling Docker images`,
         target: `daemon:${daemon.id}:dangling`,
         bytes: danglingBytes,
+        sizeUnknown: dangling.some((image) => image.sizeUnknown),
         reason: 'untagged images no container uses',
         action: {
           type: 'command',
@@ -121,7 +123,9 @@ function daemonItems(daemon, verbose, df, options, users) {
   }
   for (const image of taggedImages(unused)) {
     const name = `${image.Repository}:${image.Tag}`;
-    const bytes = parseDockerSize(image.UniqueSize ?? image.Size);
+    const bytes = image.sizeUnknown
+      ? 0
+      : parseDockerSize(image.UniqueSize ?? image.Size);
     const summary = { ref: name, id: image.ID };
     items.push(
       makeItem(env, {
@@ -131,6 +135,7 @@ function daemonItems(daemon, verbose, df, options, users) {
         description: `unused Docker image ${name}`,
         target: `daemon:${daemon.id}:image:${image.ID}`,
         bytes,
+        sizeUnknown: Boolean(image.sizeUnknown),
         tier: 'moderate',
         reason: 'no container uses it; remove it only after deciding per image',
         requiresConfirmation: 'removeImages',
@@ -256,7 +261,7 @@ export async function imageHints(docker, verbose) {
 }
 
 async function stoppedItem(daemon, ps, inspected, options) {
-  const sizes = containerSizes(ps.Size);
+  const sizes = ps.sizes ?? { bytes: 0, virtualBytes: 0 };
   const owner = ownerOf(ps, inspected);
   const kept = investigationBlocker(
     inspected?.State,
@@ -271,6 +276,7 @@ async function stoppedItem(daemon, ps, inspected, options) {
     description: `stopped container ${owner.name} (${ps.Image})`,
     target: `daemon:${daemon.id}:container:${ps.ID}`,
     bytes: sizes.bytes,
+    sizeUnknown: ps.sizeUnknown ?? false,
     tier: 'moderate',
     reason: 'stopped container, its writable layer is deleted by `docker rm`',
     requiresConfirmation: 'removeStoppedContainers',
@@ -280,6 +286,8 @@ async function stoppedItem(daemon, ps, inspected, options) {
       state: ps.State,
       owner,
       investigation: kept,
+      pinnedImage: ps.pinnedImage ?? null,
+      sizeUnknown: ps.sizeUnknown ?? false,
     },
     action: {
       type: 'docker-rm',
@@ -293,21 +301,12 @@ async function stoppedItem(daemon, ps, inspected, options) {
   if (kept) {
     block(item, kept);
   }
-  if (
-    options.removeStoppedContainers ||
-    containerNamed(options.removeContainers, ps.ID, owner.name)
-  ) {
-    const git = await containerGitState(daemon.docker, ps.ID);
-    item.container.repos = git.repos;
-    item.container.gitBlockers = git.blockers;
-    gitBlockersForRemoval(git, ps.ID, options).forEach((reason) =>
-      block(item, reason)
-    );
-  } else {
-    item.container.repos = [];
-    item.container.gitBlockers = [];
-    item.container.gitCheckDeferred = true;
-  }
+  const git = await containerGitState(daemon.docker, ps.ID);
+  item.container.repos = git.repos;
+  item.container.gitBlockers = git.blockers;
+  gitBlockersForRemoval(git, ps.ID, options).forEach((reason) =>
+    block(item, reason)
+  );
   return item;
 }
 
@@ -319,6 +318,24 @@ function matchesFilter(ps, filters) {
   return filters.some(
     (filter) => ps.ID.startsWith(filter) || names.includes(filter)
   );
+}
+
+function pinnedImage(ps, all, inspected, inventory) {
+  const imageId = inspected.get(ps.ID)?.Image;
+  const image = (inventory.Images ?? []).find(
+    (row) => row.ID === imageId || `${row.Repository}:${row.Tag}` === ps.Image
+  );
+  const users = all.filter((row) =>
+    imageId ? inspected.get(row.ID)?.Image === imageId : row.Image === ps.Image
+  );
+  return image && users.length === 1 && STOPPED.has(ps.State)
+    ? {
+        ref: ps.Image,
+        id: image.ID,
+        bytes: parseDockerSize(image.UniqueSize),
+        sizeUnknown: !image.UniqueSize,
+      }
+    : null;
 }
 
 class DockerScan {
@@ -334,6 +351,7 @@ class DockerScan {
       hints: [],
       bindMounts: [],
       volumes: [],
+      errors: [],
     };
   }
 
@@ -356,8 +374,59 @@ class DockerScan {
       depth,
       rootDir: info.DockerRootDir ?? null,
     };
-    const df = await docker.systemDf();
-    const verbose = await docker.systemDfVerbose();
+    // Discover without a global writable-layer walk. Size failures must
+    // never discard the object list or prevent nested daemon discovery.
+    const all = await this.bestEffort(
+      record.env.id,
+      () => docker.containers(),
+      []
+    );
+    const images = await this.bestEffort(
+      record.env.id,
+      () => docker.images(),
+      []
+    );
+    const inspected = new Map(
+      (
+        await this.bestEffort(
+          record.env.id,
+          () => docker.inspect(all.map((ps) => ps.ID)),
+          []
+        )
+      ).map((c) => [c.Id, c])
+    );
+    const df = await this.bestEffort(
+      record.env.id,
+      () => docker.systemDf(),
+      []
+    );
+    const verbose = await this.bestEffort(
+      record.env.id,
+      () => docker.systemDfVerbose(),
+      null
+    );
+    const inventory = verbose ?? {
+      Images: images.map((image) => ({
+        ...image,
+        Containers: String(
+          all.filter(
+            (ps) =>
+              inspected.get(ps.ID)?.Image === image.ID ||
+              ps.Image === `${image.Repository}:${image.Tag}`
+          ).length
+        ),
+        sizeUnknown: true,
+      })),
+    };
+    for (const ps of all) {
+      ps.sizes = await this.bestEffort(
+        record.env.id,
+        () => docker.containerSize(ps.ID),
+        null
+      );
+      ps.sizeUnknown = ps.sizes === null;
+      ps.pinnedImage = pinnedImage(ps, all, inspected, inventory);
+    }
     this.result.daemons.push({
       id,
       env: record.env.id,
@@ -378,15 +447,15 @@ class DockerScan {
     this.result.items.push(
       ...daemonItems(
         daemon,
-        verbose,
+        inventory,
         df,
         this.options,
-        await this.users(verbose)
+        await this.users(inventory)
       )
     );
     if (this.options.includeVolumes) {
       this.result.volumes.push(
-        ...(verbose.Volumes ?? [])
+        ...(inventory.Volumes ?? [])
           .filter((volume) => volume.Links === '0')
           .map((volume) => ({
             daemon: id,
@@ -396,8 +465,8 @@ class DockerScan {
           }))
       );
     }
-    this.result.hints.push(...(await imageHints(docker, verbose)));
-    await this.containers(daemon, record, depth, inherited);
+    this.result.hints.push(...(await imageHints(docker, inventory)));
+    await this.containers(daemon, record, depth, inherited, all, inspected);
   }
 
   /** Last users of images, read once and only when an image needs them. */
@@ -412,14 +481,21 @@ class DockerScan {
     return this.lastUsers;
   }
 
-  async containers(daemon, record, depth, inherited) {
-    const all = await daemon.docker.containers();
-    const inspected = new Map(
-      (await daemon.docker.inspect(all.map((ps) => ps.ID))).map((c) => [
-        c.Id,
-        c,
-      ])
-    );
+  async bestEffort(env, operation, fallback) {
+    let error;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await operation();
+      } catch (caught) {
+        error = caught;
+        trace('Docker inspection retry', env, error.message);
+      }
+    }
+    this.result.errors.push({ env, scanner: 'docker', message: error.message });
+    return fallback;
+  }
+
+  async containers(daemon, record, depth, inherited, all, inspected) {
     if (record.env.kind === 'host') {
       for (const ps of all.filter((row) => row.State === 'running')) {
         for (const mount of inspected.get(ps.ID)?.Mounts ?? []) {
@@ -443,7 +519,7 @@ class DockerScan {
   }
 
   async container(daemon, record, depth, ps, inspected) {
-    const sizes = containerSizes(ps.Size);
+    const sizes = ps.sizes ?? { bytes: 0, virtualBytes: 0 };
     const owner = ownerOf(ps, inspected);
     const entry = {
       id: ps.ID,
@@ -455,6 +531,8 @@ class DockerScan {
       daemonEnv: record.env.id,
       depth,
       bytes: sizes.bytes,
+      sizeUnknown: ps.sizeUnknown,
+      pinnedImage: ps.pinnedImage ?? null,
       virtualBytes: sizes.virtualBytes,
       owner,
       env: null,
@@ -510,7 +588,15 @@ class DockerScan {
     });
     this.result.items.push(...(await this.scanEnvironment(env)));
     if (await env.which('docker')) {
-      await this.daemon({ env, executor, chain }, depth, true);
+      try {
+        await this.daemon({ env, executor, chain }, depth, true);
+      } catch (error) {
+        this.result.errors.push({
+          env: env.id,
+          scanner: 'docker',
+          message: error.message,
+        });
+      }
     }
   }
 }

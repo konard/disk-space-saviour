@@ -15,6 +15,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { trace } from './exec.js';
+import { preservedWork } from './git-preserved.js';
 
 const GIT_FLAGS = [
   '--no-optional-locks',
@@ -93,7 +94,7 @@ export function stateBlockers(label, state) {
     return [`${label}: ${state.error}`];
   }
   const problems = [];
-  if (state.dirty > 0) {
+  if (state.dirty > 0 && !state.preservedOn) {
     problems.push(plural(state.dirty, 'uncommitted change'));
   }
   if (state.unpushed > 0) {
@@ -111,8 +112,9 @@ export class GitInspector {
   /**
    * @param {object} env environment adapter
    */
-  constructor(env) {
+  constructor(env, options = {}) {
     this.env = env;
+    this.options = options;
     this.states = new Map();
     this.roots = new Map();
     this.available = null;
@@ -224,6 +226,9 @@ export class GitInspector {
       return state;
     }
     state.dirty = countLines(status.stdout);
+    if (this.options.recognizePreserved && state.dirty > 0) {
+      Object.assign(state, await preservedWork(root, git));
+    }
     const unpushed = await git([
       'log',
       'HEAD',

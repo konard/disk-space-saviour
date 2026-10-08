@@ -31,6 +31,7 @@ export const ECOSYSTEMS = [
     caches: [
       {
         id: 'npm-cache',
+        mtime: true,
         description: 'npm download cache',
         paths: ['~/.npm/_cacache', '{LOCALAPPDATA}/npm-cache/_cacache'],
         native: { tool: 'npm', argv: ['npm', 'cache', 'clean', '--force'] },
@@ -39,7 +40,8 @@ export const ECOSYSTEMS = [
       {
         id: 'npx-cache',
         description: 'npx package cache',
-        paths: ['~/.npm/_npx', '{LOCALAPPDATA}/npm-cache/_npx'],
+        paths: ['~/.npm/_npx/*', '{LOCALAPPDATA}/npm-cache/_npx/*'],
+        minAge: 'stale',
         busy: ['npm', 'npx'],
       },
       {
@@ -84,6 +86,7 @@ export const ECOSYSTEMS = [
       },
       {
         id: 'node-gyp-cache',
+        mtime: true,
         description: 'node-gyp headers cache',
         paths: ['~/.cache/node-gyp', '~/Library/Caches/node-gyp'],
         busy: ['node-gyp', 'npm'],
@@ -724,7 +727,6 @@ export const ECOSYSTEMS = [
         id: 'opam-download-cache',
         description: 'opam download cache',
         paths: ['~/.opam/download-cache'],
-        native: { tool: 'opam', argv: ['opam', 'clean', '--download-cache'] },
         busy: ['opam', 'dune', 'ocaml'],
       },
     ],

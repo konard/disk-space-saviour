@@ -208,16 +208,44 @@ export class DockerCli {
   }
 
   async containers() {
+    const output = await this.json([
+      'ps',
+      '--all',
+      '--no-trunc',
+      '--format',
+      '{{.ID}}\\t{{.Names}}\\t{{.State}}\\t{{.Status}}\\t{{.Image}}',
+    ]);
+    return output
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => {
+        const [ID, Names, State, Status, Image] = line.split('\t');
+        return { ID, Names, State, Status, Image };
+      });
+  }
+
+  async images() {
     return jsonLines(
       await this.json([
-        'ps',
+        'image',
+        'ls',
         '--all',
-        '--size',
         '--no-trunc',
         '--format',
         '{{json .}}',
       ])
     );
+  }
+
+  async containerSize(id) {
+    const [entry] = JSON.parse(
+      await this.json(['inspect', '--type', 'container', '--size', id])
+    );
+    if (!Number.isFinite(entry?.SizeRw) || entry.SizeRw < 0) {
+      throw new Error(`size unknown for container ${id}`);
+    }
+    return { bytes: entry.SizeRw, virtualBytes: entry.SizeRootFs ?? 0 };
   }
 
   async inspect(ids) {
