@@ -23,6 +23,20 @@ describe('publishable package metadata', () => {
     expect(lockJson.packages[''].name).toBe('disk-space-saviour');
   });
 
+  it('names the repository the release workflow publishes from', () => {
+    // npm provenance and trusted publishing compare this URL with the
+    // repository that runs the workflow, so a moved repository must update it.
+    expect(packageJson.repository.url).toBe(
+      'git+https://github.com/link-foundation/disk-space-saviour.git'
+    );
+    const running = process.env.GITHUB_REPOSITORY;
+    if (running) {
+      expect(packageJson.repository.url).toBe(
+        `git+https://github.com/${running}.git`
+      );
+    }
+  });
+
   it('defines globally installable dss and disk-space-saviour commands', () => {
     expect(packageJson.bin).toEqual({
       dss: 'bin/dss.js',

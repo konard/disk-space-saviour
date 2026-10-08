@@ -5,7 +5,7 @@ import { sampleReport } from './sample-report.js';
 
 const repositoryUrl =
   import.meta.env.VITE_REPOSITORY_URL ??
-  'https://github.com/konard/disk-space-saviour';
+  'https://github.com/link-foundation/disk-space-saviour';
 
 const TONES = {
   safe: 'green',
