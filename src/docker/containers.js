@@ -14,6 +14,7 @@ import path from 'node:path';
 
 import { GitInspector, stateBlockers } from '../git.js';
 import { LocalEnv } from '../env/local.js';
+import { trace } from '../exec.js';
 import { repoRootsFromDiff } from './cli.js';
 
 export const COPY_EXCLUDES = [
@@ -326,6 +327,7 @@ export async function containerGitState(docker, id, options = {}) {
   try {
     return await inspectContainerGitState(docker, id, options);
   } catch (error) {
+    trace('container Git inspection failed', id, error.stack ?? error.message);
     return {
       repos: [],
       blockers: [`cannot verify Git work in the container: ${error.message}`],
