@@ -471,7 +471,7 @@ The GitHub Actions workflow (`.github/workflows/release.yml`) implements a fast-
 
 Every CI job declares an explicit `timeout-minutes` so hung steps fail
 in minutes instead of reaching the GitHub Actions default of six hours.
-Fast checks use 5-10 minute caps, release jobs use 30 minutes, and the
+Fast checks use 5-10 minute caps, release jobs use 50 minutes, and the
 link checker uses 10 minutes for external network variance.
 
 That cap is a backstop, never the deadline: GitHub reports a job it

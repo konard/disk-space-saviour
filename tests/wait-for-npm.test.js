@@ -112,11 +112,12 @@ describe('checkNpmVersion', () => {
       registryUrl: REGISTRY,
     });
 
-    expect(result).toEqual({
+    expect(result.url).toBe(`${REGISTRY}/react/999.0.0`);
+    expect({ ...result, url: 'fresh registry URL' }).toEqual({
       available: false,
       status: 'not-published',
       httpStatus: 404,
-      url: `${REGISTRY}/react/999.0.0`,
+      url: 'fresh registry URL',
     });
   });
 
