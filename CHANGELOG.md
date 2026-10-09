@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.1
+
+### Patch Changes
+
+- Tests: the repository URL check no longer reads the environment under Deno, which runs the suite without env access.
+
+  The repository moved to link-foundation/disk-space-saviour: package metadata and the example app link to the new location, so npm provenance matches the repository that publishes.
+
 ## 0.14.0
 
 ### Minor Changes
