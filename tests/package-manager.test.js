@@ -48,8 +48,11 @@ describe('check-package-manager.mjs', () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('Package manager check passed');
-    // deno.lock exists for the Deno test leg; the declaration outranks it.
-    expect(result.stderr).toContain('deno.lock');
+    // deno.lock exists for the Deno test leg next to deno.json, so it is
+    // listed but not a warning: a release annotation nobody can act on
+    // would fire on every release.
+    expect(result.stdout).toContain('deno.lock');
+    expect(result.stderr).not.toContain('::warning::');
   });
 
   itUnless(sandboxed)(
@@ -120,6 +123,28 @@ describe('check-package-manager.mjs', () => {
         expect(result.stderr).toContain('::warning::');
         expect(result.stderr).toContain('bun.lock');
         expect(result.stderr).toContain('deno.lock');
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    }
+  );
+
+  itUnless(sandboxed)(
+    'does not warn about deno.lock next to deno.json, which Deno itself keeps',
+    () => {
+      const root = createFixture(
+        { name: 'fixture', devEngines: { packageManager: { name: 'npm' } } },
+        ['deno.json', 'deno.lock']
+      );
+
+      try {
+        const result = runGuard(root);
+
+        expect(result.status).toBe(0);
+        expect(result.stderr).not.toContain('::warning::');
+        expect(result.stdout).toContain(
+          'deno.lock (kept by Deno for deno.json)'
+        );
       } finally {
         rmSync(root, { recursive: true, force: true });
       }

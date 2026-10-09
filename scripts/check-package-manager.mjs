@@ -39,6 +39,16 @@ const FOREIGN_LOCKFILES = [
   'yarn.lock',
 ];
 
+/**
+ * Lockfiles a runtime keeps for its own config, whatever the package manager:
+ * `deno test` reads and writes deno.lock next to deno.json. They are listed,
+ * not warned about, since removing them is not an option and a warning on
+ * every release that nobody can act on teaches readers to skip warnings.
+ */
+const RUNTIME_LOCKFILES = {
+  'deno.lock': ['deno.json', 'deno.jsonc'],
+};
+
 /** The only agent the release flow (npm install, npm x prettier) works with. */
 const EXPECTED = 'npm';
 
@@ -87,13 +97,17 @@ function main() {
   }
 
   const foreign = FOREIGN_LOCKFILES.filter((lock) => existsSync(lock));
+  const runtimeKept = foreign.filter((lock) =>
+    (RUNTIME_LOCKFILES[lock] ?? []).some((config) => existsSync(config))
+  );
+  const unexpected = foreign.filter((lock) => !runtimeKept.includes(lock));
 
-  if (declared === EXPECTED && foreign.length > 0) {
+  if (declared === EXPECTED && unexpected.length > 0) {
     // Safe while the declaration stands (the declaration outranks the
     // lockfile table), but each one is pure downside and worth surfacing.
     console.warn(
       `::warning::lockfile(s) for another package manager at the repository ` +
-        `root: ${foreign.join(', ')}. The npm declaration outranks them, but ` +
+        `root: ${unexpected.join(', ')}. The npm declaration outranks them, but ` +
         'any tool embedding the same lockfile table without reading the ' +
         'declaration will pick the wrong agent.'
     );
@@ -113,9 +127,13 @@ function main() {
     process.exit(1);
   }
 
+  const describeLock = (lock) =>
+    runtimeKept.includes(lock)
+      ? `${lock} (kept by Deno for ${RUNTIME_LOCKFILES[lock].find((config) => existsSync(config))})`
+      : lock;
   const foreignNote =
     foreign.length > 0
-      ? `${foreign.length} foreign lockfile(s) present (outranked by the declaration).`
+      ? `${foreign.length} foreign lockfile(s) present (outranked by the declaration): ${foreign.map(describeLock).join(', ')}.`
       : 'no foreign lockfiles.';
 
   console.log(
