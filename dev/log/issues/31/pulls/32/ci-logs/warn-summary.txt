@@ -1,0 +1,1719 @@
+=== run-37987850798.log
+     4 Test (bun on ubuntu-24.04)	Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+     4 Test (node on ubuntu-24.04)	Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+     4 Test (node on windows-2025)	Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+     4 Test (bun on windows-2025)	Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+     4 Test (bun on macos-15)	Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+     4 Test (node on macos-15)	Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+     2 Detect Changes	scripts/publish-retry.mjs
+     2 Detect Changes	scripts/run-with-budget-warning.sh
+     2 Detect Changes	tests/ci-timeouts.test.js
+     2 Detect Changes	tests/publish-retry.test.js
+     2 Detect Changes	tests/run-with-budget-warning.test.js
+     2 Lint and Format Check	- tests/push-main-with-rebase-retry.test.js [3:8 - 16:11] (14 lines, 46 tokens)
+     2 Test (bun on ubuntu-24.04)	Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+     2 Test (node on ubuntu-24.04)	Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+     2 Test (deno on macos-15)	Skipping: Deno net permission for unpkg.com is prompt, so use-m cannot be evaluated.
+     2 Test (deno on macos-15)	Skipping: this runtime is not allowed to listen on 127.0.0.1.
+     2 Test (node on windows-2025)	Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+     2 Test (deno on windows-2025)	Skipping: Deno net permission for unpkg.com is prompt, so use-m cannot be evaluated.
+     2 Test (deno on windows-2025)	Skipping: this runtime is not allowed to listen on 127.0.0.1.
+     2 Test (bun on windows-2025)	Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+     2 Test (bun on macos-15)	Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+     2 Test (deno on ubuntu-24.04)	Skipping: Deno net permission for unpkg.com is prompt, so use-m cannot be evaluated.
+     2 Test (deno on ubuntu-24.04)	Skipping: this runtime is not allowed to listen on 127.0.0.1.
+     2 Test (node on macos-15)	Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+     1 Release Preflight	FAIL: npm refused the OIDC package exchange (404) -- the trusted publisher on npmjs.com does not match this repository and workflow (see dev/log/issues/29/pulls/30)
+     1 Release Preflight	SKIP: DOCKERHUB_IMAGE is not set -- Docker publishing is disabled (scripts/check-docker-publish.mjs)
+     1 Release Preflight	Release preflight: 0 verified, 1 failed, 0 unknown
+     1 Release Preflight	##[error]release-preflight: npm refused the OIDC package exchange (404) -- the trusted publisher on npmjs.com does not match this repository and workflow (see dev/log/issues/29/pulls/30)
+     1 Release Preflight	##[error]release-preflight: refusing to release with 1 refused credential(s)
+     1 Release Preflight	##[error]Process completed with exit code 1.
+     1 Detect Changes	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Detect Changes	dev/log/issues/29/pulls/30/ci-logs/warn-summary.txt
+     1 Detect Changes	docs/CI-TIMEOUT-BUDGETS.md
+     1 Docker-in-Docker Integration	bash scripts/run-with-budget-warning.sh 780 "Docker-in-Docker integration" npm run test:dind
+     1 Docker-in-Docker Integration	shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Docker-in-Docker Integration	Running Docker-in-Docker integration with a 780s budget (warning at 546s).
+     1 Test Compilation	Checking scripts/publish-failure-classifier.mjs...
+     1 Test Compilation	Checking scripts/publish-retry.mjs...
+     1 Test Compilation	Checking scripts/push-failure-classifier.mjs...
+     1 Test Compilation	Checking scripts/push-main-with-rebase-retry.mjs...
+     1 Check File Line Limits	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Check File Line Limits	docs/CI-TIMEOUT-BUDGETS.md: 131 lines
+     1 Check File Line Limits	experiments/test-failure-detection.mjs: 143 lines
+     1 Check File Line Limits	scripts/publish-failure-classifier.mjs: 82 lines
+     1 Check File Line Limits	scripts/publish-retry.mjs: 225 lines
+     1 Check File Line Limits	scripts/push-failure-classifier.mjs: 92 lines
+     1 Check File Line Limits	scripts/push-main-with-rebase-retry.mjs: 187 lines
+     1 Check File Line Limits	tests/ci-timeouts.test.js: 550 lines
+     1 Check File Line Limits	tests/publish-failure-classifier.test.js: 81 lines
+     1 Check File Line Limits	tests/publish-retry.test.js: 287 lines
+     1 Check File Line Limits	tests/push-failure-classifier.test.js: 84 lines
+     1 Check File Line Limits	tests/push-main-with-rebase-retry.test.js: 331 lines
+     1 Check File Line Limits	tests/run-with-budget-warning.test.js: 344 lines
+     1 Check File Line Limits	Checked 278 tracked files against a 1500-line limit (warning at 1350).
+     1 Lint and Format Check	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Lint and Format Check	found 0 vulnerabilities
+     1 Lint and Format Check	9 warning(s) on unchanged lines were not reported. Run LINT_ALL_WARNINGS=1 npm run lint to see them.
+     1 Lint and Format Check	config file .jscpd.json: unknown field 'skipComments'
+     1 Lint and Format Check	- experiments/test-failure-detection.mjs [13:1 - 37:2] (25 lines, 68 tokens)
+     1 Lint and Format Check	tests/ci-timeouts.test.js [28:61 - 35:38]
+     1 Lint and Format Check	tests/ci-timeouts.test.js [52:3 - 59:38]
+     1 Lint and Format Check	tests/ci-timeouts.test.js [59:63 - 71:9]
+     1 Lint and Format Check	tests/ci-timeouts.test.js [30:3 - 41:9]
+     1 Lint and Format Check	- tests/ci-timeouts.test.js [26:44 - 41:9] (16 lines, 92 tokens)
+     1 Lint and Format Check	- tests/ci-timeouts.test.js [464:95 - 470:37] (7 lines, 32 tokens)
+     1 Lint and Format Check	tests/ci-timeouts.test.js [540:102 - 546:37]
+     1 Lint and Format Check	tests/push-main-with-rebase-retry.test.js [5:3 - 16:11]
+     1 Lint and Format Check	tests/push-main-with-rebase-retry.test.js [50:19 - 55:9]
+     1 Lint and Format Check	tests/push-main-with-rebase-retry.test.js [1:1 - 12:30]
+     1 Lint and Format Check	tests/run-with-budget-warning.test.js [1:1 - 12:30]
+     1 Lint and Format Check	- tests/publish-retry.test.js [38:7 - 46:12] (9 lines, 37 tokens)
+     1 Lint and Format Check	tests/publish-retry.test.js [198:7 - 207:12]
+     1 Lint and Format Check	- tests/publish-retry.test.js [127:77 - 135:26] (9 lines, 56 tokens)
+     1 Lint and Format Check	tests/publish-retry.test.js [143:71 - 151:26]
+     1 Lint and Format Check	- tests/publish-retry.test.js [127:77 - 132:21] (6 lines, 33 tokens)
+     1 Lint and Format Check	tests/publish-retry.test.js [181:53 - 186:21]
+     1 Lint and Format Check	- tests/publish-retry.test.js [172:9 - 178:12] (7 lines, 30 tokens)
+     1 Lint and Format Check	tests/publish-retry.test.js [242:8 - 248:12]
+     1 Lint and Format Check	- tests/publish-retry.test.js [173:31 - 178:44] (6 lines, 32 tokens)
+     1 Lint and Format Check	tests/publish-retry.test.js [203:8 - 208:44]
+     1 Lint and Format Check	- tests/publish-retry.test.js [212:73 - 217:26] (6 lines, 32 tokens)
+     1 Lint and Format Check	tests/publish-retry.test.js [269:63 - 275:19]
+     1 Lint and Format Check	- tests/publish-retry.test.js [220:37 - 226:25] (7 lines, 36 tokens)
+     1 Lint and Format Check	tests/publish-retry.test.js [260:31 - 266:25]
+     1 Lint and Format Check	- tests/publish-retry.test.js [241:64 - 248:28] (8 lines, 38 tokens)
+     1 Lint and Format Check	tests/publish-retry.test.js [278:9 - 285:28]
+     1 Lint and Format Check	tests/run-with-budget-warning.test.js [3:8 - 16:11]
+     1 Lint and Format Check	- tests/run-with-budget-warning.test.js [16:50 - 25:9] (10 lines, 45 tokens)
+     1 Lint and Format Check	- tests/run-with-budget-warning.test.js [72:63 - 77:37] (6 lines, 31 tokens)
+     1 Lint and Format Check	tests/run-with-budget-warning.test.js [264:64 - 269:39]
+     1 Test (bun on ubuntu-24.04)	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Test (bun on ubuntu-24.04)	bash scripts/run-with-budget-warning.sh 200 "Bun test suite" bun test --timeout 30000
+     1 Test (bun on ubuntu-24.04)	shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Test (bun on ubuntu-24.04)	Running Bun test suite with a 200s budget (warning at 140s).
+     1 Test (bun on ubuntu-24.04)	(pass) bootstrapDependencies > reports the failure as a GitHub error annotation [0.31ms]
+     1 Test (bun on ubuntu-24.04)	(pass) bootstrapDependencies > does not run later loaders once one has failed [0.09ms]
+     1 Test (bun on ubuntu-24.04)	(pass) writeOutputs > never throws when the output file cannot be written [0.04ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status gate > passes when jobs succeeded or were skipped [50.86ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status gate > fails for a failed job on every ref [54.80ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status gate > fails for a cancelled job on main [83.73ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status gate > fails closed for a cancellation without branch and workflow context [85.16ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status gate in every workflow > uses a status function, so the gate runs when its needs fail [0.39ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status supersede detection > errors when main is at the run commit (a genuine overrun) [81.86ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status supersede detection > warns only when a moved branch could cancel that exact job [82.52ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status supersede detection > fails closed when cancel-in-progress is an expression [79.50ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status supersede detection > errors when the branch head cannot be resolved [88.79ms]
+     1 Test (bun on ubuntu-24.04)	(pass) pipeline status supersede detection > errors without a network call when RUN_SHA is missing [89.07ms]
+     1 Test (bun on ubuntu-24.04)	(pass) workflow linting job > bounds every job with a timeout backstop [0.05ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-file-line-limits.sh > warns without failing for files above the warning threshold [17.56ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-file-line-limits.sh > still fails files over the hard limit [13.71ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-file-line-limits.sh > fails .js and .cjs files over the hard limit [15.60ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-file-line-limits.sh > fails Markdown files over the hard limit [13.65ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-file-line-limits.sh > fails workflow files under any name, including .yaml [15.46ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-file-line-limits.sh walk > exits 2 with an error when it examined nothing [9.54ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push failure classifier > classifies a GH013 ruleset rejection as a repository rule violation [0.10ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push failure classifier > never mistakes a ruleset rejection for a lost race [0.03ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push failure classifier > classifies a non-fast-forward rejection as a lost race [0.03ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push failure classifier > recognizes legacy GH006 protected-branch rejections [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push failure classifier > reads the message of a thrown command error, not just its output [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push failure classifier > is case-insensitive and accepts a plain string [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push failure classifier > treats other failures (auth, network) as neither [0.04ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-required-docs.sh > fails when a required section is deleted but the file remains [14.52ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-required-docs.sh > fails a missing required document with its own message [14.35ms]
+     1 Test (bun on ubuntu-24.04)	(pass) transient link failures > classifies cached 503 and rejected 429 as retryable, preserving 404 [0.32ms]
+     1 Test (bun on ubuntu-24.04)	(pass) transient link failures > backs off between transient answers and recovers only on success [1.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) transient link failures > uses authenticated contents GET for GitHub blob and tree throttling [0.41ms]
+     1 Test (bun on ubuntu-24.04)	(pass) transient link failures > does not recover on an API denial and keeps credentials off unrelated hosts [0.23ms]
+     1 Test (bun on ubuntu-24.04)	(pass) transient link failures > never retries a definitive 404 or uses an API answer to hide it [0.18ms]
+     1 Test (bun on ubuntu-24.04)	(pass) transient link failures > bounds persistent 503 errors by the shared wall-clock budget [0.17ms]
+     1 Test (bun on ubuntu-24.04)	(pass) transient link failures > pins every Bun setup to the supported major line [0.11ms]
+     1 Test (bun on ubuntu-24.04)	(pass) exit codes > returns 1 when a deletion failed [0.08ms]
+     1 Test (bun on ubuntu-24.04)	(pass) exit codes > returns 1 when an emergency action fails even if the goal is met [0.09ms]
+     1 Test (bun on ubuntu-24.04)	(pass) CI timeout policy > sets timeout-minutes for every release workflow job [2.05ms]
+     1 Test (bun on ubuntu-24.04)	(pass) CI timeout policy > sets timeout-minutes for every link workflow job [0.19ms]
+     1 Test (bun on ubuntu-24.04)	(pass) CI timeout policy > parses workflow files checked out with Windows line endings [0.07ms]
+     1 Test (bun on ubuntu-24.04)	(pass) CI timeout policy > caps individual Node.js and Bun tests at 30 seconds [0.03ms]
+     1 Test (bun on ubuntu-24.04)	(pass) CI timeout policy > documents that the Bun flag bounds a test and not the suite [0.52ms]
+     1 Test (bun on ubuntu-24.04)	(pass) CI execution budgets > warns at the same share of the budget that the invariant allows [0.05ms]
+     1 Test (bun on ubuntu-24.04)	(pass) step budget grouping > still fails when a single leg exceeds the allowance [0.04ms]
+     1 Test (bun on ubuntu-24.04)	(pass) step budget grouping > reports a budget it cannot read and never skips one silently [0.05ms]
+     1 Test (bun on ubuntu-24.04)	(pass) create-github-release.mjs > throws when gh api exits non-zero with an unexpected error [0.14ms]
+     1 Test (bun on ubuntu-24.04)	(pass) create-github-release.mjs > fails when gh api exits non-zero with an unexpected error [22.66ms]
+     1 Test (bun on ubuntu-24.04)	(pass) create-github-release.mjs > treats already_exists as an explicit idempotent skip [23.10ms]
+     1 Test (bun on ubuntu-24.04)	(pass) land-via-pull-request > gives up with the real command error when the merge never succeeds [0.24ms]
+     1 Test (bun on ubuntu-24.04)	(pass) land-via-pull-request > does not retry a permanent repository-policy merge rejection [0.12ms]
+     1 Test (bun on ubuntu-24.04)	(pass) land-via-pull-request check enforcement > propagates a failed pull-request check without attempting a merge [0.99ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release landing failures and reuse > stops before merge when the Checks API rejects attestation [0.32ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release landing failures and reuse > fails closed before pushing a branch when neither token is available [0.14ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release landing failures and reuse > reuses an open pull request so a re-run creates no duplicate [0.19ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release landing failures and reuse > reports no open pull request when the lookup itself fails [0.07ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh > passes a successful command through with its output and exit code [16.62ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh > preserves the exit code of a failing command [14.28ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh > fails with exit code 124 and a titled error when the budget expires [2072.22ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh > warns while the overrun can still be acted on [2038.60ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh > kills workers spawned by the command, not just the direct child [2200.58ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh > does not let a surviving child hold the wrapper output pipe open [24.63ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh > keeps control state when the wrapped command cleans TMPDIR [17.17ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh > fails clearly when the private state parent is unavailable [2.93ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh argument validation > rejects a missing or non-numeric budget [4.25ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh privileged survivor handling > uses the process table, passwordless escalation, and explicit reporting [0.05ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh SIGKILL escalation > escalates to SIGKILL when the command ignores SIGTERM [4130.98ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh SIGKILL escalation > enforces the budget on a fractional poll interval [1585.34ms]
+     1 Test (bun on ubuntu-24.04)	(pass) run-with-budget-warning.sh SIGKILL escalation > rejects a poll interval that is not a number [1.77ms]
+     1 Test (bun on ubuntu-24.04)	(pass) parsed version guard > fails when the base ref is unavailable [35.46ms]
+     1 Test (bun on ubuntu-24.04)	(pass) parsed version guard > fails when the explicitly requested PR head is unavailable [50.09ms]
+     1 Test (bun on ubuntu-24.04)	(pass) PR changeset validation > does not accept a base fragment when the CI comparison fails [41.59ms]
+     1 Test (bun on ubuntu-24.04)	(pass) isWindowsFileUrlError > matches the loader rejection only on Windows [0.07ms]
+     1 Test (bun on ubuntu-24.04)	(pass) isWindowsFileUrlError > matches the code when use-m rethrows it inside a message [0.06ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-package-manager.mjs > fails when neither packageManager nor devEngines is declared [30.49ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-package-manager.mjs > fails on a declaration naming a manager the flow cannot use [33.60ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-package-manager.mjs > warns but passes when a foreign lockfile sits under a declaration [29.96ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-package-manager.mjs > fails and names the lockfile when a foreign lockfile has no declaration [27.74ms]
+     1 Test (bun on ubuntu-24.04)	(pass) security workflow > fails closed on fixable high-severity advisories in every npm lock [1.46ms]
+     1 Test (bun on ubuntu-24.04)	(pass) dependency graph probe > skips the review with a warning when the dependency graph is disabled [6.61ms]
+     1 Test (bun on ubuntu-24.04)	(pass) dependency graph probe > fails on a rate-limited 403, which says nothing about the setting [7.26ms]
+     1 Test (bun on ubuntu-24.04)	(pass) dependency graph probe > fails on any other answer, on one annotation line [18.64ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push-main-with-rebase-retry.mjs > rebases and retries when a generated-artifact push races another main writer [762.93ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push-main-with-rebase-retry.mjs > lands the commit through a pull request when a ruleset declines the direct push [175.82ms]
+     1 Test (bun on ubuntu-24.04)	(pass) push-main-with-rebase-retry.mjs > fails fast on a rejection that neither a rebase nor a pull request can fix [37.97ms]
+     1 Test (bun on ubuntu-24.04)	(pass) audit-fixable > finds the newer release outside the vulnerable range [0.72ms]
+     1 Test (bun on ubuntu-24.04)	(pass) audit-fixable > blocks fixable advisories and only warns about the rest [0.18ms]
+     1 Test (bun on ubuntu-24.04)	(pass) optional Docker Hub publishing workflow > suppresses only DEP0005 warnings from download-artifact v8 [0.41ms]
+     1 Test (bun on ubuntu-24.04)	(pass) aggregate cleanup details > preserves readable shell paths while retaining denied PID identity [0.20ms]
+     1 Test (bun on ubuntu-24.04)	(pass) aggregate cleanup safety and publishing > reports Full Disk Access when Safari inspection is denied [0.28ms]
+     1 Test (bun on ubuntu-24.04)	(pass) aggregate cleanup safety and publishing > retains npm E404 diagnostics when publishing rejects with a generic exit error [0.08ms]
+     1 Test (bun on ubuntu-24.04)	(pass) issue 14 writable-layer usage > marks failed layer inspection as unknown with zero estimated bytes [0.13ms]
+     1 Test (bun on ubuntu-24.04)	(pass) workflow concurrency policy > uses job-level concurrency so stale checks cannot cancel active writers [1.15ms]
+     1 Test (bun on ubuntu-24.04)	(pass) workflow reliability policy > uploads preview regeneration artifacts when screenshot rendering fails [0.09ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release workflow change gates > skips the slow test matrix for pull requests with no code changes [0.59ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release workflow change gates > skips test-compilation for excluded-only pushes [0.14ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release workflow change gates > skips check-file-line-limits for excluded-only pushes [0.10ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release workflow change gates > skips lint for excluded-only pushes [0.12ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release workflow change gates > skips test for excluded-only pushes [0.11ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release workflow change gates > skips validate-docs for excluded-only pushes [0.11ms]
+     1 Test (bun on ubuntu-24.04)	(pass) manual release quality gates > blocks an instant manual release after either quality gate fails [0.17ms]
+     1 Test (bun on ubuntu-24.04)	(pass) npm user config cleanup > removes deprecated always-auth before npm commands in the release job [0.10ms]
+     1 Test (bun on ubuntu-24.04)	(pass) npm user config cleanup > removes deprecated always-auth before npm commands in the instant-release job [0.10ms]
+     1 Test (bun on ubuntu-24.04)	(pass) npm user config sanitization > removes only deprecated always-auth entries from npmrc content [0.09ms]
+     1 Test (bun on ubuntu-24.04)	(pass) npm user config sanitization > skips cleanly when setup-node did not create a user config file [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) version-and-commit.mjs formats the release commit > skips the check when nothing formattable is staged
+     1 Test (bun on ubuntu-24.04)	(pass) version-and-commit.mjs push failure reporting > reports the version when the push helper exits non-zero [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) staged release formatting > checks a formatted file while skipping a consumed changeset deletion [300.36ms]
+     1 Test (bun on ubuntu-24.04)	(pass) npm registry package version checks > throws for unexpected registry failures [0.10ms]
+     1 Test (bun on ubuntu-24.04)	(pass) detect-code-changes push ranges > widens when the lookup fails [61.39ms]
+     1 Test (bun on ubuntu-24.04)	(pass) detect-code-changes push ranges > keeps the push range when the lookup fails with no base SHA [60.14ms]
+     1 Test (bun on ubuntu-24.04)	(pass) detect-code-changes push ranges > skips the lookup entirely without push SHAs [57.35ms]
+     1 Test (bun on ubuntu-24.04)	(pass) generated npm badge detection > does not skip ordinary notes: ### Patch Changes
+     1 Test (bun on ubuntu-24.04)	(pass) generated npm badge detection > does not skip ordinary notes: ![build](https://img.shields.io/badge/build-passing-green) [0.03ms]
+     1 Test (bun on ubuntu-24.04)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://img.shields.io.attacker.invalid/badge/npm-1-blue.svg) [0.01ms]
+     1 Test (bun on ubuntu-24.04)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://img.shields.io@attacker.invalid/badge/npm-1-blue.svg) [0.01ms]
+     1 Test (bun on ubuntu-24.04)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://attacker.invalid/img.shields.io/badge/npm-1-blue.svg) [0.01ms]
+     1 Test (bun on ubuntu-24.04)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](http://img.shields.io/badge/npm-1-blue.svg) [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://user@img.shields.io/badge/npm-1-blue.svg) [0.01ms]
+     1 Test (bun on ubuntu-24.04)	(pass) generated npm badge detection > does not skip ordinary notes: https://img.shields.io/badge/npm-1-blue.svg
+     1 Test (bun on ubuntu-24.04)	(pass) release-preflight workflow wiring (issues #176, #181) > fails on main and manual instant releases, reports on pull requests [0.09ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode when there is nothing to publish with [4.01ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode when Docker Hub refuses the write [146.90ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode when an npm token secret is present [105.75ms]
+     1 Test (bun on ubuntu-24.04)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode without the OIDC permission npm needs [4.32ms]
+     1 Test (bun on ubuntu-24.04)	(pass) npm OIDC package exchange > fails in release mode when npm rejects the trusted publisher (404) [75.07ms]
+     1 Test (bun on ubuntu-24.04)	(pass) npm OIDC package exchange > only warns on a pull request when npm rejects the trusted publisher [78.61ms]
+     1 Test (bun on ubuntu-24.04)	(pass) simulate-fresh-merge.sh fetch retry > survives a transient fetch failure [20.27ms]
+     1 Test (bun on ubuntu-24.04)	(pass) simulate-fresh-merge.sh fetch retry > still fails when the base branch cannot be fetched at all [26.28ms]
+     1 Test (bun on ubuntu-24.04)	(pass) containers kept for investigation > holds failed and OOM killed containers until they are named [0.21ms]
+     1 Test (bun on ubuntu-24.04)	(pass) install-git-hooks.mjs verification > fails when husky leaves core.hooksPath unset [37.79ms]
+     1 Test (bun on ubuntu-24.04)	(pass) install-git-hooks.mjs verification > skips on CI [28.42ms]
+     1 Test (bun on ubuntu-24.04)	(pass) install-git-hooks.mjs verification > skips with HUSKY=0 [27.06ms]
+     1 Test (bun on ubuntu-24.04)	(pass) install-git-hooks.mjs verification > skips outside a git repository [27.08ms]
+     1 Test (bun on ubuntu-24.04)	(pass) issue 21 bounded storage snapshots > skips a diff with insufficient host headroom [0.17ms]
+     1 Test (bun on ubuntu-24.04)	(pass) issue 21 bounded storage snapshots > skips a diff before contacting the daemon when the candidate change budget is excessive [0.11ms]
+     1 Test (bun on ubuntu-24.04)	(pass) checkNpmVersion > reports a network failure as unknown and keeps the reason [0.12ms]
+     1 Test (bun on ubuntu-24.04)	(pass) formatFailureMessage > asserts a failed release only when npm answered [0.03ms]
+     1 Test (bun on ubuntu-24.04)	(pass) formatFailureMessage > does not blame the release when the registry was unreachable [0.05ms]
+     1 Test (bun on ubuntu-24.04)	(pass) complete release gate (offline HTTP) > does not release on a GitHub network failure [12.91ms]
+     1 Test (bun on ubuntu-24.04)	(pass) use-module interop shim > reports the HTTP status when use.js cannot be fetched [0.30ms]
+     1 Test (bun on ubuntu-24.04)	(pass) use-m load is bounded in time and retried > retries a transient failure and returns the later success [0.17ms]
+     1 Test (bun on ubuntu-24.04)	(pass) use-m load is bounded in time and retried > preserves the original failure as the error cause [0.16ms]
+     1 Test (bun on ubuntu-24.04)	(pass) use-m load is bounded in time and retried > retries a non-2xx response instead of eval-ing an error page [0.22ms]
+     1 Test (bun on ubuntu-24.04)	(pass) broken link workflow > fails for every nonzero Lychee exit even when an archive exists [0.20ms]
+     1 Test (bun on ubuntu-24.04)	(pass) broken link workflow > downgrades a failure only when every unanswered link recovered [0.18ms]
+     1 Test (bun on ubuntu-24.04)	(pass) filterWarningsToChangedLines > keeps warnings on changed lines [0.18ms]
+     1 Test (bun on ubuntu-24.04)	(pass) filterWarningsToChangedLines > drops warnings on unchanged lines of a changed file [0.03ms]
+     1 Test (bun on ubuntu-24.04)	(pass) filterWarningsToChangedLines > drops warnings from files that were not touched at all [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) filterWarningsToChangedLines > keeps every warning of a wholly new file [0.03ms]
+     1 Test (bun on ubuntu-24.04)	(pass) filterWarningsToChangedLines > always keeps errors regardless of the diff [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) merge-changesets.mjs > fails without merging when any changeset has an unparseable bump type [15.39ms]
+     1 Test (bun on ubuntu-24.04)	(pass) extractErrorsSection > stops at the next top-level heading [1.22ms]
+     1 Test (bun on ubuntu-24.04)	(pass) extractErrorsSection > falls back to the whole document when the heading is absent [0.04ms]
+     1 Test (bun on ubuntu-24.04)	(pass) extractBrokenUrls > ignores successful redirects outside the errors section [0.19ms]
+     1 Test (bun on ubuntu-24.04)	(pass) extractBrokenUrls > parses the full document when the errors section is absent [0.05ms]
+     1 Test (bun on ubuntu-24.04)	(pass) extractBrokenUrls > extracts every http error from a full report exactly once [0.11ms]
+     1 Test (bun on ubuntu-24.04)	(pass) extractBrokenLinks > reports errors that the Wayback Machine cannot answer [0.11ms]
+     1 Test (bun on ubuntu-24.04)	(pass) extractBrokenLinks > never classifies a non-http error as a URL [0.04ms]
+     1 Test (bun on ubuntu-24.04)	(pass) extractBrokenLinks > matches the error count lychee itself reports [0.07ms]
+     1 Test (bun on ubuntu-24.04)	(pass) check-web-archive.mjs end to end > fails when the only lychee errors have no http URL to archive [11.12ms]
+     1 Test (bun on ubuntu-24.04)	(pass) issue 14 reporting and consent > returns a failure exit code for an incomplete JSON scan [0.77ms]
+     1 Test (bun on ubuntu-24.04)	(pass) lychee report classification > marks a failure carrying a status code as final [0.19ms]
+     1 Test (bun on ubuntu-24.04)	(pass) lychee report classification > marks ERROR, TIMEOUT, and UNKNOWN markers as never answered [0.06ms]
+     1 Test (bun on ubuntu-24.04)	(pass) lychee report classification > keeps non-http failures out of the re-check even when unanswered [0.05ms]
+     1 Test (bun on ubuntu-24.04)	(pass) complete report recovery verdict > requires every failure in a non-empty unanswered-only report to recover [0.06ms]
+     1 Test (bun on ubuntu-24.04)	(pass) web archive fallback honouring the re-check > skips nothing when the recovered file is missing or empty [0.03ms]
+     1 Test (bun on ubuntu-24.04)	(pass) issue 14 Docker discovery > preserves containers and images after repeated global size failures [1.29ms]
+     1 Test (bun on ubuntu-24.04)	(pass) issue 14 Docker discovery > retains one failed container size as unknown and scans the others [0.59ms]
+     1 Test (bun on ubuntu-24.04)	(pass) issue 14 Docker process inspection > skips zombie metadata while retaining command paths of live processes [0.49ms]
+     1 Test (bun on ubuntu-24.04)	(pass) issue 14 Docker process inspection > reports unreadable process names when the fallback is denied [0.18ms]
+     1 Test (bun on ubuntu-24.04)	(pass) isAlreadyPublishedError > detects publish conflicts [0.07ms]
+     1 Test (bun on ubuntu-24.04)	(pass) isAlreadyPublishedError > detects the E409 "previously staged version" wording [0.07ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publishWithRetry > publishes once and succeeds when visibility arrives after 310 seconds [0.33ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publishWithRetry > fails within the verification bound when a version stays absent [0.16ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publishWithRetry > treats an E409 staged-version conflict as a cue to verify [0.14ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publishWithRetry > never republishes when only verification lags [0.17ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publishWithRetry > fails without republishing when verification polling is exhausted [0.12ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publishWithRetry > retries the publish command when the publish itself failed [0.16ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publishWithRetry > fails fast on non-retryable publish errors [0.11ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publishWithRetry > treats an already-published conflict as a cue to verify [0.10ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publish failure classifier > classifies a first-publish E404 as non-retryable [0.12ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publish failure classifier > classifies authentication failures (401/403/auth) as non-retryable [0.17ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publish failure classifier > is case-insensitive when matching patterns [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publish failure classifier > treats transient/unknown failures as retryable [0.04ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publish failure classifier > handles null/undefined input without throwing [0.02ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publish failure classifier > exposes the documented non-retryable patterns [0.05ms]
+     1 Test (bun on ubuntu-24.04)	(pass) publish failure classifier > builds actionable guidance naming the package and the token-free bootstrap [0.05ms]
+     1 Test (bun on ubuntu-24.04)	0 fail
+     1 Test (node on ubuntu-24.04)	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Test (node on ubuntu-24.04)	found 0 vulnerabilities
+     1 Test (node on ubuntu-24.04)	bash scripts/run-with-budget-warning.sh 300 "Node.js test suite" npm test
+     1 Test (node on ubuntu-24.04)	shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Test (node on ubuntu-24.04)	Running Node.js test suite with a 300s budget (warning at 210s).
+     1 Test (node on ubuntu-24.04)	> node --test --test-timeout=30000 tests/*.test.js
+     1 Test (node on ubuntu-24.04)	✔ finds the newer release outside the vulnerable range (14.730867ms)
+     1 Test (node on ubuntu-24.04)	✔ blocks fixable advisories and only warns about the rest (0.651772ms)
+     1 Test (node on ubuntu-24.04)	✔ reports the failure as a GitHub error annotation (0.427722ms)
+     1 Test (node on ubuntu-24.04)	✔ does not run later loaders once one has failed (0.351589ms)
+     1 Test (node on ubuntu-24.04)	✔ never throws when the output file cannot be written (0.402816ms)
+     1 Test (node on ubuntu-24.04)	✔ warns without failing for files above the warning threshold (38.068046ms)
+     1 Test (node on ubuntu-24.04)	✔ still fails files over the hard limit (25.398253ms)
+     1 Test (node on ubuntu-24.04)	✔ fails .js and .cjs files over the hard limit (29.122242ms)
+     1 Test (node on ubuntu-24.04)	✔ fails Markdown files over the hard limit (23.887177ms)
+     1 Test (node on ubuntu-24.04)	✔ fails workflow files under any name, including .yaml (43.339081ms)
+     1 Test (node on ubuntu-24.04)	✔ exits 2 with an error when it examined nothing (18.366644ms)
+     1 Test (node on ubuntu-24.04)	✔ does not release on a GitHub network failure (133.207386ms)
+     1 Test (node on ubuntu-24.04)	✔ checks a formatted file while skipping a consumed changeset deletion (209.923404ms)
+     1 Test (node on ubuntu-24.04)	▶ extractErrorsSection
+     1 Test (node on ubuntu-24.04)	✔ extractErrorsSection (3.73269ms)
+     1 Test (node on ubuntu-24.04)	✔ ignores successful redirects outside the errors section (1.699397ms)
+     1 Test (node on ubuntu-24.04)	✔ parses the full document when the errors section is absent (0.311043ms)
+     1 Test (node on ubuntu-24.04)	✔ extracts every http error from a full report exactly once (0.475281ms)
+     1 Test (node on ubuntu-24.04)	✔ reports errors that the Wayback Machine cannot answer (0.536837ms)
+     1 Test (node on ubuntu-24.04)	✔ never classifies a non-http error as a URL (0.328927ms)
+     1 Test (node on ubuntu-24.04)	✔ matches the error count lychee itself reports (0.383259ms)
+     1 Test (node on ubuntu-24.04)	✔ fails when the only lychee errors have no http URL to archive (43.961446ms)
+     1 Test (node on ubuntu-24.04)	▶ CI timeout policy
+     1 Test (node on ubuntu-24.04)	✔ sets timeout-minutes for every release workflow job (5.429984ms)
+     1 Test (node on ubuntu-24.04)	✔ sets timeout-minutes for every link workflow job (0.334627ms)
+     1 Test (node on ubuntu-24.04)	✔ CI timeout policy (9.028713ms)
+     1 Test (node on ubuntu-24.04)	✔ warns at the same share of the budget that the invariant allows (0.370565ms)
+     1 Test (node on ubuntu-24.04)	✔ still fails when a single leg exceeds the allowance (0.453811ms)
+     1 Test (node on ubuntu-24.04)	✔ reports a budget it cannot read and never skips one silently (0.252413ms)
+     1 Test (node on ubuntu-24.04)	✔ returns 1 when a deletion failed (1.217634ms)
+     1 Test (node on ubuntu-24.04)	✔ returns 1 when an emergency action fails even if the goal is met (0.758082ms)
+     1 Test (node on ubuntu-24.04)	✔ throws when gh api exits non-zero with an unexpected error (0.395622ms)
+     1 Test (node on ubuntu-24.04)	✔ fails when gh api exits non-zero with an unexpected error (89.724072ms)
+     1 Test (node on ubuntu-24.04)	✔ treats already_exists as an explicit idempotent skip (94.908137ms)
+     1 Test (node on ubuntu-24.04)	✔ widens when the lookup fails (223.302817ms)
+     1 Test (node on ubuntu-24.04)	✔ keeps the push range when the lookup fails with no base SHA (212.738771ms)
+     1 Test (node on ubuntu-24.04)	✔ skips the lookup entirely without push SHAs (159.477212ms)
+     1 Test (node on ubuntu-24.04)	✔ holds failed and OOM killed containers until they are named (0.548008ms)
+     1 Test (node on ubuntu-24.04)	✔ suppresses only DEP0005 warnings from download-artifact v8 (0.671419ms)
+     1 Test (node on ubuntu-24.04)	✔ fails when husky leaves core.hooksPath unset (62.163734ms)
+     1 Test (node on ubuntu-24.04)	✔ skips on CI (42.657517ms)
+     1 Test (node on ubuntu-24.04)	✔ skips with HUSKY=0 (42.269469ms)
+     1 Test (node on ubuntu-24.04)	✔ skips outside a git repository (40.774901ms)
+     1 Test (node on ubuntu-24.04)	✔ returns a failure exit code for an incomplete JSON scan (5.388133ms)
+     1 Test (node on ubuntu-24.04)	✔ preserves containers and images after repeated global size failures (12.413424ms)
+     1 Test (node on ubuntu-24.04)	✔ retains one failed container size as unknown and scans the others (1.642047ms)
+     1 Test (node on ubuntu-24.04)	✔ skips zombie metadata while retaining command paths of live processes (3.016651ms)
+     1 Test (node on ubuntu-24.04)	✔ reports unreadable process names when the fallback is denied (0.569988ms)
+     1 Test (node on ubuntu-24.04)	✔ marks failed layer inspection as unknown with zero estimated bytes (1.44126ms)
+     1 Test (node on ubuntu-24.04)	✔ preserves readable shell paths while retaining denied PID identity (0.833392ms)
+     1 Test (node on ubuntu-24.04)	✔ reports Full Disk Access when Safari inspection is denied (1.574349ms)
+     1 Test (node on ubuntu-24.04)	✔ retains npm E404 diagnostics when publishing rejects with a generic exit error (0.476994ms)
+     1 Test (node on ubuntu-24.04)	✔ skips a diff with insufficient host headroom (0.40027ms)
+     1 Test (node on ubuntu-24.04)	✔ skips a diff before contacting the daemon when the candidate change budget is excessive (0.344365ms)
+     1 Test (node on ubuntu-24.04)	✔ gives up with the real command error when the merge never succeeds (0.409627ms)
+     1 Test (node on ubuntu-24.04)	✔ does not retry a permanent repository-policy merge rejection (0.408204ms)
+     1 Test (node on ubuntu-24.04)	✔ propagates a failed pull-request check without attempting a merge (1.481285ms)
+     1 Test (node on ubuntu-24.04)	▶ release landing failures and reuse
+     1 Test (node on ubuntu-24.04)	✔ fails closed before pushing a branch when neither token is available (0.233057ms)
+     1 Test (node on ubuntu-24.04)	✔ reports no open pull request when the lookup itself fails (0.145022ms)
+     1 Test (node on ubuntu-24.04)	✔ release landing failures and reuse (1.610196ms)
+     1 Test (node on ubuntu-24.04)	✔ fails for every nonzero Lychee exit even when an archive exists (3.29398ms)
+     1 Test (node on ubuntu-24.04)	✔ downgrades a failure only when every unanswered link recovered (0.513923ms)
+     1 Test (node on ubuntu-24.04)	▶ filterWarningsToChangedLines
+     1 Test (node on ubuntu-24.04)	✔ keeps warnings on changed lines (0.903973ms)
+     1 Test (node on ubuntu-24.04)	✔ drops warnings on unchanged lines of a changed file (0.353041ms)
+     1 Test (node on ubuntu-24.04)	✔ drops warnings from files that were not touched at all (0.335929ms)
+     1 Test (node on ubuntu-24.04)	✔ keeps every warning of a wholly new file (0.360886ms)
+     1 Test (node on ubuntu-24.04)	✔ always keeps errors regardless of the diff (0.378078ms)
+     1 Test (node on ubuntu-24.04)	✔ filterWarningsToChangedLines (3.05907ms)
+     1 Test (node on ubuntu-24.04)	✔ fails without merging when any changeset has an unparseable bump type (56.180834ms)
+     1 Test (node on ubuntu-24.04)	✔ throws for unexpected registry failures (0.376736ms)
+     1 Test (node on ubuntu-24.04)	✔ fails when neither packageManager nor devEngines is declared (45.95286ms)
+     1 Test (node on ubuntu-24.04)	✔ fails on a declaration naming a manager the flow cannot use (41.045371ms)
+     1 Test (node on ubuntu-24.04)	✔ warns but passes when a foreign lockfile sits under a declaration (47.658946ms)
+     1 Test (node on ubuntu-24.04)	✔ fails and names the lockfile when a foreign lockfile has no declaration (48.030774ms)
+     1 Test (node on ubuntu-24.04)	✔ passes when jobs succeeded or were skipped (76.763922ms)
+     1 Test (node on ubuntu-24.04)	✔ fails for a failed job on every ref (83.287249ms)
+     1 Test (node on ubuntu-24.04)	✔ fails for a cancelled job on main (129.374764ms)
+     1 Test (node on ubuntu-24.04)	✔ fails closed for a cancellation without branch and workflow context (119.898113ms)
+     1 Test (node on ubuntu-24.04)	✔ uses a status function, so the gate runs when its needs fail (0.796672ms)
+     1 Test (node on ubuntu-24.04)	✔ errors when main is at the run commit (a genuine overrun) (139.590402ms)
+     1 Test (node on ubuntu-24.04)	✔ warns only when a moved branch could cancel that exact job (125.84046ms)
+     1 Test (node on ubuntu-24.04)	✔ fails closed when cancel-in-progress is an expression (127.794877ms)
+     1 Test (node on ubuntu-24.04)	✔ errors when the branch head cannot be resolved (144.225204ms)
+     1 Test (node on ubuntu-24.04)	✔ errors without a network call when RUN_SHA is missing (134.281851ms)
+     1 Test (node on ubuntu-24.04)	✔ fails when the base ref is unavailable (89.476749ms)
+     1 Test (node on ubuntu-24.04)	✔ fails when the explicitly requested PR head is unavailable (154.388409ms)
+     1 Test (node on ubuntu-24.04)	✔ does not accept a base fragment when the CI comparison fails (106.052761ms)
+     1 Test (node on ubuntu-24.04)	▶ publish failure classifier
+     1 Test (node on ubuntu-24.04)	✔ classifies a first-publish E404 as non-retryable (2.447424ms)
+     1 Test (node on ubuntu-24.04)	✔ classifies authentication failures (401/403/auth) as non-retryable (0.496189ms)
+     1 Test (node on ubuntu-24.04)	✔ treats transient/unknown failures as retryable (0.30447ms)
+     1 Test (node on ubuntu-24.04)	✔ exposes the documented non-retryable patterns (0.390351ms)
+     1 Test (node on ubuntu-24.04)	✔ publish failure classifier (7.12766ms)
+     1 Test (node on ubuntu-24.04)	▶ isAlreadyPublishedError
+     1 Test (node on ubuntu-24.04)	✔ isAlreadyPublishedError (1.269317ms)
+     1 Test (node on ubuntu-24.04)	▶ publishWithRetry
+     1 Test (node on ubuntu-24.04)	✔ fails within the verification bound when a version stays absent (0.697978ms)
+     1 Test (node on ubuntu-24.04)	✔ fails without republishing when verification polling is exhausted (0.334456ms)
+     1 Test (node on ubuntu-24.04)	✔ retries the publish command when the publish itself failed (0.281979ms)
+     1 Test (node on ubuntu-24.04)	✔ fails fast on non-retryable publish errors (0.28811ms)
+     1 Test (node on ubuntu-24.04)	✔ publishWithRetry (5.392851ms)
+     1 Test (node on ubuntu-24.04)	▶ push failure classifier
+     1 Test (node on ubuntu-24.04)	✔ reads the message of a thrown command error, not just its output (0.299271ms)
+     1 Test (node on ubuntu-24.04)	✔ treats other failures (auth, network) as neither (0.359453ms)
+     1 Test (node on ubuntu-24.04)	✔ push failure classifier (7.229972ms)
+     1 Test (node on ubuntu-24.04)	▶ push-main-with-rebase-retry.mjs
+     1 Test (node on ubuntu-24.04)	✔ fails fast on a rejection that neither a rebase nor a pull request can fix (84.527381ms)
+     1 Test (node on ubuntu-24.04)	✔ push-main-with-rebase-retry.mjs (712.077762ms)
+     1 Test (node on ubuntu-24.04)	✔ marks a failure carrying a status code as final (2.524779ms)
+     1 Test (node on ubuntu-24.04)	✔ marks ERROR, TIMEOUT, and UNKNOWN markers as never answered (0.575217ms)
+     1 Test (node on ubuntu-24.04)	✔ keeps non-http failures out of the re-check even when unanswered (0.709719ms)
+     1 Test (node on ubuntu-24.04)	✔ requires every failure in a non-empty unanswered-only report to recover (0.378159ms)
+     1 Test (node on ubuntu-24.04)	✔ skips nothing when the recovered file is missing or empty (0.172783ms)
+     1 Test (node on ubuntu-24.04)	✔ does not skip ordinary notes: ### Patch Changes
+     1 Test (node on ubuntu-24.04)	✔ does not skip ordinary notes: ![build](https://img.shields.io/badge/build-passing-green) (3.618718ms)
+     1 Test (node on ubuntu-24.04)	✔ does not skip ordinary notes: ![npm](https://img.shields.io.attacker.invalid/badge/npm-1-blue.svg) (0.288641ms)
+     1 Test (node on ubuntu-24.04)	✔ does not skip ordinary notes: ![npm](https://img.shields.io@attacker.invalid/badge/npm-1-blue.svg) (0.311965ms)
+     1 Test (node on ubuntu-24.04)	✔ does not skip ordinary notes: ![npm](https://attacker.invalid/img.shields.io/badge/npm-1-blue.svg) (0.208741ms)
+     1 Test (node on ubuntu-24.04)	✔ does not skip ordinary notes: ![npm](http://img.shields.io/badge/npm-1-blue.svg) (0.178444ms)
+     1 Test (node on ubuntu-24.04)	✔ does not skip ordinary notes: ![npm](https://user@img.shields.io/badge/npm-1-blue.svg) (0.33095ms)
+     1 Test (node on ubuntu-24.04)	✔ does not skip ordinary notes: https://img.shields.io/badge/npm-1-blue.svg (0.13848ms)
+     1 Test (node on ubuntu-24.04)	✔ fails on main and manual instant releases, reports on pull requests (0.25082ms)
+     1 Test (node on ubuntu-24.04)	✔ fails in release mode when there is nothing to publish with (7.843961ms)
+     1 Test (node on ubuntu-24.04)	✔ fails in release mode when Docker Hub refuses the write (217.225983ms)
+     1 Test (node on ubuntu-24.04)	✔ fails in release mode when an npm token secret is present (148.739821ms)
+     1 Test (node on ubuntu-24.04)	✔ fails in release mode without the OIDC permission npm needs (9.684532ms)
+     1 Test (node on ubuntu-24.04)	✔ fails in release mode when npm rejects the trusted publisher (404) (120.345057ms)
+     1 Test (node on ubuntu-24.04)	✔ only warns on a pull request when npm rejects the trusted publisher (129.757632ms)
+     1 Test (node on ubuntu-24.04)	✔ fails when a required section is deleted but the file remains (31.070443ms)
+     1 Test (node on ubuntu-24.04)	✔ fails a missing required document with its own message (26.079724ms)
+     1 Test (node on ubuntu-24.04)	▶ run-with-budget-warning.sh
+     1 Test (node on ubuntu-24.04)	✔ preserves the exit code of a failing command (31.959258ms)
+     1 Test (node on ubuntu-24.04)	✔ fails with exit code 124 and a titled error when the budget expires (2161.149616ms)
+     1 Test (node on ubuntu-24.04)	✔ warns while the overrun can still be acted on (2079.619962ms)
+     1 Test (node on ubuntu-24.04)	✔ fails clearly when the private state parent is unavailable (6.090551ms)
+     1 Test (node on ubuntu-24.04)	✔ run-with-budget-warning.sh (6578.342403ms)
+     1 Test (node on ubuntu-24.04)	▶ run-with-budget-warning.sh argument validation
+     1 Test (node on ubuntu-24.04)	✔ run-with-budget-warning.sh argument validation (11.158687ms)
+     1 Test (node on ubuntu-24.04)	▶ run-with-budget-warning.sh privileged survivor handling
+     1 Test (node on ubuntu-24.04)	✔ run-with-budget-warning.sh privileged survivor handling (0.686275ms)
+     1 Test (node on ubuntu-24.04)	▶ run-with-budget-warning.sh SIGKILL escalation
+     1 Test (node on ubuntu-24.04)	✔ run-with-budget-warning.sh SIGKILL escalation (6489.397911ms)
+     1 Test (node on ubuntu-24.04)	✔ removes only deprecated always-auth entries from npmrc content (1.317648ms)
+     1 Test (node on ubuntu-24.04)	✔ skips cleanly when setup-node did not create a user config file (0.193372ms)
+     1 Test (node on ubuntu-24.04)	✔ fails closed on fixable high-severity advisories in every npm lock (7.124926ms)
+     1 Test (node on ubuntu-24.04)	✔ skips the review with a warning when the dependency graph is disabled (11.7184ms)
+     1 Test (node on ubuntu-24.04)	✔ fails on a rate-limited 403, which says nothing about the setting (13.935122ms)
+     1 Test (node on ubuntu-24.04)	✔ fails on any other answer, on one annotation line (30.612384ms)
+     1 Test (node on ubuntu-24.04)	▶ simulate-fresh-merge.sh fetch retry
+     1 Test (node on ubuntu-24.04)	✔ survives a transient fetch failure (30.293539ms)
+     1 Test (node on ubuntu-24.04)	✔ still fails when the base branch cannot be fetched at all (40.856918ms)
+     1 Test (node on ubuntu-24.04)	✔ simulate-fresh-merge.sh fetch retry (71.553853ms)
+     1 Test (node on ubuntu-24.04)	▶ transient link failures
+     1 Test (node on ubuntu-24.04)	✔ classifies cached 503 and rejected 429 as retryable, preserving 404 (2.053336ms)
+     1 Test (node on ubuntu-24.04)	✔ bounds persistent 503 errors by the shared wall-clock budget (0.688049ms)
+     1 Test (node on ubuntu-24.04)	✔ transient link failures (10.155121ms)
+     1 Test (node on ubuntu-24.04)	▶ isWindowsFileUrlError
+     1 Test (node on ubuntu-24.04)	✔ isWindowsFileUrlError (3.744133ms)
+     1 Test (node on ubuntu-24.04)	✔ reports the HTTP status when use.js cannot be fetched (1.337826ms)
+     1 Test (node on ubuntu-24.04)	✔ retries a transient failure and returns the later success (0.777326ms)
+     1 Test (node on ubuntu-24.04)	✔ preserves the original failure as the error cause (0.367027ms)
+     1 Test (node on ubuntu-24.04)	✔ retries a non-2xx response instead of eval-ing an error page (0.477625ms)
+     1 Test (node on ubuntu-24.04)	✔ skips the check when nothing formattable is staged (0.286467ms)
+     1 Test (node on ubuntu-24.04)	▶ version-and-commit.mjs push failure reporting
+     1 Test (node on ubuntu-24.04)	✔ version-and-commit.mjs push failure reporting (0.911748ms)
+     1 Test (node on ubuntu-24.04)	✔ reports a network failure as unknown and keeps the reason (0.414557ms)
+     1 Test (node on ubuntu-24.04)	▶ formatFailureMessage
+     1 Test (node on ubuntu-24.04)	✔ asserts a failed release only when npm answered (0.171982ms)
+     1 Test (node on ubuntu-24.04)	✔ formatFailureMessage (0.529903ms)
+     1 Test (node on ubuntu-24.04)	✔ uses job-level concurrency so stale checks cannot cancel active writers (4.544222ms)
+     1 Test (node on ubuntu-24.04)	✔ uploads preview regeneration artifacts when screenshot rendering fails (0.339956ms)
+     1 Test (node on ubuntu-24.04)	✔ skips the slow test matrix for pull requests with no code changes (1.090833ms)
+     1 Test (node on ubuntu-24.04)	✔ skips test-compilation for excluded-only pushes (0.377507ms)
+     1 Test (node on ubuntu-24.04)	✔ skips check-file-line-limits for excluded-only pushes (0.307977ms)
+     1 Test (node on ubuntu-24.04)	✔ skips lint for excluded-only pushes (0.296755ms)
+     1 Test (node on ubuntu-24.04)	✔ skips test for excluded-only pushes (0.279253ms)
+     1 Test (node on ubuntu-24.04)	✔ skips validate-docs for excluded-only pushes (0.371266ms)
+     1 Test (node on ubuntu-24.04)	✔ blocks an instant manual release after either quality gate fails (0.600715ms)
+     1 Test (node on ubuntu-24.04)	✔ removes deprecated always-auth before npm commands in the release job (0.330439ms)
+     1 Test (node on ubuntu-24.04)	✔ removes deprecated always-auth before npm commands in the instant-release job (0.231884ms)
+     1 Test (node on ubuntu-24.04)	✔ bounds every job with a timeout backstop (0.36841ms)
+     1 Test (deno on macos-15)	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Test (deno on macos-15)	bash scripts/run-with-budget-warning.sh 100 "Deno test suite" deno test --allow-read
+     1 Test (deno on macos-15)	shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Test (deno on macos-15)	Running Deno test suite with a 100s budget (warning at 70s).
+     1 Test (deno on macos-15)	Download https://registry.npmjs.org/@humanwhocodes/retry/-/retry-0.4.3.tgz
+     1 Test (deno on macos-15)	Download https://registry.npmjs.org/@changesets/errors/-/errors-1.0.0.tgz
+     1 Test (deno on macos-15)	Download https://registry.npmjs.org/@changesets/should-skip-package/-/should-skip-package-1.0.0.tgz
+     1 Test (deno on macos-15)	Initialize @changesets/should-skip-package@1.0.0
+     1 Test (deno on macos-15)	Initialize @changesets/errors@1.0.0
+     1 Test (deno on macos-15)	Initialize @humanwhocodes/retry@0.4.3
+     1 Test (deno on macos-15)	╭ Warning
+     1 Test (deno on macos-15)	│  The following packages are deprecated:
+     1 Test (deno on macos-15)	finds the newer release outside the vulnerable range ... ok (13ms)
+     1 Test (deno on macos-15)	blocks fixable advisories and only warns about the rest ... ok (440µs)
+     1 Test (deno on macos-15)	reports the failure as a GitHub error annotation ... ok (1ms)
+     1 Test (deno on macos-15)	does not run later loaders once one has failed ... ok (1ms)
+     1 Test (deno on macos-15)	never throws when the output file cannot be written ... ok (300µs)
+     1 Test (deno on macos-15)	checks a formatted file while skipping a consumed changeset deletion ... ok (808µs)
+     1 Test (deno on macos-15)	extractErrorsSection ...
+     1 Test (deno on macos-15)	extractErrorsSection ... ok (3ms)
+     1 Test (deno on macos-15)	ignores successful redirects outside the errors section ... ok (1ms)
+     1 Test (deno on macos-15)	parses the full document when the errors section is absent ... ok (0ms)
+     1 Test (deno on macos-15)	extracts every http error from a full report exactly once ... ok (1ms)
+     1 Test (deno on macos-15)	reports errors that the Wayback Machine cannot answer ... ok (0ms)
+     1 Test (deno on macos-15)	never classifies a non-http error as a URL ... ok (0ms)
+     1 Test (deno on macos-15)	matches the error count lychee itself reports ... ok (0ms)
+     1 Test (deno on macos-15)	running 12 tests from ./tests/ci-timeouts.test.js
+     1 Test (deno on macos-15)	sets timeout-minutes for every release workflow job ... ok (2ms)
+     1 Test (deno on macos-15)	sets timeout-minutes for every link workflow job ... ok (367µs)
+     1 Test (deno on macos-15)	warns at the same share of the budget that the invariant allows ... ok (522µs)
+     1 Test (deno on macos-15)	still fails when a single leg exceeds the allowance ... ok (247µs)
+     1 Test (deno on macos-15)	reports a budget it cannot read and never skips one silently ... ok (298µs)
+     1 Test (deno on macos-15)	returns 1 when a deletion failed ... ok (71µs)
+     1 Test (deno on macos-15)	returns 1 when an emergency action fails even if the goal is met ... ok (103µs)
+     1 Test (deno on macos-15)	throws when gh api exits non-zero with an unexpected error ... ok (573µs)
+     1 Test (deno on macos-15)	holds failed and OOM killed containers until they are named ... ok (173µs)
+     1 Test (deno on macos-15)	suppresses only DEP0005 warnings from download-artifact v8 ... ok (271µs)
+     1 Test (deno on macos-15)	returns a failure exit code for an incomplete JSON scan ... ok (106µs)
+     1 Test (deno on macos-15)	preserves containers and images after repeated global size failures ... ok (4ms)
+     1 Test (deno on macos-15)	retains one failed container size as unknown and scans the others ... ok (563µs)
+     1 Test (deno on macos-15)	skips zombie metadata while retaining command paths of live processes ... ok (448µs)
+     1 Test (deno on macos-15)	reports unreadable process names when the fallback is denied ... ok (341µs)
+     1 Test (deno on macos-15)	marks failed layer inspection as unknown with zero estimated bytes ... ok (294µs)
+     1 Test (deno on macos-15)	preserves readable shell paths while retaining denied PID identity ... ok (1ms)
+     1 Test (deno on macos-15)	reports Full Disk Access when Safari inspection is denied ... ok (76µs)
+     1 Test (deno on macos-15)	retains npm E404 diagnostics when publishing rejects with a generic exit error ... ok (217µs)
+     1 Test (deno on macos-15)	skips a diff with insufficient host headroom ... ok (139µs)
+     1 Test (deno on macos-15)	skips a diff before contacting the daemon when the candidate change budget is excessive ... ok (67µs)
+     1 Test (deno on macos-15)	gives up with the real command error when the merge never succeeds ... ok (190µs)
+     1 Test (deno on macos-15)	does not retry a permanent repository-policy merge rejection ... ok (82µs)
+     1 Test (deno on macos-15)	propagates a failed pull-request check without attempting a merge ... ok (6ms)
+     1 Test (deno on macos-15)	fails closed before pushing a branch when neither token is available ... ok (250µs)
+     1 Test (deno on macos-15)	reports no open pull request when the lookup itself fails ... ok (250µs)
+     1 Test (deno on macos-15)	fails for every nonzero Lychee exit even when an archive exists ... ok (408µs)
+     1 Test (deno on macos-15)	downgrades a failure only when every unanswered link recovered ... ok (571µs)
+     1 Test (deno on macos-15)	keeps warnings on changed lines ... ok (535µs)
+     1 Test (deno on macos-15)	drops warnings on unchanged lines of a changed file ... ok (778µs)
+     1 Test (deno on macos-15)	drops warnings from files that were not touched at all ... ok (428µs)
+     1 Test (deno on macos-15)	keeps every warning of a wholly new file ... ok (251µs)
+     1 Test (deno on macos-15)	always keeps errors regardless of the diff ... ok (156µs)
+     1 Test (deno on macos-15)	throws for unexpected registry failures ... ok (980µs)
+     1 Test (deno on macos-15)	fails when neither packageManager nor devEngines is declared ... ok (387µs)
+     1 Test (deno on macos-15)	fails on a declaration naming a manager the flow cannot use ... ok (333µs)
+     1 Test (deno on macos-15)	warns but passes when a foreign lockfile sits under a declaration ... ok (379µs)
+     1 Test (deno on macos-15)	fails and names the lockfile when a foreign lockfile has no declaration ... ok (570µs)
+     1 Test (deno on macos-15)	uses a status function, so the gate runs when its needs fail ... ok (251µs)
+     1 Test (deno on macos-15)	running 7 tests from ./tests/publish-failure-classifier.test.js
+     1 Test (deno on macos-15)	classifies a first-publish E404 as non-retryable ... ok (359µs)
+     1 Test (deno on macos-15)	classifies authentication failures (401/403/auth) as non-retryable ... ok (180µs)
+     1 Test (deno on macos-15)	treats transient/unknown failures as retryable ... ok (35µs)
+     1 Test (deno on macos-15)	exposes the documented non-retryable patterns ... ok (56µs)
+     1 Test (deno on macos-15)	running 16 tests from ./tests/publish-retry.test.js
+     1 Test (deno on macos-15)	fails within the verification bound when a version stays absent ... ok (356µs)
+     1 Test (deno on macos-15)	fails without republishing when verification polling is exhausted ... ok (488µs)
+     1 Test (deno on macos-15)	retries the publish command when the publish itself failed ... ok (304µs)
+     1 Test (deno on macos-15)	fails fast on non-retryable publish errors ... ok (160µs)
+     1 Test (deno on macos-15)	running 7 tests from ./tests/push-failure-classifier.test.js
+     1 Test (deno on macos-15)	reads the message of a thrown command error, not just its output ... ok (791µs)
+     1 Test (deno on macos-15)	treats other failures (auth, network) as neither ... ok (256µs)
+     1 Test (deno on macos-15)	running 0 tests from ./tests/push-main-with-rebase-retry.test.js
+     1 Test (deno on macos-15)	marks a failure carrying a status code as final ... ok (2ms)
+     1 Test (deno on macos-15)	marks ERROR, TIMEOUT, and UNKNOWN markers as never answered ... ok (291µs)
+     1 Test (deno on macos-15)	keeps non-http failures out of the re-check even when unanswered ... ok (115µs)
+     1 Test (deno on macos-15)	requires every failure in a non-empty unanswered-only report to recover ... ok (59µs)
+     1 Test (deno on macos-15)	skips nothing when the recovered file is missing or empty ... ok (131µs)
+     1 Test (deno on macos-15)	does not skip ordinary notes: ### Patch Changes\n- Fix img.shields.io URL handling ... ok (201µs)
+     1 Test (deno on macos-15)	does not skip ordinary notes: ![build](https://img.shields.io/badge/build-passing-green) ... ok (188µs)
+     1 Test (deno on macos-15)	does not skip ordinary notes: ![npm](https://img.shields.io.attacker.invalid/badge/npm-1-blue.svg) ... ok (214µs)
+     1 Test (deno on macos-15)	does not skip ordinary notes: ![npm](https://img.shields.io@attacker.invalid/badge/npm-1-blue.svg) ... ok (82µs)
+     1 Test (deno on macos-15)	does not skip ordinary notes: ![npm](https://attacker.invalid/img.shields.io/badge/npm-1-blue.svg) ... ok (181µs)
+     1 Test (deno on macos-15)	does not skip ordinary notes: ![npm](http://img.shields.io/badge/npm-1-blue.svg) ... ok (149µs)
+     1 Test (deno on macos-15)	does not skip ordinary notes: ![npm](https://user@img.shields.io/badge/npm-1-blue.svg) ... ok (69µs)
+     1 Test (deno on macos-15)	does not skip ordinary notes: https://img.shields.io/badge/npm-1-blue.svg ... ok (36µs)
+     1 Test (deno on macos-15)	fails on main and manual instant releases, reports on pull requests ... ok (227µs)
+     1 Test (deno on macos-15)	running 14 tests from ./tests/run-with-budget-warning.test.js
+     1 Test (deno on macos-15)	preserves the exit code of a failing command ... ok (28µs)
+     1 Test (deno on macos-15)	fails with exit code 124 and a titled error when the budget expires ... ok (23µs)
+     1 Test (deno on macos-15)	warns while the overrun can still be acted on ... ok (45µs)
+     1 Test (deno on macos-15)	fails clearly when the private state parent is unavailable ... ok (36µs)
+     1 Test (deno on macos-15)	removes only deprecated always-auth entries from npmrc content ... ok (1ms)
+     1 Test (deno on macos-15)	skips cleanly when setup-node did not create a user config file ... ok (425µs)
+     1 Test (deno on macos-15)	fails closed on fixable high-severity advisories in every npm lock ... ok (22ms)
+     1 Test (deno on macos-15)	is skipped where bash is unavailable ... ok (313µs)
+     1 Test (deno on macos-15)	classifies cached 503 and rejected 429 as retryable, preserving 404 ... ok (1ms)
+     1 Test (deno on macos-15)	bounds persistent 503 errors by the shared wall-clock budget ... ok (398µs)
+     1 Test (deno on macos-15)	reports the HTTP status when use.js cannot be fetched ... ok (2ms)
+     1 Test (deno on macos-15)	retries a transient failure and returns the later success ... ok (1ms)
+     1 Test (deno on macos-15)	preserves the original failure as the error cause ... ok (435µs)
+     1 Test (deno on macos-15)	retries a non-2xx response instead of eval-ing an error page ... ok (424µs)
+     1 Test (deno on macos-15)	skips the check when nothing formattable is staged ... ok (206µs)
+     1 Test (deno on macos-15)	reports a network failure as unknown and keeps the reason ... ok (512µs)
+     1 Test (deno on macos-15)	asserts a failed release only when npm answered ... ok (55µs)
+     1 Test (deno on macos-15)	uses job-level concurrency so stale checks cannot cancel active writers ... ok (2ms)
+     1 Test (deno on macos-15)	uploads preview regeneration artifacts when screenshot rendering fails ... ok (140µs)
+     1 Test (deno on macos-15)	skips the slow test matrix for pull requests with no code changes ... ok (457µs)
+     1 Test (deno on macos-15)	skips test-compilation for excluded-only pushes ... ok (196µs)
+     1 Test (deno on macos-15)	skips check-file-line-limits for excluded-only pushes ... ok (149µs)
+     1 Test (deno on macos-15)	skips lint for excluded-only pushes ... ok (145µs)
+     1 Test (deno on macos-15)	skips test for excluded-only pushes ... ok (142µs)
+     1 Test (deno on macos-15)	skips validate-docs for excluded-only pushes ... ok (152µs)
+     1 Test (deno on macos-15)	blocks an instant manual release after either quality gate fails ... ok (197µs)
+     1 Test (deno on macos-15)	removes deprecated always-auth before npm commands in the release job ... ok (135µs)
+     1 Test (deno on macos-15)	removes deprecated always-auth before npm commands in the instant-release job ... ok (131µs)
+     1 Test (deno on macos-15)	bounds every job with a timeout backstop ... ok (141µs)
+     1 Test (deno on macos-15)	ok | 746 passed (8 steps) | 0 failed (12s)
+     1 Test (deno on macos-15)	Caching is not enabled. Caching is skipped.
+     1 Test (node on windows-2025)	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Test (node on windows-2025)	found 0 vulnerabilities
+     1 Test (node on windows-2025)	bash scripts/run-with-budget-warning.sh 300 "Node.js test suite" npm test
+     1 Test (node on windows-2025)	shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+     1 Test (node on windows-2025)	Running Node.js test suite with a 300s budget (warning at 210s).
+     1 Test (node on windows-2025)	> node --test --test-timeout=30000 tests/*.test.js
+     1 Test (node on windows-2025)	✔ finds the newer release outside the vulnerable range (13.84ms)
+     1 Test (node on windows-2025)	✔ blocks fixable advisories and only warns about the rest (0.6053ms)
+     1 Test (node on windows-2025)	✔ reports the failure as a GitHub error annotation (0.6456ms)
+     1 Test (node on windows-2025)	✔ does not run later loaders once one has failed (0.8285ms)
+     1 Test (node on windows-2025)	✔ never throws when the output file cannot be written (0.6963ms)
+     1 Test (node on windows-2025)	✔ does not release on a GitHub network failure (173.2236ms)
+     1 Test (node on windows-2025)	✔ checks a formatted file while skipping a consumed changeset deletion (620.2275ms)
+     1 Test (node on windows-2025)	▶ extractErrorsSection
+     1 Test (node on windows-2025)	✔ extractErrorsSection (3.1119ms)
+     1 Test (node on windows-2025)	✔ ignores successful redirects outside the errors section (1.5239ms)
+     1 Test (node on windows-2025)	✔ parses the full document when the errors section is absent (0.3221ms)
+     1 Test (node on windows-2025)	✔ extracts every http error from a full report exactly once (0.4097ms)
+     1 Test (node on windows-2025)	✔ reports errors that the Wayback Machine cannot answer (0.4296ms)
+     1 Test (node on windows-2025)	✔ never classifies a non-http error as a URL (0.2988ms)
+     1 Test (node on windows-2025)	✔ matches the error count lychee itself reports (0.2875ms)
+     1 Test (node on windows-2025)	✔ fails when the only lychee errors have no http URL to archive (102.7829ms)
+     1 Test (node on windows-2025)	▶ CI timeout policy
+     1 Test (node on windows-2025)	✔ sets timeout-minutes for every release workflow job (5.2661ms)
+     1 Test (node on windows-2025)	✔ sets timeout-minutes for every link workflow job (0.3207ms)
+     1 Test (node on windows-2025)	✔ CI timeout policy (8.6403ms)
+     1 Test (node on windows-2025)	✔ warns at the same share of the budget that the invariant allows (0.4546ms)
+     1 Test (node on windows-2025)	✔ still fails when a single leg exceeds the allowance (0.3223ms)
+     1 Test (node on windows-2025)	✔ reports a budget it cannot read and never skips one silently (0.2329ms)
+     1 Test (node on windows-2025)	✔ returns 1 when a deletion failed (1.6451ms)
+     1 Test (node on windows-2025)	✔ returns 1 when an emergency action fails even if the goal is met (0.5235ms)
+     1 Test (node on windows-2025)	✔ throws when gh api exits non-zero with an unexpected error (0.4965ms)
+     1 Test (node on windows-2025)	✔ widens when the lookup fails (927.113ms)
+     1 Test (node on windows-2025)	✔ keeps the push range when the lookup fails with no base SHA (964.7069ms)
+     1 Test (node on windows-2025)	✔ skips the lookup entirely without push SHAs (824.4592ms)
+     1 Test (node on windows-2025)	✔ holds failed and OOM killed containers until they are named (1.4718ms)
+     1 Test (node on windows-2025)	✔ suppresses only DEP0005 warnings from download-artifact v8 (0.9143ms)
+     1 Test (node on windows-2025)	✔ returns a failure exit code for an incomplete JSON scan (5.933ms)
+     1 Test (node on windows-2025)	✔ preserves containers and images after repeated global size failures (6.9544ms)
+     1 Test (node on windows-2025)	✔ retains one failed container size as unknown and scans the others (1.4695ms)
+     1 Test (node on windows-2025)	✔ skips zombie metadata while retaining command paths of live processes (6.1665ms)
+     1 Test (node on windows-2025)	✔ reports unreadable process names when the fallback is denied (0.4482ms)
+     1 Test (node on windows-2025)	✔ marks failed layer inspection as unknown with zero estimated bytes (1.1787ms)
+     1 Test (node on windows-2025)	✔ preserves readable shell paths while retaining denied PID identity (0.7963ms)
+     1 Test (node on windows-2025)	✔ reports Full Disk Access when Safari inspection is denied (4.5031ms)
+     1 Test (node on windows-2025)	✔ retains npm E404 diagnostics when publishing rejects with a generic exit error (0.4053ms)
+     1 Test (node on windows-2025)	✔ skips a diff with insufficient host headroom (0.4204ms)
+     1 Test (node on windows-2025)	✔ skips a diff before contacting the daemon when the candidate change budget is excessive (0.3249ms)
+     1 Test (node on windows-2025)	✔ gives up with the real command error when the merge never succeeds (0.9027ms)
+     1 Test (node on windows-2025)	✔ does not retry a permanent repository-policy merge rejection (0.9127ms)
+     1 Test (node on windows-2025)	✔ propagates a failed pull-request check without attempting a merge (2.5789ms)
+     1 Test (node on windows-2025)	▶ release landing failures and reuse
+     1 Test (node on windows-2025)	✔ fails closed before pushing a branch when neither token is available (3.4069ms)
+     1 Test (node on windows-2025)	✔ reports no open pull request when the lookup itself fails (0.2543ms)
+     1 Test (node on windows-2025)	✔ release landing failures and reuse (5.1348ms)
+     1 Test (node on windows-2025)	✔ fails for every nonzero Lychee exit even when an archive exists (7.886ms)
+     1 Test (node on windows-2025)	✔ downgrades a failure only when every unanswered link recovered (1.2337ms)
+     1 Test (node on windows-2025)	▶ filterWarningsToChangedLines
+     1 Test (node on windows-2025)	✔ keeps warnings on changed lines (0.4163ms)
+     1 Test (node on windows-2025)	✔ drops warnings on unchanged lines of a changed file (0.2038ms)
+     1 Test (node on windows-2025)	✔ drops warnings from files that were not touched at all (0.213ms)
+     1 Test (node on windows-2025)	✔ keeps every warning of a wholly new file (0.6131ms)
+     1 Test (node on windows-2025)	✔ always keeps errors regardless of the diff (0.2418ms)
+     1 Test (node on windows-2025)	✔ filterWarningsToChangedLines (2.1016ms)
+     1 Test (node on windows-2025)	✔ fails without merging when any changeset has an unparseable bump type (151.7282ms)
+     1 Test (node on windows-2025)	✔ throws for unexpected registry failures (0.716ms)
+     1 Test (node on windows-2025)	✔ fails when neither packageManager nor devEngines is declared (79.7668ms)
+     1 Test (node on windows-2025)	✔ fails on a declaration naming a manager the flow cannot use (77.0346ms)
+     1 Test (node on windows-2025)	✔ warns but passes when a foreign lockfile sits under a declaration (78.2422ms)
+     1 Test (node on windows-2025)	✔ fails and names the lockfile when a foreign lockfile has no declaration (83.8287ms)
+     1 Test (node on windows-2025)	✔ uses a status function, so the gate runs when its needs fail (1.2296ms)
+     1 Test (node on windows-2025)	✔ fails when the base ref is unavailable (386.6327ms)
+     1 Test (node on windows-2025)	✔ fails when the explicitly requested PR head is unavailable (519.8832ms)
+     1 Test (node on windows-2025)	✔ does not accept a base fragment when the CI comparison fails (558.9341ms)
+     1 Test (node on windows-2025)	▶ publish failure classifier
+     1 Test (node on windows-2025)	✔ classifies a first-publish E404 as non-retryable (1.7948ms)
+     1 Test (node on windows-2025)	✔ classifies authentication failures (401/403/auth) as non-retryable (0.3402ms)
+     1 Test (node on windows-2025)	✔ treats transient/unknown failures as retryable (0.1992ms)
+     1 Test (node on windows-2025)	✔ exposes the documented non-retryable patterns (0.3142ms)
+     1 Test (node on windows-2025)	✔ publish failure classifier (5.3989ms)
+     1 Test (node on windows-2025)	▶ isAlreadyPublishedError
+     1 Test (node on windows-2025)	✔ isAlreadyPublishedError (4.0404ms)
+     1 Test (node on windows-2025)	▶ publishWithRetry
+     1 Test (node on windows-2025)	✔ fails within the verification bound when a version stays absent (1.8156ms)
+     1 Test (node on windows-2025)	✔ fails without republishing when verification polling is exhausted (0.5838ms)
+     1 Test (node on windows-2025)	✔ retries the publish command when the publish itself failed (0.6942ms)
+     1 Test (node on windows-2025)	✔ fails fast on non-retryable publish errors (0.7094ms)
+     1 Test (node on windows-2025)	✔ publishWithRetry (9.2458ms)
+     1 Test (node on windows-2025)	▶ push failure classifier
+     1 Test (node on windows-2025)	✔ reads the message of a thrown command error, not just its output (0.4112ms)
+     1 Test (node on windows-2025)	✔ treats other failures (auth, network) as neither (0.3351ms)
+     1 Test (node on windows-2025)	✔ push failure classifier (5.3652ms)
+     1 Test (node on windows-2025)	✔ push-main-with-rebase-retry.mjs (1.9503ms)
+     1 Test (node on windows-2025)	✔ marks a failure carrying a status code as final (1.6886ms)
+     1 Test (node on windows-2025)	✔ marks ERROR, TIMEOUT, and UNKNOWN markers as never answered (0.5698ms)
+     1 Test (node on windows-2025)	✔ keeps non-http failures out of the re-check even when unanswered (0.5977ms)
+     1 Test (node on windows-2025)	✔ requires every failure in a non-empty unanswered-only report to recover (0.3546ms)
+     1 Test (node on windows-2025)	✔ skips nothing when the recovered file is missing or empty (0.1284ms)
+     1 Test (node on windows-2025)	✔ does not skip ordinary notes: ### Patch Changes
+     1 Test (node on windows-2025)	✔ does not skip ordinary notes: ![build](https://img.shields.io/badge/build-passing-green) (0.4718ms)
+     1 Test (node on windows-2025)	✔ does not skip ordinary notes: ![npm](https://img.shields.io.attacker.invalid/badge/npm-1-blue.svg) (0.3892ms)
+     1 Test (node on windows-2025)	✔ does not skip ordinary notes: ![npm](https://img.shields.io@attacker.invalid/badge/npm-1-blue.svg) (0.3088ms)
+     1 Test (node on windows-2025)	✔ does not skip ordinary notes: ![npm](https://attacker.invalid/img.shields.io/badge/npm-1-blue.svg) (0.198ms)
+     1 Test (node on windows-2025)	✔ does not skip ordinary notes: ![npm](http://img.shields.io/badge/npm-1-blue.svg) (0.121ms)
+     1 Test (node on windows-2025)	✔ does not skip ordinary notes: ![npm](https://user@img.shields.io/badge/npm-1-blue.svg) (0.1881ms)
+     1 Test (node on windows-2025)	✔ does not skip ordinary notes: https://img.shields.io/badge/npm-1-blue.svg (0.1455ms)
+     1 Test (node on windows-2025)	✔ fails on main and manual instant releases, reports on pull requests (0.2991ms)
+     1 Test (node on windows-2025)	✔ fails in release mode when there is nothing to publish with (82.6261ms)
+     1 Test (node on windows-2025)	✔ fails in release mode when Docker Hub refuses the write (1196.794ms)
+     1 Test (node on windows-2025)	✔ fails in release mode when an npm token secret is present (730.5762ms)
+     1 Test (node on windows-2025)	✔ fails in release mode without the OIDC permission npm needs (100.9765ms)
+     1 Test (node on windows-2025)	✔ fails in release mode when npm rejects the trusted publisher (404) (611.142ms)
+     1 Test (node on windows-2025)	✔ only warns on a pull request when npm rejects the trusted publisher (573.992ms)
+     1 Test (node on windows-2025)	▶ run-with-budget-warning.sh
+     1 Test (node on windows-2025)	✔ preserves the exit code of a failing command (0.2491ms)
+     1 Test (node on windows-2025)	✔ fails with exit code 124 and a titled error when the budget expires (0.22ms)
+     1 Test (node on windows-2025)	✔ warns while the overrun can still be acted on (0.226ms)
+     1 Test (node on windows-2025)	✔ fails clearly when the private state parent is unavailable (0.2451ms)
+     1 Test (node on windows-2025)	✔ run-with-budget-warning.sh (4.8338ms)
+     1 Test (node on windows-2025)	▶ run-with-budget-warning.sh argument validation
+     1 Test (node on windows-2025)	✔ run-with-budget-warning.sh argument validation (0.5292ms)
+     1 Test (node on windows-2025)	▶ run-with-budget-warning.sh privileged survivor handling
+     1 Test (node on windows-2025)	✔ run-with-budget-warning.sh privileged survivor handling (0.7641ms)
+     1 Test (node on windows-2025)	▶ run-with-budget-warning.sh SIGKILL escalation
+     1 Test (node on windows-2025)	✔ run-with-budget-warning.sh SIGKILL escalation (0.5899ms)
+     1 Test (node on windows-2025)	✔ removes only deprecated always-auth entries from npmrc content (1.8548ms)
+     1 Test (node on windows-2025)	✔ skips cleanly when setup-node did not create a user config file (0.2215ms)
+     1 Test (node on windows-2025)	✔ fails closed on fixable high-severity advisories in every npm lock (14.014ms)
+     1 Test (node on windows-2025)	✔ is skipped where bash is unavailable (0.2069ms)
+     1 Test (node on windows-2025)	✔ simulate-fresh-merge.sh fetch retry (0.1ms)
+     1 Test (node on windows-2025)	▶ transient link failures
+     1 Test (node on windows-2025)	✔ classifies cached 503 and rejected 429 as retryable, preserving 404 (1.4975ms)
+     1 Test (node on windows-2025)	✔ bounds persistent 503 errors by the shared wall-clock budget (0.7031ms)
+     1 Test (node on windows-2025)	✔ transient link failures (7.6536ms)
+     1 Test (node on windows-2025)	▶ isWindowsFileUrlError
+     1 Test (node on windows-2025)	✔ isWindowsFileUrlError (2.884ms)
+     1 Test (node on windows-2025)	✔ reports the HTTP status when use.js cannot be fetched (0.5194ms)
+     1 Test (node on windows-2025)	✔ retries a transient failure and returns the later success (0.3107ms)
+     1 Test (node on windows-2025)	✔ preserves the original failure as the error cause (0.2903ms)
+     1 Test (node on windows-2025)	✔ retries a non-2xx response instead of eval-ing an error page (0.2625ms)
+     1 Test (node on windows-2025)	✔ skips the check when nothing formattable is staged (0.3635ms)
+     1 Test (node on windows-2025)	▶ version-and-commit.mjs push failure reporting
+     1 Test (node on windows-2025)	✔ version-and-commit.mjs push failure reporting (0.5904ms)
+     1 Test (node on windows-2025)	✔ reports a network failure as unknown and keeps the reason (0.5753ms)
+     1 Test (node on windows-2025)	▶ formatFailureMessage
+     1 Test (node on windows-2025)	✔ asserts a failed release only when npm answered (0.1285ms)
+     1 Test (node on windows-2025)	✔ formatFailureMessage (0.3129ms)
+     1 Test (node on windows-2025)	✔ uses job-level concurrency so stale checks cannot cancel active writers (3.5918ms)
+     1 Test (node on windows-2025)	✔ uploads preview regeneration artifacts when screenshot rendering fails (0.5547ms)
+     1 Test (node on windows-2025)	✔ skips the slow test matrix for pull requests with no code changes (1.0628ms)
+     1 Test (node on windows-2025)	✔ skips test-compilation for excluded-only pushes (0.4122ms)
+     1 Test (node on windows-2025)	✔ skips check-file-line-limits for excluded-only pushes (0.4442ms)
+     1 Test (node on windows-2025)	✔ skips lint for excluded-only pushes (0.4417ms)
+     1 Test (node on windows-2025)	✔ skips test for excluded-only pushes (0.3297ms)
+     1 Test (node on windows-2025)	✔ skips validate-docs for excluded-only pushes (0.3947ms)
+     1 Test (node on windows-2025)	✔ blocks an instant manual release after either quality gate fails (0.7939ms)
+     1 Test (node on windows-2025)	✔ removes deprecated always-auth before npm commands in the release job (0.7107ms)
+     1 Test (node on windows-2025)	✔ removes deprecated always-auth before npm commands in the instant-release job (0.3075ms)
+     1 Test (node on windows-2025)	✔ bounds every job with a timeout backstop (0.262ms)
+     1 Test (deno on windows-2025)	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Test (deno on windows-2025)	bash scripts/run-with-budget-warning.sh 100 "Deno test suite" deno test --allow-read
+     1 Test (deno on windows-2025)	shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+     1 Test (deno on windows-2025)	Running Deno test suite with a 100s budget (warning at 70s).
+     1 Test (deno on windows-2025)	Download https://registry.npmjs.org/@humanwhocodes/retry/-/retry-0.4.3.tgz
+     1 Test (deno on windows-2025)	Download https://registry.npmjs.org/@changesets/should-skip-package/-/should-skip-package-1.0.0.tgz
+     1 Test (deno on windows-2025)	Download https://registry.npmjs.org/@changesets/errors/-/errors-1.0.0.tgz
+     1 Test (deno on windows-2025)	Initialize @changesets/should-skip-package@1.0.0
+     1 Test (deno on windows-2025)	Initialize @changesets/errors@1.0.0
+     1 Test (deno on windows-2025)	Initialize @humanwhocodes/retry@0.4.3
+     1 Test (deno on windows-2025)	╭ Warning
+     1 Test (deno on windows-2025)	│  The following packages are deprecated:
+     1 Test (deno on windows-2025)	finds the newer release outside the vulnerable range ... ok (15ms)
+     1 Test (deno on windows-2025)	blocks fixable advisories and only warns about the rest ... ok (494µs)
+     1 Test (deno on windows-2025)	reports the failure as a GitHub error annotation ... ok (1ms)
+     1 Test (deno on windows-2025)	does not run later loaders once one has failed ... ok (267µs)
+     1 Test (deno on windows-2025)	never throws when the output file cannot be written ... ok (194µs)
+     1 Test (deno on windows-2025)	checks a formatted file while skipping a consumed changeset deletion ... ok (466µs)
+     1 Test (deno on windows-2025)	extractErrorsSection ...
+     1 Test (deno on windows-2025)	extractErrorsSection ... ok (3ms)
+     1 Test (deno on windows-2025)	ignores successful redirects outside the errors section ... ok (1ms)
+     1 Test (deno on windows-2025)	parses the full document when the errors section is absent ... ok (1ms)
+     1 Test (deno on windows-2025)	extracts every http error from a full report exactly once ... ok (0ms)
+     1 Test (deno on windows-2025)	reports errors that the Wayback Machine cannot answer ... ok (0ms)
+     1 Test (deno on windows-2025)	never classifies a non-http error as a URL ... ok (0ms)
+     1 Test (deno on windows-2025)	matches the error count lychee itself reports ... ok (0ms)
+     1 Test (deno on windows-2025)	running 12 tests from ./tests/ci-timeouts.test.js
+     1 Test (deno on windows-2025)	sets timeout-minutes for every release workflow job ... ok (3ms)
+     1 Test (deno on windows-2025)	sets timeout-minutes for every link workflow job ... ok (211µs)
+     1 Test (deno on windows-2025)	warns at the same share of the budget that the invariant allows ... ok (441µs)
+     1 Test (deno on windows-2025)	still fails when a single leg exceeds the allowance ... ok (167µs)
+     1 Test (deno on windows-2025)	reports a budget it cannot read and never skips one silently ... ok (138µs)
+     1 Test (deno on windows-2025)	returns 1 when a deletion failed ... ok (181µs)
+     1 Test (deno on windows-2025)	returns 1 when an emergency action fails even if the goal is met ... ok (266µs)
+     1 Test (deno on windows-2025)	throws when gh api exits non-zero with an unexpected error ... ok (633µs)
+     1 Test (deno on windows-2025)	holds failed and OOM killed containers until they are named ... ok (1ms)
+     1 Test (deno on windows-2025)	suppresses only DEP0005 warnings from download-artifact v8 ... ok (540µs)
+     1 Test (deno on windows-2025)	returns a failure exit code for an incomplete JSON scan ... ok (191µs)
+     1 Test (deno on windows-2025)	preserves containers and images after repeated global size failures ... ok (5ms)
+     1 Test (deno on windows-2025)	retains one failed container size as unknown and scans the others ... ok (775µs)
+     1 Test (deno on windows-2025)	skips zombie metadata while retaining command paths of live processes ... ok (190µs)
+     1 Test (deno on windows-2025)	reports unreadable process names when the fallback is denied ... ok (305µs)
+     1 Test (deno on windows-2025)	marks failed layer inspection as unknown with zero estimated bytes ... ok (303µs)
+     1 Test (deno on windows-2025)	preserves readable shell paths while retaining denied PID identity ... ok (1ms)
+     1 Test (deno on windows-2025)	reports Full Disk Access when Safari inspection is denied ... ok (135µs)
+     1 Test (deno on windows-2025)	retains npm E404 diagnostics when publishing rejects with a generic exit error ... ok (471µs)
+     1 Test (deno on windows-2025)	skips a diff with insufficient host headroom ... ok (231µs)
+     1 Test (deno on windows-2025)	skips a diff before contacting the daemon when the candidate change budget is excessive ... ok (189µs)
+     1 Test (deno on windows-2025)	gives up with the real command error when the merge never succeeds ... ok (388µs)
+     1 Test (deno on windows-2025)	does not retry a permanent repository-policy merge rejection ... ok (215µs)
+     1 Test (deno on windows-2025)	propagates a failed pull-request check without attempting a merge ... ok (14ms)
+     1 Test (deno on windows-2025)	fails closed before pushing a branch when neither token is available ... ok (435µs)
+     1 Test (deno on windows-2025)	reports no open pull request when the lookup itself fails ... ok (117µs)
+     1 Test (deno on windows-2025)	fails for every nonzero Lychee exit even when an archive exists ... ok (754µs)
+     1 Test (deno on windows-2025)	downgrades a failure only when every unanswered link recovered ... ok (411µs)
+     1 Test (deno on windows-2025)	keeps warnings on changed lines ... ok (757µs)
+     1 Test (deno on windows-2025)	drops warnings on unchanged lines of a changed file ... ok (171µs)
+     1 Test (deno on windows-2025)	drops warnings from files that were not touched at all ... ok (219µs)
+     1 Test (deno on windows-2025)	keeps every warning of a wholly new file ... ok (206µs)
+     1 Test (deno on windows-2025)	always keeps errors regardless of the diff ... ok (213µs)
+     1 Test (deno on windows-2025)	throws for unexpected registry failures ... ok (295µs)
+     1 Test (deno on windows-2025)	fails when neither packageManager nor devEngines is declared ... ok (126µs)
+     1 Test (deno on windows-2025)	fails on a declaration naming a manager the flow cannot use ... ok (102µs)
+     1 Test (deno on windows-2025)	warns but passes when a foreign lockfile sits under a declaration ... ok (122µs)
+     1 Test (deno on windows-2025)	fails and names the lockfile when a foreign lockfile has no declaration ... ok (144µs)
+     1 Test (deno on windows-2025)	uses a status function, so the gate runs when its needs fail ... ok (370µs)
+     1 Test (deno on windows-2025)	running 7 tests from ./tests/publish-failure-classifier.test.js
+     1 Test (deno on windows-2025)	classifies a first-publish E404 as non-retryable ... ok (624µs)
+     1 Test (deno on windows-2025)	classifies authentication failures (401/403/auth) as non-retryable ... ok (182µs)
+     1 Test (deno on windows-2025)	treats transient/unknown failures as retryable ... ok (98µs)
+     1 Test (deno on windows-2025)	exposes the documented non-retryable patterns ... ok (176µs)
+     1 Test (deno on windows-2025)	running 16 tests from ./tests/publish-retry.test.js
+     1 Test (deno on windows-2025)	fails within the verification bound when a version stays absent ... ok (321µs)
+     1 Test (deno on windows-2025)	fails without republishing when verification polling is exhausted ... ok (169µs)
+     1 Test (deno on windows-2025)	retries the publish command when the publish itself failed ... ok (226µs)
+     1 Test (deno on windows-2025)	fails fast on non-retryable publish errors ... ok (208µs)
+     1 Test (deno on windows-2025)	running 7 tests from ./tests/push-failure-classifier.test.js
+     1 Test (deno on windows-2025)	reads the message of a thrown command error, not just its output ... ok (408µs)
+     1 Test (deno on windows-2025)	treats other failures (auth, network) as neither ... ok (128µs)
+     1 Test (deno on windows-2025)	running 0 tests from ./tests/push-main-with-rebase-retry.test.js
+     1 Test (deno on windows-2025)	marks a failure carrying a status code as final ... ok (1ms)
+     1 Test (deno on windows-2025)	marks ERROR, TIMEOUT, and UNKNOWN markers as never answered ... ok (441µs)
+     1 Test (deno on windows-2025)	keeps non-http failures out of the re-check even when unanswered ... ok (257µs)
+     1 Test (deno on windows-2025)	requires every failure in a non-empty unanswered-only report to recover ... ok (141µs)
+     1 Test (deno on windows-2025)	skips nothing when the recovered file is missing or empty ... ok (91µs)
+     1 Test (deno on windows-2025)	does not skip ordinary notes: ### Patch Changes\n- Fix img.shields.io URL handling ... ok (394µs)
+     1 Test (deno on windows-2025)	does not skip ordinary notes: ![build](https://img.shields.io/badge/build-passing-green) ... ok (433µs)
+     1 Test (deno on windows-2025)	does not skip ordinary notes: ![npm](https://img.shields.io.attacker.invalid/badge/npm-1-blue.svg) ... ok (112µs)
+     1 Test (deno on windows-2025)	does not skip ordinary notes: ![npm](https://img.shields.io@attacker.invalid/badge/npm-1-blue.svg) ... ok (153µs)
+     1 Test (deno on windows-2025)	does not skip ordinary notes: ![npm](https://attacker.invalid/img.shields.io/badge/npm-1-blue.svg) ... ok (145µs)
+     1 Test (deno on windows-2025)	does not skip ordinary notes: ![npm](http://img.shields.io/badge/npm-1-blue.svg) ... ok (137µs)
+     1 Test (deno on windows-2025)	does not skip ordinary notes: ![npm](https://user@img.shields.io/badge/npm-1-blue.svg) ... ok (87µs)
+     1 Test (deno on windows-2025)	does not skip ordinary notes: https://img.shields.io/badge/npm-1-blue.svg ... ok (73µs)
+     1 Test (deno on windows-2025)	fails on main and manual instant releases, reports on pull requests ... ok (161µs)
+     1 Test (deno on windows-2025)	running 14 tests from ./tests/run-with-budget-warning.test.js
+     1 Test (deno on windows-2025)	preserves the exit code of a failing command ... ok (109µs)
+     1 Test (deno on windows-2025)	fails with exit code 124 and a titled error when the budget expires ... ok (131µs)
+     1 Test (deno on windows-2025)	warns while the overrun can still be acted on ... ok (125µs)
+     1 Test (deno on windows-2025)	fails clearly when the private state parent is unavailable ... ok (103µs)
+     1 Test (deno on windows-2025)	removes only deprecated always-auth entries from npmrc content ... ok (925µs)
+     1 Test (deno on windows-2025)	skips cleanly when setup-node did not create a user config file ... ok (169µs)
+     1 Test (deno on windows-2025)	fails closed on fixable high-severity advisories in every npm lock ... ok (13ms)
+     1 Test (deno on windows-2025)	is skipped where bash is unavailable ... ok (119µs)
+     1 Test (deno on windows-2025)	classifies cached 503 and rejected 429 as retryable, preserving 404 ... ok (1ms)
+     1 Test (deno on windows-2025)	bounds persistent 503 errors by the shared wall-clock budget ... ok (312µs)
+     1 Test (deno on windows-2025)	reports the HTTP status when use.js cannot be fetched ... ok (1ms)
+     1 Test (deno on windows-2025)	retries a transient failure and returns the later success ... ok (597µs)
+     1 Test (deno on windows-2025)	preserves the original failure as the error cause ... ok (270µs)
+     1 Test (deno on windows-2025)	retries a non-2xx response instead of eval-ing an error page ... ok (362µs)
+     1 Test (deno on windows-2025)	skips the check when nothing formattable is staged ... ok (106µs)
+     1 Test (deno on windows-2025)	reports a network failure as unknown and keeps the reason ... ok (637µs)
+     1 Test (deno on windows-2025)	asserts a failed release only when npm answered ... ok (167µs)
+     1 Test (deno on windows-2025)	uses job-level concurrency so stale checks cannot cancel active writers ... ok (3ms)
+     1 Test (deno on windows-2025)	uploads preview regeneration artifacts when screenshot rendering fails ... ok (380µs)
+     1 Test (deno on windows-2025)	skips the slow test matrix for pull requests with no code changes ... ok (883µs)
+     1 Test (deno on windows-2025)	skips test-compilation for excluded-only pushes ... ok (565µs)
+     1 Test (deno on windows-2025)	skips check-file-line-limits for excluded-only pushes ... ok (528µs)
+     1 Test (deno on windows-2025)	skips lint for excluded-only pushes ... ok (546µs)
+     1 Test (deno on windows-2025)	skips test for excluded-only pushes ... ok (495µs)
+     1 Test (deno on windows-2025)	skips validate-docs for excluded-only pushes ... ok (503µs)
+     1 Test (deno on windows-2025)	blocks an instant manual release after either quality gate fails ... ok (546µs)
+     1 Test (deno on windows-2025)	removes deprecated always-auth before npm commands in the release job ... ok (477µs)
+     1 Test (deno on windows-2025)	removes deprecated always-auth before npm commands in the instant-release job ... ok (456µs)
+     1 Test (deno on windows-2025)	bounds every job with a timeout backstop ... ok (232µs)
+     1 Test (deno on windows-2025)	ok | 746 passed (8 steps) | 0 failed (10s)
+     1 Test (deno on windows-2025)	Caching is not enabled. Caching is skipped.
+     1 Test (bun on windows-2025)	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Test (bun on windows-2025)	bash scripts/run-with-budget-warning.sh 200 "Bun test suite" bun test --timeout 30000
+     1 Test (bun on windows-2025)	shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+     1 Test (bun on windows-2025)	Running Bun test suite with a 200s budget (warning at 140s).
+     1 Test (bun on windows-2025)	(pass) audit-fixable > finds the newer release outside the vulnerable range [0.90ms]
+     1 Test (bun on windows-2025)	(pass) audit-fixable > blocks fixable advisories and only warns about the rest [0.14ms]
+     1 Test (bun on windows-2025)	(pass) bootstrapDependencies > reports the failure as a GitHub error annotation [0.22ms]
+     1 Test (bun on windows-2025)	(pass) bootstrapDependencies > does not run later loaders once one has failed [0.06ms]
+     1 Test (bun on windows-2025)	(pass) writeOutputs > never throws when the output file cannot be written [0.03ms]
+     1 Test (bun on windows-2025)	(pass) complete release gate (offline HTTP) > does not release on a GitHub network failure [27.89ms]
+     1 Test (bun on windows-2025)	(pass) staged release formatting > checks a formatted file while skipping a consumed changeset deletion [472.32ms]
+     1 Test (bun on windows-2025)	(pass) extractErrorsSection > stops at the next top-level heading [0.90ms]
+     1 Test (bun on windows-2025)	(pass) extractErrorsSection > falls back to the whole document when the heading is absent [0.04ms]
+     1 Test (bun on windows-2025)	(pass) extractBrokenUrls > ignores successful redirects outside the errors section [0.21ms]
+     1 Test (bun on windows-2025)	(pass) extractBrokenUrls > parses the full document when the errors section is absent [0.06ms]
+     1 Test (bun on windows-2025)	(pass) extractBrokenUrls > extracts every http error from a full report exactly once [0.08ms]
+     1 Test (bun on windows-2025)	(pass) extractBrokenLinks > reports errors that the Wayback Machine cannot answer [0.06ms]
+     1 Test (bun on windows-2025)	(pass) extractBrokenLinks > never classifies a non-http error as a URL [0.03ms]
+     1 Test (bun on windows-2025)	(pass) extractBrokenLinks > matches the error count lychee itself reports [0.05ms]
+     1 Test (bun on windows-2025)	(pass) check-web-archive.mjs end to end > fails when the only lychee errors have no http URL to archive [21.06ms]
+     1 Test (bun on windows-2025)	(pass) CI timeout policy > sets timeout-minutes for every release workflow job [1.29ms]
+     1 Test (bun on windows-2025)	(pass) CI timeout policy > sets timeout-minutes for every link workflow job [0.11ms]
+     1 Test (bun on windows-2025)	(pass) CI timeout policy > parses workflow files checked out with Windows line endings [0.03ms]
+     1 Test (bun on windows-2025)	(pass) CI timeout policy > caps individual Node.js and Bun tests at 30 seconds [0.02ms]
+     1 Test (bun on windows-2025)	(pass) CI timeout policy > documents that the Bun flag bounds a test and not the suite [0.29ms]
+     1 Test (bun on windows-2025)	(pass) CI execution budgets > warns at the same share of the budget that the invariant allows [0.18ms]
+     1 Test (bun on windows-2025)	(pass) step budget grouping > still fails when a single leg exceeds the allowance [0.03ms]
+     1 Test (bun on windows-2025)	(pass) step budget grouping > reports a budget it cannot read and never skips one silently [0.04ms]
+     1 Test (bun on windows-2025)	(pass) exit codes > returns 1 when a deletion failed [0.06ms]
+     1 Test (bun on windows-2025)	(pass) exit codes > returns 1 when an emergency action fails even if the goal is met [0.07ms]
+     1 Test (bun on windows-2025)	(pass) create-github-release.mjs > throws when gh api exits non-zero with an unexpected error [0.12ms]
+     1 Test (bun on windows-2025)	(pass) create-github-release.mjs > fails when gh api exits non-zero with an unexpected error [58.90ms]
+     1 Test (bun on windows-2025)	(pass) create-github-release.mjs > treats already_exists as an explicit idempotent skip [58.99ms]
+     1 Test (bun on windows-2025)	(pass) detect-code-changes push ranges > widens when the lookup fails [509.47ms]
+     1 Test (bun on windows-2025)	(pass) detect-code-changes push ranges > keeps the push range when the lookup fails with no base SHA [489.03ms]
+     1 Test (bun on windows-2025)	(pass) detect-code-changes push ranges > skips the lookup entirely without push SHAs [498.24ms]
+     1 Test (bun on windows-2025)	(pass) containers kept for investigation > holds failed and OOM killed containers until they are named [0.18ms]
+     1 Test (bun on windows-2025)	(pass) optional Docker Hub publishing workflow > suppresses only DEP0005 warnings from download-artifact v8 [0.39ms]
+     1 Test (bun on windows-2025)	(pass) issue 14 reporting and consent > returns a failure exit code for an incomplete JSON scan [2.94ms]
+     1 Test (bun on windows-2025)	(pass) issue 14 Docker discovery > preserves containers and images after repeated global size failures [1.54ms]
+     1 Test (bun on windows-2025)	(pass) issue 14 Docker discovery > retains one failed container size as unknown and scans the others [1.20ms]
+     1 Test (bun on windows-2025)	(pass) issue 14 Docker process inspection > skips zombie metadata while retaining command paths of live processes [1.02ms]
+     1 Test (bun on windows-2025)	(pass) issue 14 Docker process inspection > reports unreadable process names when the fallback is denied [0.15ms]
+     1 Test (bun on windows-2025)	(pass) issue 14 writable-layer usage > marks failed layer inspection as unknown with zero estimated bytes [0.07ms]
+     1 Test (bun on windows-2025)	(pass) aggregate cleanup details > preserves readable shell paths while retaining denied PID identity [0.18ms]
+     1 Test (bun on windows-2025)	(pass) aggregate cleanup safety and publishing > reports Full Disk Access when Safari inspection is denied [0.40ms]
+     1 Test (bun on windows-2025)	(pass) aggregate cleanup safety and publishing > retains npm E404 diagnostics when publishing rejects with a generic exit error [0.09ms]
+     1 Test (bun on windows-2025)	(pass) issue 21 bounded storage snapshots > skips a diff with insufficient host headroom [0.09ms]
+     1 Test (bun on windows-2025)	(pass) issue 21 bounded storage snapshots > skips a diff before contacting the daemon when the candidate change budget is excessive [0.09ms]
+     1 Test (bun on windows-2025)	(pass) land-via-pull-request > gives up with the real command error when the merge never succeeds [0.16ms]
+     1 Test (bun on windows-2025)	(pass) land-via-pull-request > does not retry a permanent repository-policy merge rejection [0.12ms]
+     1 Test (bun on windows-2025)	(pass) land-via-pull-request check enforcement > propagates a failed pull-request check without attempting a merge [0.74ms]
+     1 Test (bun on windows-2025)	(pass) release landing failures and reuse > stops before merge when the Checks API rejects attestation [0.25ms]
+     1 Test (bun on windows-2025)	(pass) release landing failures and reuse > fails closed before pushing a branch when neither token is available [0.10ms]
+     1 Test (bun on windows-2025)	(pass) release landing failures and reuse > reuses an open pull request so a re-run creates no duplicate [0.13ms]
+     1 Test (bun on windows-2025)	(pass) release landing failures and reuse > reports no open pull request when the lookup itself fails [0.05ms]
+     1 Test (bun on windows-2025)	(pass) broken link workflow > fails for every nonzero Lychee exit even when an archive exists [0.15ms]
+     1 Test (bun on windows-2025)	(pass) broken link workflow > downgrades a failure only when every unanswered link recovered [0.11ms]
+     1 Test (bun on windows-2025)	(pass) filterWarningsToChangedLines > keeps warnings on changed lines [0.11ms]
+     1 Test (bun on windows-2025)	(pass) filterWarningsToChangedLines > drops warnings on unchanged lines of a changed file [0.02ms]
+     1 Test (bun on windows-2025)	(pass) filterWarningsToChangedLines > drops warnings from files that were not touched at all [0.01ms]
+     1 Test (bun on windows-2025)	(pass) filterWarningsToChangedLines > keeps every warning of a wholly new file [0.02ms]
+     1 Test (bun on windows-2025)	(pass) filterWarningsToChangedLines > always keeps errors regardless of the diff [0.02ms]
+     1 Test (bun on windows-2025)	(pass) merge-changesets.mjs > fails without merging when any changeset has an unparseable bump type [28.62ms]
+     1 Test (bun on windows-2025)	(pass) npm registry package version checks > throws for unexpected registry failures [0.06ms]
+     1 Test (bun on windows-2025)	(pass) check-package-manager.mjs > fails when neither packageManager nor devEngines is declared [47.83ms]
+     1 Test (bun on windows-2025)	(pass) check-package-manager.mjs > fails on a declaration naming a manager the flow cannot use [46.45ms]
+     1 Test (bun on windows-2025)	(pass) check-package-manager.mjs > warns but passes when a foreign lockfile sits under a declaration [59.21ms]
+     1 Test (bun on windows-2025)	(pass) check-package-manager.mjs > fails and names the lockfile when a foreign lockfile has no declaration [53.18ms]
+     1 Test (bun on windows-2025)	(pass) pipeline status gate in every workflow > uses a status function, so the gate runs when its needs fail [0.21ms]
+     1 Test (bun on windows-2025)	(pass) parsed version guard > fails when the base ref is unavailable [202.04ms]
+     1 Test (bun on windows-2025)	(pass) parsed version guard > fails when the explicitly requested PR head is unavailable [279.55ms]
+     1 Test (bun on windows-2025)	(pass) PR changeset validation > does not accept a base fragment when the CI comparison fails [408.88ms]
+     1 Test (bun on windows-2025)	(pass) publish failure classifier > classifies a first-publish E404 as non-retryable [0.06ms]
+     1 Test (bun on windows-2025)	(pass) publish failure classifier > classifies authentication failures (401/403/auth) as non-retryable [1.81ms]
+     1 Test (bun on windows-2025)	(pass) publish failure classifier > is case-insensitive when matching patterns [0.08ms]
+     1 Test (bun on windows-2025)	(pass) publish failure classifier > treats transient/unknown failures as retryable [0.02ms]
+     1 Test (bun on windows-2025)	(pass) publish failure classifier > handles null/undefined input without throwing [0.02ms]
+     1 Test (bun on windows-2025)	(pass) publish failure classifier > exposes the documented non-retryable patterns [0.08ms]
+     1 Test (bun on windows-2025)	(pass) publish failure classifier > builds actionable guidance naming the package and the token-free bootstrap [0.06ms]
+     1 Test (bun on windows-2025)	(pass) isAlreadyPublishedError > detects publish conflicts [0.06ms]
+     1 Test (bun on windows-2025)	(pass) isAlreadyPublishedError > detects the E409 "previously staged version" wording [0.05ms]
+     1 Test (bun on windows-2025)	(pass) publishWithRetry > publishes once and succeeds when visibility arrives after 310 seconds [0.25ms]
+     1 Test (bun on windows-2025)	(pass) publishWithRetry > fails within the verification bound when a version stays absent [0.34ms]
+     1 Test (bun on windows-2025)	(pass) publishWithRetry > treats an E409 staged-version conflict as a cue to verify [0.13ms]
+     1 Test (bun on windows-2025)	(pass) publishWithRetry > never republishes when only verification lags [0.10ms]
+     1 Test (bun on windows-2025)	(pass) publishWithRetry > fails without republishing when verification polling is exhausted [0.06ms]
+     1 Test (bun on windows-2025)	(pass) publishWithRetry > retries the publish command when the publish itself failed [0.07ms]
+     1 Test (bun on windows-2025)	(pass) publishWithRetry > fails fast on non-retryable publish errors [0.05ms]
+     1 Test (bun on windows-2025)	(pass) publishWithRetry > treats an already-published conflict as a cue to verify [0.05ms]
+     1 Test (bun on windows-2025)	(pass) push failure classifier > classifies a GH013 ruleset rejection as a repository rule violation [0.06ms]
+     1 Test (bun on windows-2025)	(pass) push failure classifier > never mistakes a ruleset rejection for a lost race [0.02ms]
+     1 Test (bun on windows-2025)	(pass) push failure classifier > classifies a non-fast-forward rejection as a lost race [0.02ms]
+     1 Test (bun on windows-2025)	(pass) push failure classifier > recognizes legacy GH006 protected-branch rejections [0.01ms]
+     1 Test (bun on windows-2025)	(pass) push failure classifier > reads the message of a thrown command error, not just its output [0.02ms]
+     1 Test (bun on windows-2025)	(pass) push failure classifier > is case-insensitive and accepts a plain string [0.01ms]
+     1 Test (bun on windows-2025)	(pass) push failure classifier > treats other failures (auth, network) as neither [0.05ms]
+     1 Test (bun on windows-2025)	(pass) lychee report classification > marks a failure carrying a status code as final [0.32ms]
+     1 Test (bun on windows-2025)	(pass) lychee report classification > marks ERROR, TIMEOUT, and UNKNOWN markers as never answered [0.09ms]
+     1 Test (bun on windows-2025)	(pass) lychee report classification > keeps non-http failures out of the re-check even when unanswered [0.05ms]
+     1 Test (bun on windows-2025)	(pass) complete report recovery verdict > requires every failure in a non-empty unanswered-only report to recover [0.04ms]
+     1 Test (bun on windows-2025)	(pass) web archive fallback honouring the re-check > skips nothing when the recovered file is missing or empty [0.03ms]
+     1 Test (bun on windows-2025)	(pass) generated npm badge detection > does not skip ordinary notes: ### Patch Changes
+     1 Test (bun on windows-2025)	(pass) generated npm badge detection > does not skip ordinary notes: ![build](https://img.shields.io/badge/build-passing-green) [0.05ms]
+     1 Test (bun on windows-2025)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://img.shields.io.attacker.invalid/badge/npm-1-blue.svg) [0.02ms]
+     1 Test (bun on windows-2025)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://img.shields.io@attacker.invalid/badge/npm-1-blue.svg) [0.02ms]
+     1 Test (bun on windows-2025)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://attacker.invalid/img.shields.io/badge/npm-1-blue.svg)
+     1 Test (bun on windows-2025)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](http://img.shields.io/badge/npm-1-blue.svg) [0.01ms]
+     1 Test (bun on windows-2025)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://user@img.shields.io/badge/npm-1-blue.svg)
+     1 Test (bun on windows-2025)	(pass) generated npm badge detection > does not skip ordinary notes: https://img.shields.io/badge/npm-1-blue.svg
+     1 Test (bun on windows-2025)	(pass) release-preflight workflow wiring (issues #176, #181) > fails on main and manual instant releases, reports on pull requests [0.11ms]
+     1 Test (bun on windows-2025)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode when there is nothing to publish with [61.47ms]
+     1 Test (bun on windows-2025)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode when Docker Hub refuses the write [768.37ms]
+     1 Test (bun on windows-2025)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode when an npm token secret is present [528.42ms]
+     1 Test (bun on windows-2025)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode without the OIDC permission npm needs [78.76ms]
+     1 Test (bun on windows-2025)	(pass) npm OIDC package exchange > fails in release mode when npm rejects the trusted publisher (404) [417.10ms]
+     1 Test (bun on windows-2025)	(pass) npm OIDC package exchange > only warns on a pull request when npm rejects the trusted publisher [418.18ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh > passes a successful command through with its output and exit code [0.03ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh > preserves the exit code of a failing command [0.01ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh > fails with exit code 124 and a titled error when the budget expires [0.06ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh > warns while the overrun can still be acted on [0.01ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh > kills workers spawned by the command, not just the direct child [0.03ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh > does not let a surviving child hold the wrapper output pipe open [0.04ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh > keeps control state when the wrapped command cleans TMPDIR [0.04ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh > fails clearly when the private state parent is unavailable [0.02ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh argument validation > rejects a missing or non-numeric budget [0.01ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh privileged survivor handling > uses the process table, passwordless escalation, and explicit reporting [0.02ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh SIGKILL escalation > escalates to SIGKILL when the command ignores SIGTERM [0.03ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh SIGKILL escalation > enforces the budget on a fractional poll interval [0.01ms]
+     1 Test (bun on windows-2025)	(pass) run-with-budget-warning.sh SIGKILL escalation > rejects a poll interval that is not a number [0.01ms]
+     1 Test (bun on windows-2025)	(pass) npm user config sanitization > removes only deprecated always-auth entries from npmrc content [0.12ms]
+     1 Test (bun on windows-2025)	(pass) npm user config sanitization > skips cleanly when setup-node did not create a user config file [0.02ms]
+     1 Test (bun on windows-2025)	(pass) security workflow > fails closed on fixable high-severity advisories in every npm lock [2.47ms]
+     1 Test (bun on windows-2025)	(pass) dependency graph probe > is skipped where bash is unavailable
+     1 Test (bun on windows-2025)	(pass) transient link failures > classifies cached 503 and rejected 429 as retryable, preserving 404 [0.09ms]
+     1 Test (bun on windows-2025)	(pass) transient link failures > backs off between transient answers and recovers only on success [0.30ms]
+     1 Test (bun on windows-2025)	(pass) transient link failures > uses authenticated contents GET for GitHub blob and tree throttling [0.39ms]
+     1 Test (bun on windows-2025)	(pass) transient link failures > does not recover on an API denial and keeps credentials off unrelated hosts [0.20ms]
+     1 Test (bun on windows-2025)	(pass) transient link failures > never retries a definitive 404 or uses an API answer to hide it [0.07ms]
+     1 Test (bun on windows-2025)	(pass) transient link failures > bounds persistent 503 errors by the shared wall-clock budget [0.09ms]
+     1 Test (bun on windows-2025)	(pass) transient link failures > pins every Bun setup to the supported major line [0.13ms]
+     1 Test (bun on windows-2025)	(pass) isWindowsFileUrlError > matches the loader rejection only on Windows [0.04ms]
+     1 Test (bun on windows-2025)	(pass) isWindowsFileUrlError > matches the code when use-m rethrows it inside a message [0.03ms]
+     1 Test (bun on windows-2025)	(pass) use-module interop shim > reports the HTTP status when use.js cannot be fetched [0.21ms]
+     1 Test (bun on windows-2025)	(pass) use-m load is bounded in time and retried > retries a transient failure and returns the later success [0.13ms]
+     1 Test (bun on windows-2025)	(pass) use-m load is bounded in time and retried > preserves the original failure as the error cause [0.08ms]
+     1 Test (bun on windows-2025)	(pass) use-m load is bounded in time and retried > retries a non-2xx response instead of eval-ing an error page [0.08ms]
+     1 Test (bun on windows-2025)	(pass) version-and-commit.mjs formats the release commit > skips the check when nothing formattable is staged
+     1 Test (bun on windows-2025)	(pass) version-and-commit.mjs push failure reporting > reports the version when the push helper exits non-zero [0.02ms]
+     1 Test (bun on windows-2025)	(pass) checkNpmVersion > reports a network failure as unknown and keeps the reason [0.09ms]
+     1 Test (bun on windows-2025)	(pass) formatFailureMessage > asserts a failed release only when npm answered [0.03ms]
+     1 Test (bun on windows-2025)	(pass) formatFailureMessage > does not blame the release when the registry was unreachable [0.02ms]
+     1 Test (bun on windows-2025)	(pass) workflow concurrency policy > uses job-level concurrency so stale checks cannot cancel active writers [1.14ms]
+     1 Test (bun on windows-2025)	(pass) workflow reliability policy > uploads preview regeneration artifacts when screenshot rendering fails [0.11ms]
+     1 Test (bun on windows-2025)	(pass) release workflow change gates > skips the slow test matrix for pull requests with no code changes [0.55ms]
+     1 Test (bun on windows-2025)	(pass) release workflow change gates > skips test-compilation for excluded-only pushes [0.19ms]
+     1 Test (bun on windows-2025)	(pass) release workflow change gates > skips check-file-line-limits for excluded-only pushes [0.14ms]
+     1 Test (bun on windows-2025)	(pass) release workflow change gates > skips lint for excluded-only pushes [0.14ms]
+     1 Test (bun on windows-2025)	(pass) release workflow change gates > skips test for excluded-only pushes [0.15ms]
+     1 Test (bun on windows-2025)	(pass) release workflow change gates > skips validate-docs for excluded-only pushes [0.15ms]
+     1 Test (bun on windows-2025)	(pass) manual release quality gates > blocks an instant manual release after either quality gate fails [0.20ms]
+     1 Test (bun on windows-2025)	(pass) npm user config cleanup > removes deprecated always-auth before npm commands in the release job [0.14ms]
+     1 Test (bun on windows-2025)	(pass) npm user config cleanup > removes deprecated always-auth before npm commands in the instant-release job [0.12ms]
+     1 Test (bun on windows-2025)	(pass) workflow linting job > bounds every job with a timeout backstop [0.03ms]
+     1 Test (bun on windows-2025)	0 fail
+     1 Test (bun on macos-15)	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Test (bun on macos-15)	bash scripts/run-with-budget-warning.sh 200 "Bun test suite" bun test --timeout 30000
+     1 Test (bun on macos-15)	shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Test (bun on macos-15)	Running Bun test suite with a 200s budget (warning at 140s).
+     1 Test (bun on macos-15)	(pass) npm registry package version checks > throws for unexpected registry failures [0.18ms]
+     1 Test (bun on macos-15)	(pass) broken link workflow > fails for every nonzero Lychee exit even when an archive exists [0.54ms]
+     1 Test (bun on macos-15)	(pass) broken link workflow > downgrades a failure only when every unanswered link recovered [0.28ms]
+     1 Test (bun on macos-15)	(pass) security workflow > fails closed on fixable high-severity advisories in every npm lock [2.48ms]
+     1 Test (bun on macos-15)	(pass) dependency graph probe > skips the review with a warning when the dependency graph is disabled [15.12ms]
+     1 Test (bun on macos-15)	(pass) dependency graph probe > fails on a rate-limited 403, which says nothing about the setting [19.29ms]
+     1 Test (bun on macos-15)	(pass) dependency graph probe > fails on any other answer, on one annotation line [41.43ms]
+     1 Test (bun on macos-15)	(pass) use-module interop shim > reports the HTTP status when use.js cannot be fetched [0.47ms]
+     1 Test (bun on macos-15)	(pass) use-m load is bounded in time and retried > retries a transient failure and returns the later success [0.10ms]
+     1 Test (bun on macos-15)	(pass) use-m load is bounded in time and retried > preserves the original failure as the error cause [0.06ms]
+     1 Test (bun on macos-15)	(pass) use-m load is bounded in time and retried > retries a non-2xx response instead of eval-ing an error page [0.07ms]
+     1 Test (bun on macos-15)	(pass) issue 21 bounded storage snapshots > skips a diff with insufficient host headroom [0.07ms]
+     1 Test (bun on macos-15)	(pass) issue 21 bounded storage snapshots > skips a diff before contacting the daemon when the candidate change budget is excessive [0.05ms]
+     1 Test (bun on macos-15)	(pass) check-package-manager.mjs > fails when neither packageManager nor devEngines is declared [93.62ms]
+     1 Test (bun on macos-15)	(pass) check-package-manager.mjs > fails on a declaration naming a manager the flow cannot use [88.40ms]
+     1 Test (bun on macos-15)	(pass) check-package-manager.mjs > warns but passes when a foreign lockfile sits under a declaration [78.96ms]
+     1 Test (bun on macos-15)	(pass) check-package-manager.mjs > fails and names the lockfile when a foreign lockfile has no declaration [78.91ms]
+     1 Test (bun on macos-15)	(pass) simulate-fresh-merge.sh fetch retry > survives a transient fetch failure [72.11ms]
+     1 Test (bun on macos-15)	(pass) simulate-fresh-merge.sh fetch retry > still fails when the base branch cannot be fetched at all [78.23ms]
+     1 Test (bun on macos-15)	(pass) optional Docker Hub publishing workflow > suppresses only DEP0005 warnings from download-artifact v8 [0.51ms]
+     1 Test (bun on macos-15)	(pass) containers kept for investigation > holds failed and OOM killed containers until they are named [0.12ms]
+     1 Test (bun on macos-15)	(pass) check-file-line-limits.sh > warns without failing for files above the warning threshold [78.46ms]
+     1 Test (bun on macos-15)	(pass) check-file-line-limits.sh > still fails files over the hard limit [53.53ms]
+     1 Test (bun on macos-15)	(pass) check-file-line-limits.sh > fails .js and .cjs files over the hard limit [55.93ms]
+     1 Test (bun on macos-15)	(pass) check-file-line-limits.sh > fails Markdown files over the hard limit [49.31ms]
+     1 Test (bun on macos-15)	(pass) check-file-line-limits.sh > fails workflow files under any name, including .yaml [63.30ms]
+     1 Test (bun on macos-15)	(pass) check-file-line-limits.sh walk > exits 2 with an error when it examined nothing [47.47ms]
+     1 Test (bun on macos-15)	(pass) isAlreadyPublishedError > detects publish conflicts [0.08ms]
+     1 Test (bun on macos-15)	(pass) isAlreadyPublishedError > detects the E409 "previously staged version" wording [0.02ms]
+     1 Test (bun on macos-15)	(pass) publishWithRetry > publishes once and succeeds when visibility arrives after 310 seconds [0.23ms]
+     1 Test (bun on macos-15)	(pass) publishWithRetry > fails within the verification bound when a version stays absent [0.09ms]
+     1 Test (bun on macos-15)	(pass) publishWithRetry > treats an E409 staged-version conflict as a cue to verify [0.05ms]
+     1 Test (bun on macos-15)	(pass) publishWithRetry > never republishes when only verification lags [0.08ms]
+     1 Test (bun on macos-15)	(pass) publishWithRetry > fails without republishing when verification polling is exhausted [0.06ms]
+     1 Test (bun on macos-15)	(pass) publishWithRetry > retries the publish command when the publish itself failed [0.05ms]
+     1 Test (bun on macos-15)	(pass) publishWithRetry > fails fast on non-retryable publish errors [0.05ms]
+     1 Test (bun on macos-15)	(pass) publishWithRetry > treats an already-published conflict as a cue to verify [0.04ms]
+     1 Test (bun on macos-15)	(pass) parsed version guard > fails when the base ref is unavailable [77.97ms]
+     1 Test (bun on macos-15)	(pass) parsed version guard > fails when the explicitly requested PR head is unavailable [272.20ms]
+     1 Test (bun on macos-15)	(pass) PR changeset validation > does not accept a base fragment when the CI comparison fails [131.78ms]
+     1 Test (bun on macos-15)	(pass) complete release gate (offline HTTP) > does not release on a GitHub network failure [20.41ms]
+     1 Test (bun on macos-15)	(pass) exit codes > returns 1 when a deletion failed [0.04ms]
+     1 Test (bun on macos-15)	(pass) exit codes > returns 1 when an emergency action fails even if the goal is met [0.05ms]
+     1 Test (bun on macos-15)	(pass) issue 14 Docker process inspection > skips zombie metadata while retaining command paths of live processes [0.88ms]
+     1 Test (bun on macos-15)	(pass) issue 14 Docker process inspection > reports unreadable process names when the fallback is denied [0.11ms]
+     1 Test (bun on macos-15)	(pass) aggregate cleanup details > preserves readable shell paths while retaining denied PID identity [0.11ms]
+     1 Test (bun on macos-15)	(pass) aggregate cleanup safety and publishing > reports Full Disk Access when Safari inspection is denied [0.30ms]
+     1 Test (bun on macos-15)	(pass) aggregate cleanup safety and publishing > retains npm E404 diagnostics when publishing rejects with a generic exit error [0.05ms]
+     1 Test (bun on macos-15)	(pass) create-github-release.mjs > throws when gh api exits non-zero with an unexpected error [0.11ms]
+     1 Test (bun on macos-15)	(pass) create-github-release.mjs > fails when gh api exits non-zero with an unexpected error [34.24ms]
+     1 Test (bun on macos-15)	(pass) create-github-release.mjs > treats already_exists as an explicit idempotent skip [28.82ms]
+     1 Test (bun on macos-15)	(pass) detect-code-changes push ranges > widens when the lookup fails [221.22ms]
+     1 Test (bun on macos-15)	(pass) detect-code-changes push ranges > keeps the push range when the lookup fails with no base SHA [215.33ms]
+     1 Test (bun on macos-15)	(pass) detect-code-changes push ranges > skips the lookup entirely without push SHAs [223.74ms]
+     1 Test (bun on macos-15)	(pass) issue 14 writable-layer usage > marks failed layer inspection as unknown with zero estimated bytes [0.25ms]
+     1 Test (bun on macos-15)	(pass) workflow concurrency policy > uses job-level concurrency so stale checks cannot cancel active writers [0.89ms]
+     1 Test (bun on macos-15)	(pass) workflow reliability policy > uploads preview regeneration artifacts when screenshot rendering fails [0.09ms]
+     1 Test (bun on macos-15)	(pass) release workflow change gates > skips the slow test matrix for pull requests with no code changes [0.28ms]
+     1 Test (bun on macos-15)	(pass) release workflow change gates > skips test-compilation for excluded-only pushes [0.08ms]
+     1 Test (bun on macos-15)	(pass) release workflow change gates > skips check-file-line-limits for excluded-only pushes [0.07ms]
+     1 Test (bun on macos-15)	(pass) release workflow change gates > skips lint for excluded-only pushes [0.09ms]
+     1 Test (bun on macos-15)	(pass) release workflow change gates > skips test for excluded-only pushes [0.11ms]
+     1 Test (bun on macos-15)	(pass) release workflow change gates > skips validate-docs for excluded-only pushes [0.10ms]
+     1 Test (bun on macos-15)	(pass) manual release quality gates > blocks an instant manual release after either quality gate fails [0.12ms]
+     1 Test (bun on macos-15)	(pass) npm user config cleanup > removes deprecated always-auth before npm commands in the release job [0.09ms]
+     1 Test (bun on macos-15)	(pass) npm user config cleanup > removes deprecated always-auth before npm commands in the instant-release job [0.07ms]
+     1 Test (bun on macos-15)	(pass) npm user config sanitization > removes only deprecated always-auth entries from npmrc content [0.12ms]
+     1 Test (bun on macos-15)	(pass) npm user config sanitization > skips cleanly when setup-node did not create a user config file [0.02ms]
+     1 Test (bun on macos-15)	(pass) issue 14 reporting and consent > returns a failure exit code for an incomplete JSON scan [1.10ms]
+     1 Test (bun on macos-15)	(pass) land-via-pull-request > gives up with the real command error when the merge never succeeds [0.19ms]
+     1 Test (bun on macos-15)	(pass) land-via-pull-request > does not retry a permanent repository-policy merge rejection [0.09ms]
+     1 Test (bun on macos-15)	(pass) land-via-pull-request check enforcement > propagates a failed pull-request check without attempting a merge [0.71ms]
+     1 Test (bun on macos-15)	(pass) release landing failures and reuse > stops before merge when the Checks API rejects attestation [0.19ms]
+     1 Test (bun on macos-15)	(pass) release landing failures and reuse > fails closed before pushing a branch when neither token is available [0.08ms]
+     1 Test (bun on macos-15)	(pass) release landing failures and reuse > reuses an open pull request so a re-run creates no duplicate [0.07ms]
+     1 Test (bun on macos-15)	(pass) release landing failures and reuse > reports no open pull request when the lookup itself fails [0.03ms]
+     1 Test (bun on macos-15)	(pass) pipeline status gate > passes when jobs succeeded or were skipped [166.32ms]
+     1 Test (bun on macos-15)	(pass) pipeline status gate > fails for a failed job on every ref [129.21ms]
+     1 Test (bun on macos-15)	(pass) pipeline status gate > fails for a cancelled job on main [274.92ms]
+     1 Test (bun on macos-15)	(pass) pipeline status gate > fails closed for a cancellation without branch and workflow context [165.56ms]
+     1 Test (bun on macos-15)	(pass) pipeline status gate in every workflow > uses a status function, so the gate runs when its needs fail [0.17ms]
+     1 Test (bun on macos-15)	(pass) pipeline status supersede detection > errors when main is at the run commit (a genuine overrun) [190.60ms]
+     1 Test (bun on macos-15)	(pass) pipeline status supersede detection > warns only when a moved branch could cancel that exact job [179.44ms]
+     1 Test (bun on macos-15)	(pass) pipeline status supersede detection > fails closed when cancel-in-progress is an expression [182.97ms]
+     1 Test (bun on macos-15)	(pass) pipeline status supersede detection > errors when the branch head cannot be resolved [204.24ms]
+     1 Test (bun on macos-15)	(pass) pipeline status supersede detection > errors without a network call when RUN_SHA is missing [196.01ms]
+     1 Test (bun on macos-15)	(pass) isWindowsFileUrlError > matches the loader rejection only on Windows [0.06ms]
+     1 Test (bun on macos-15)	(pass) isWindowsFileUrlError > matches the code when use-m rethrows it inside a message [0.07ms]
+     1 Test (bun on macos-15)	(pass) merge-changesets.mjs > fails without merging when any changeset has an unparseable bump type [18.20ms]
+     1 Test (bun on macos-15)	(pass) issue 14 Docker discovery > preserves containers and images after repeated global size failures [1.78ms]
+     1 Test (bun on macos-15)	(pass) issue 14 Docker discovery > retains one failed container size as unknown and scans the others [0.63ms]
+     1 Test (bun on macos-15)	(pass) filterWarningsToChangedLines > keeps warnings on changed lines [0.17ms]
+     1 Test (bun on macos-15)	(pass) filterWarningsToChangedLines > drops warnings on unchanged lines of a changed file [0.03ms]
+     1 Test (bun on macos-15)	(pass) filterWarningsToChangedLines > drops warnings from files that were not touched at all [0.02ms]
+     1 Test (bun on macos-15)	(pass) filterWarningsToChangedLines > keeps every warning of a wholly new file [0.02ms]
+     1 Test (bun on macos-15)	(pass) filterWarningsToChangedLines > always keeps errors regardless of the diff [0.02ms]
+     1 Test (bun on macos-15)	(pass) staged release formatting > checks a formatted file while skipping a consumed changeset deletion [445.53ms]
+     1 Test (bun on macos-15)	(pass) checkNpmVersion > reports a network failure as unknown and keeps the reason [0.14ms]
+     1 Test (bun on macos-15)	(pass) formatFailureMessage > asserts a failed release only when npm answered [0.02ms]
+     1 Test (bun on macos-15)	(pass) formatFailureMessage > does not blame the release when the registry was unreachable [0.07ms]
+     1 Test (bun on macos-15)	(pass) generated npm badge detection > does not skip ordinary notes: ### Patch Changes
+     1 Test (bun on macos-15)	(pass) generated npm badge detection > does not skip ordinary notes: ![build](https://img.shields.io/badge/build-passing-green) [0.03ms]
+     1 Test (bun on macos-15)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://img.shields.io.attacker.invalid/badge/npm-1-blue.svg) [0.02ms]
+     1 Test (bun on macos-15)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://img.shields.io@attacker.invalid/badge/npm-1-blue.svg) [0.01ms]
+     1 Test (bun on macos-15)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://attacker.invalid/img.shields.io/badge/npm-1-blue.svg)
+     1 Test (bun on macos-15)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](http://img.shields.io/badge/npm-1-blue.svg) [0.02ms]
+     1 Test (bun on macos-15)	(pass) generated npm badge detection > does not skip ordinary notes: ![npm](https://user@img.shields.io/badge/npm-1-blue.svg)
+     1 Test (bun on macos-15)	(pass) generated npm badge detection > does not skip ordinary notes: https://img.shields.io/badge/npm-1-blue.svg
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh > passes a successful command through with its output and exit code [49.37ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh > preserves the exit code of a failing command [37.89ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh > fails with exit code 124 and a titled error when the budget expires [2386.39ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh > warns while the overrun can still be acted on [2247.31ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh > kills workers spawned by the command, not just the direct child [2443.01ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh > does not let a surviving child hold the wrapper output pipe open [63.98ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh > keeps control state when the wrapped command cleans TMPDIR [52.07ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh > fails clearly when the private state parent is unavailable [5.86ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh argument validation > rejects a missing or non-numeric budget [8.78ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh privileged survivor handling > uses the process table, passwordless escalation, and explicit reporting [0.07ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh SIGKILL escalation > escalates to SIGKILL when the command ignores SIGTERM [3594.40ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh SIGKILL escalation > enforces the budget on a fractional poll interval [2014.58ms]
+     1 Test (bun on macos-15)	(pass) run-with-budget-warning.sh SIGKILL escalation > rejects a poll interval that is not a number [3.49ms]
+     1 Test (bun on macos-15)	(pass) push-main-with-rebase-retry.mjs > rebases and retries when a generated-artifact push races another main writer [699.88ms]
+     1 Test (bun on macos-15)	(pass) push-main-with-rebase-retry.mjs > lands the commit through a pull request when a ruleset declines the direct push [961.42ms]
+     1 Test (bun on macos-15)	(pass) push-main-with-rebase-retry.mjs > fails fast on a rejection that neither a rebase nor a pull request can fix [141.85ms]
+     1 Test (bun on macos-15)	(pass) version-and-commit.mjs formats the release commit > skips the check when nothing formattable is staged [0.02ms]
+     1 Test (bun on macos-15)	(pass) version-and-commit.mjs push failure reporting > reports the version when the push helper exits non-zero [0.04ms]
+     1 Test (bun on macos-15)	(pass) publish failure classifier > classifies a first-publish E404 as non-retryable [0.04ms]
+     1 Test (bun on macos-15)	(pass) publish failure classifier > classifies authentication failures (401/403/auth) as non-retryable [0.04ms]
+     1 Test (bun on macos-15)	(pass) publish failure classifier > is case-insensitive when matching patterns
+     1 Test (bun on macos-15)	(pass) publish failure classifier > treats transient/unknown failures as retryable [0.02ms]
+     1 Test (bun on macos-15)	(pass) publish failure classifier > handles null/undefined input without throwing
+     1 Test (bun on macos-15)	(pass) publish failure classifier > exposes the documented non-retryable patterns [0.04ms]
+     1 Test (bun on macos-15)	(pass) publish failure classifier > builds actionable guidance naming the package and the token-free bootstrap [0.03ms]
+     1 Test (bun on macos-15)	(pass) bootstrapDependencies > reports the failure as a GitHub error annotation [0.47ms]
+     1 Test (bun on macos-15)	(pass) bootstrapDependencies > does not run later loaders once one has failed [0.10ms]
+     1 Test (bun on macos-15)	(pass) writeOutputs > never throws when the output file cannot be written [0.03ms]
+     1 Test (bun on macos-15)	(pass) audit-fixable > finds the newer release outside the vulnerable range [0.82ms]
+     1 Test (bun on macos-15)	(pass) audit-fixable > blocks fixable advisories and only warns about the rest [0.16ms]
+     1 Test (bun on macos-15)	(pass) CI timeout policy > sets timeout-minutes for every release workflow job [1.79ms]
+     1 Test (bun on macos-15)	(pass) CI timeout policy > sets timeout-minutes for every link workflow job [0.14ms]
+     1 Test (bun on macos-15)	(pass) CI timeout policy > parses workflow files checked out with Windows line endings [0.05ms]
+     1 Test (bun on macos-15)	(pass) CI timeout policy > caps individual Node.js and Bun tests at 30 seconds [0.03ms]
+     1 Test (bun on macos-15)	(pass) CI timeout policy > documents that the Bun flag bounds a test and not the suite [0.25ms]
+     1 Test (bun on macos-15)	(pass) CI execution budgets > warns at the same share of the budget that the invariant allows [0.10ms]
+     1 Test (bun on macos-15)	(pass) step budget grouping > still fails when a single leg exceeds the allowance [0.03ms]
+     1 Test (bun on macos-15)	(pass) step budget grouping > reports a budget it cannot read and never skips one silently [0.04ms]
+     1 Test (bun on macos-15)	(pass) check-required-docs.sh > fails when a required section is deleted but the file remains [70.70ms]
+     1 Test (bun on macos-15)	(pass) check-required-docs.sh > fails a missing required document with its own message [49.91ms]
+     1 Test (bun on macos-15)	(pass) push failure classifier > classifies a GH013 ruleset rejection as a repository rule violation [0.06ms]
+     1 Test (bun on macos-15)	(pass) push failure classifier > never mistakes a ruleset rejection for a lost race [0.04ms]
+     1 Test (bun on macos-15)	(pass) push failure classifier > classifies a non-fast-forward rejection as a lost race [0.02ms]
+     1 Test (bun on macos-15)	(pass) push failure classifier > recognizes legacy GH006 protected-branch rejections
+     1 Test (bun on macos-15)	(pass) push failure classifier > reads the message of a thrown command error, not just its output [0.02ms]
+     1 Test (bun on macos-15)	(pass) push failure classifier > is case-insensitive and accepts a plain string [0.01ms]
+     1 Test (bun on macos-15)	(pass) push failure classifier > treats other failures (auth, network) as neither [0.04ms]
+     1 Test (bun on macos-15)	(pass) release-preflight workflow wiring (issues #176, #181) > fails on main and manual instant releases, reports on pull requests [0.10ms]
+     1 Test (bun on macos-15)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode when there is nothing to publish with [7.04ms]
+     1 Test (bun on macos-15)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode when Docker Hub refuses the write [400.86ms]
+     1 Test (bun on macos-15)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode when an npm token secret is present [256.58ms]
+     1 Test (bun on macos-15)	(pass) release-preflight probe behaviour (offline, curl stub) > fails in release mode without the OIDC permission npm needs [14.00ms]
+     1 Test (bun on macos-15)	(pass) npm OIDC package exchange > fails in release mode when npm rejects the trusted publisher (404) [227.51ms]
+     1 Test (bun on macos-15)	(pass) npm OIDC package exchange > only warns on a pull request when npm rejects the trusted publisher [197.26ms]
+     1 Test (bun on macos-15)	(pass) install-git-hooks.mjs verification > fails when husky leaves core.hooksPath unset [100.08ms]
+     1 Test (bun on macos-15)	(pass) install-git-hooks.mjs verification > skips on CI [114.10ms]
+     1 Test (bun on macos-15)	(pass) install-git-hooks.mjs verification > skips with HUSKY=0 [137.04ms]
+     1 Test (bun on macos-15)	(pass) install-git-hooks.mjs verification > skips outside a git repository [116.50ms]
+     1 Test (bun on macos-15)	(pass) transient link failures > classifies cached 503 and rejected 429 as retryable, preserving 404 [0.38ms]
+     1 Test (bun on macos-15)	(pass) transient link failures > backs off between transient answers and recovers only on success [1.08ms]
+     1 Test (bun on macos-15)	(pass) transient link failures > uses authenticated contents GET for GitHub blob and tree throttling [0.53ms]
+     1 Test (bun on macos-15)	(pass) transient link failures > does not recover on an API denial and keeps credentials off unrelated hosts [0.21ms]
+     1 Test (bun on macos-15)	(pass) transient link failures > never retries a definitive 404 or uses an API answer to hide it [0.09ms]
+     1 Test (bun on macos-15)	(pass) transient link failures > bounds persistent 503 errors by the shared wall-clock budget [0.11ms]
+     1 Test (bun on macos-15)	(pass) transient link failures > pins every Bun setup to the supported major line [0.15ms]
+     1 Test (bun on macos-15)	(pass) workflow linting job > bounds every job with a timeout backstop [0.09ms]
+     1 Test (bun on macos-15)	(pass) lychee report classification > marks a failure carrying a status code as final [0.21ms]
+     1 Test (bun on macos-15)	(pass) lychee report classification > marks ERROR, TIMEOUT, and UNKNOWN markers as never answered [0.06ms]
+     1 Test (bun on macos-15)	(pass) lychee report classification > keeps non-http failures out of the re-check even when unanswered [0.06ms]
+     1 Test (bun on macos-15)	(pass) complete report recovery verdict > requires every failure in a non-empty unanswered-only report to recover [0.05ms]
+     1 Test (bun on macos-15)	(pass) web archive fallback honouring the re-check > skips nothing when the recovered file is missing or empty [0.03ms]
+     1 Test (bun on macos-15)	(pass) extractErrorsSection > stops at the next top-level heading [1.67ms]
+     1 Test (bun on macos-15)	(pass) extractErrorsSection > falls back to the whole document when the heading is absent [0.09ms]
+     1 Test (bun on macos-15)	(pass) extractBrokenUrls > ignores successful redirects outside the errors section [3.93ms]
+     1 Test (bun on macos-15)	(pass) extractBrokenUrls > parses the full document when the errors section is absent [0.12ms]
+     1 Test (bun on macos-15)	(pass) extractBrokenUrls > extracts every http error from a full report exactly once [0.14ms]
+     1 Test (bun on macos-15)	(pass) extractBrokenLinks > reports errors that the Wayback Machine cannot answer [0.09ms]
+     1 Test (bun on macos-15)	(pass) extractBrokenLinks > never classifies a non-http error as a URL [0.03ms]
+     1 Test (bun on macos-15)	(pass) extractBrokenLinks > matches the error count lychee itself reports [0.11ms]
+     1 Test (bun on macos-15)	(pass) check-web-archive.mjs end to end > fails when the only lychee errors have no http URL to archive [20.45ms]
+     1 Test (bun on macos-15)	0 fail
+     1 Test (deno on ubuntu-24.04)	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Test (deno on ubuntu-24.04)	bash scripts/run-with-budget-warning.sh 100 "Deno test suite" deno test --allow-read
+     1 Test (deno on ubuntu-24.04)	shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Test (deno on ubuntu-24.04)	Running Deno test suite with a 100s budget (warning at 70s).
+     1 Test (deno on ubuntu-24.04)	finds the newer release outside the vulnerable range ... ok (8ms)
+     1 Test (deno on ubuntu-24.04)	blocks fixable advisories and only warns about the rest ... ok (350µs)
+     1 Test (deno on ubuntu-24.04)	reports the failure as a GitHub error annotation ... ok (871µs)
+     1 Test (deno on ubuntu-24.04)	does not run later loaders once one has failed ... ok (288µs)
+     1 Test (deno on ubuntu-24.04)	never throws when the output file cannot be written ... ok (139µs)
+     1 Test (deno on ubuntu-24.04)	Download https://registry.npmjs.org/@humanwhocodes/retry/-/retry-0.4.3.tgz
+     1 Test (deno on ubuntu-24.04)	Download https://registry.npmjs.org/@changesets/should-skip-package/-/should-skip-package-1.0.0.tgz
+     1 Test (deno on ubuntu-24.04)	Download https://registry.npmjs.org/@changesets/errors/-/errors-1.0.0.tgz
+     1 Test (deno on ubuntu-24.04)	Initialize @changesets/should-skip-package@1.0.0
+     1 Test (deno on ubuntu-24.04)	Initialize @changesets/errors@1.0.0
+     1 Test (deno on ubuntu-24.04)	Initialize @humanwhocodes/retry@0.4.3
+     1 Test (deno on ubuntu-24.04)	╭ Warning
+     1 Test (deno on ubuntu-24.04)	│  The following packages are deprecated:
+     1 Test (deno on ubuntu-24.04)	checks a formatted file while skipping a consumed changeset deletion ... ok (490µs)
+     1 Test (deno on ubuntu-24.04)	extractErrorsSection ...
+     1 Test (deno on ubuntu-24.04)	extractErrorsSection ... ok (2ms)
+     1 Test (deno on ubuntu-24.04)	ignores successful redirects outside the errors section ... ok (1ms)
+     1 Test (deno on ubuntu-24.04)	parses the full document when the errors section is absent ... ok (0ms)
+     1 Test (deno on ubuntu-24.04)	extracts every http error from a full report exactly once ... ok (0ms)
+     1 Test (deno on ubuntu-24.04)	reports errors that the Wayback Machine cannot answer ... ok (0ms)
+     1 Test (deno on ubuntu-24.04)	never classifies a non-http error as a URL ... ok (1ms)
+     1 Test (deno on ubuntu-24.04)	matches the error count lychee itself reports ... ok (0ms)
+     1 Test (deno on ubuntu-24.04)	running 12 tests from ./tests/ci-timeouts.test.js
+     1 Test (deno on ubuntu-24.04)	sets timeout-minutes for every release workflow job ... ok (2ms)
+     1 Test (deno on ubuntu-24.04)	sets timeout-minutes for every link workflow job ... ok (140µs)
+     1 Test (deno on ubuntu-24.04)	warns at the same share of the budget that the invariant allows ... ok (133µs)
+     1 Test (deno on ubuntu-24.04)	still fails when a single leg exceeds the allowance ... ok (131µs)
+     1 Test (deno on ubuntu-24.04)	reports a budget it cannot read and never skips one silently ... ok (134µs)
+     1 Test (deno on ubuntu-24.04)	returns 1 when a deletion failed ... ok (184µs)
+     1 Test (deno on ubuntu-24.04)	returns 1 when an emergency action fails even if the goal is met ... ok (198µs)
+     1 Test (deno on ubuntu-24.04)	throws when gh api exits non-zero with an unexpected error ... ok (440µs)
+     1 Test (deno on ubuntu-24.04)	holds failed and OOM killed containers until they are named ... ok (964µs)
+     1 Test (deno on ubuntu-24.04)	suppresses only DEP0005 warnings from download-artifact v8 ... ok (446µs)
+     1 Test (deno on ubuntu-24.04)	returns a failure exit code for an incomplete JSON scan ... ok (160µs)
+     1 Test (deno on ubuntu-24.04)	preserves containers and images after repeated global size failures ... ok (4ms)
+     1 Test (deno on ubuntu-24.04)	retains one failed container size as unknown and scans the others ... ok (958µs)
+     1 Test (deno on ubuntu-24.04)	skips zombie metadata while retaining command paths of live processes ... ok (138µs)
+     1 Test (deno on ubuntu-24.04)	reports unreadable process names when the fallback is denied ... ok (217µs)
+     1 Test (deno on ubuntu-24.04)	marks failed layer inspection as unknown with zero estimated bytes ... ok (246µs)
+     1 Test (deno on ubuntu-24.04)	preserves readable shell paths while retaining denied PID identity ... ok (1ms)
+     1 Test (deno on ubuntu-24.04)	reports Full Disk Access when Safari inspection is denied ... ok (101µs)
+     1 Test (deno on ubuntu-24.04)	retains npm E404 diagnostics when publishing rejects with a generic exit error ... ok (355µs)
+     1 Test (deno on ubuntu-24.04)	skips a diff with insufficient host headroom ... ok (197µs)
+     1 Test (deno on ubuntu-24.04)	skips a diff before contacting the daemon when the candidate change budget is excessive ... ok (189µs)
+     1 Test (deno on ubuntu-24.04)	gives up with the real command error when the merge never succeeds ... ok (300µs)
+     1 Test (deno on ubuntu-24.04)	does not retry a permanent repository-policy merge rejection ... ok (200µs)
+     1 Test (deno on ubuntu-24.04)	propagates a failed pull-request check without attempting a merge ... ok (9ms)
+     1 Test (deno on ubuntu-24.04)	fails closed before pushing a branch when neither token is available ... ok (381µs)
+     1 Test (deno on ubuntu-24.04)	reports no open pull request when the lookup itself fails ... ok (115µs)
+     1 Test (deno on ubuntu-24.04)	fails for every nonzero Lychee exit even when an archive exists ... ok (656µs)
+     1 Test (deno on ubuntu-24.04)	downgrades a failure only when every unanswered link recovered ... ok (1ms)
+     1 Test (deno on ubuntu-24.04)	keeps warnings on changed lines ... ok (450µs)
+     1 Test (deno on ubuntu-24.04)	drops warnings on unchanged lines of a changed file ... ok (113µs)
+     1 Test (deno on ubuntu-24.04)	drops warnings from files that were not touched at all ... ok (142µs)
+     1 Test (deno on ubuntu-24.04)	keeps every warning of a wholly new file ... ok (137µs)
+     1 Test (deno on ubuntu-24.04)	always keeps errors regardless of the diff ... ok (132µs)
+     1 Test (deno on ubuntu-24.04)	throws for unexpected registry failures ... ok (205µs)
+     1 Test (deno on ubuntu-24.04)	fails when neither packageManager nor devEngines is declared ... ok (74µs)
+     1 Test (deno on ubuntu-24.04)	fails on a declaration naming a manager the flow cannot use ... ok (69µs)
+     1 Test (deno on ubuntu-24.04)	warns but passes when a foreign lockfile sits under a declaration ... ok (82µs)
+     1 Test (deno on ubuntu-24.04)	fails and names the lockfile when a foreign lockfile has no declaration ... ok (66µs)
+     1 Test (deno on ubuntu-24.04)	uses a status function, so the gate runs when its needs fail ... ok (253µs)
+     1 Test (deno on ubuntu-24.04)	running 7 tests from ./tests/publish-failure-classifier.test.js
+     1 Test (deno on ubuntu-24.04)	classifies a first-publish E404 as non-retryable ... ok (563µs)
+     1 Test (deno on ubuntu-24.04)	classifies authentication failures (401/403/auth) as non-retryable ... ok (123µs)
+     1 Test (deno on ubuntu-24.04)	treats transient/unknown failures as retryable ... ok (62µs)
+     1 Test (deno on ubuntu-24.04)	exposes the documented non-retryable patterns ... ok (122µs)
+     1 Test (deno on ubuntu-24.04)	running 16 tests from ./tests/publish-retry.test.js
+     1 Test (deno on ubuntu-24.04)	fails within the verification bound when a version stays absent ... ok (249µs)
+     1 Test (deno on ubuntu-24.04)	fails without republishing when verification polling is exhausted ... ok (153µs)
+     1 Test (deno on ubuntu-24.04)	retries the publish command when the publish itself failed ... ok (190µs)
+     1 Test (deno on ubuntu-24.04)	fails fast on non-retryable publish errors ... ok (175µs)
+     1 Test (deno on ubuntu-24.04)	running 7 tests from ./tests/push-failure-classifier.test.js
+     1 Test (deno on ubuntu-24.04)	reads the message of a thrown command error, not just its output ... ok (374µs)
+     1 Test (deno on ubuntu-24.04)	treats other failures (auth, network) as neither ... ok (112µs)
+     1 Test (deno on ubuntu-24.04)	running 0 tests from ./tests/push-main-with-rebase-retry.test.js
+     1 Test (deno on ubuntu-24.04)	marks a failure carrying a status code as final ... ok (1ms)
+     1 Test (deno on ubuntu-24.04)	marks ERROR, TIMEOUT, and UNKNOWN markers as never answered ... ok (308µs)
+     1 Test (deno on ubuntu-24.04)	keeps non-http failures out of the re-check even when unanswered ... ok (228µs)
+     1 Test (deno on ubuntu-24.04)	requires every failure in a non-empty unanswered-only report to recover ... ok (113µs)
+     1 Test (deno on ubuntu-24.04)	skips nothing when the recovered file is missing or empty ... ok (90µs)
+     1 Test (deno on ubuntu-24.04)	does not skip ordinary notes: ### Patch Changes\n- Fix img.shields.io URL handling ... ok (279µs)
+     1 Test (deno on ubuntu-24.04)	does not skip ordinary notes: ![build](https://img.shields.io/badge/build-passing-green) ... ok (341µs)
+     1 Test (deno on ubuntu-24.04)	does not skip ordinary notes: ![npm](https://img.shields.io.attacker.invalid/badge/npm-1-blue.svg) ... ok (98µs)
+     1 Test (deno on ubuntu-24.04)	does not skip ordinary notes: ![npm](https://img.shields.io@attacker.invalid/badge/npm-1-blue.svg) ... ok (106µs)
+     1 Test (deno on ubuntu-24.04)	does not skip ordinary notes: ![npm](https://attacker.invalid/img.shields.io/badge/npm-1-blue.svg) ... ok (112µs)
+     1 Test (deno on ubuntu-24.04)	does not skip ordinary notes: ![npm](http://img.shields.io/badge/npm-1-blue.svg) ... ok (113µs)
+     1 Test (deno on ubuntu-24.04)	does not skip ordinary notes: ![npm](https://user@img.shields.io/badge/npm-1-blue.svg) ... ok (67µs)
+     1 Test (deno on ubuntu-24.04)	does not skip ordinary notes: https://img.shields.io/badge/npm-1-blue.svg ... ok (42µs)
+     1 Test (deno on ubuntu-24.04)	fails on main and manual instant releases, reports on pull requests ... ok (113µs)
+     1 Test (deno on ubuntu-24.04)	running 14 tests from ./tests/run-with-budget-warning.test.js
+     1 Test (deno on ubuntu-24.04)	preserves the exit code of a failing command ... ok (67µs)
+     1 Test (deno on ubuntu-24.04)	fails with exit code 124 and a titled error when the budget expires ... ok (62µs)
+     1 Test (deno on ubuntu-24.04)	warns while the overrun can still be acted on ... ok (61µs)
+     1 Test (deno on ubuntu-24.04)	fails clearly when the private state parent is unavailable ... ok (62µs)
+     1 Test (deno on ubuntu-24.04)	removes only deprecated always-auth entries from npmrc content ... ok (1ms)
+     1 Test (deno on ubuntu-24.04)	skips cleanly when setup-node did not create a user config file ... ok (93µs)
+     1 Test (deno on ubuntu-24.04)	fails closed on fixable high-severity advisories in every npm lock ... ok (5ms)
+     1 Test (deno on ubuntu-24.04)	is skipped where bash is unavailable ... ok (64µs)
+     1 Test (deno on ubuntu-24.04)	classifies cached 503 and rejected 429 as retryable, preserving 404 ... ok (1ms)
+     1 Test (deno on ubuntu-24.04)	bounds persistent 503 errors by the shared wall-clock budget ... ok (242µs)
+     1 Test (deno on ubuntu-24.04)	reports the HTTP status when use.js cannot be fetched ... ok (1ms)
+     1 Test (deno on ubuntu-24.04)	retries a transient failure and returns the later success ... ok (511µs)
+     1 Test (deno on ubuntu-24.04)	preserves the original failure as the error cause ... ok (232µs)
+     1 Test (deno on ubuntu-24.04)	retries a non-2xx response instead of eval-ing an error page ... ok (326µs)
+     1 Test (deno on ubuntu-24.04)	skips the check when nothing formattable is staged ... ok (84µs)
+     1 Test (deno on ubuntu-24.04)	reports a network failure as unknown and keeps the reason ... ok (462µs)
+     1 Test (deno on ubuntu-24.04)	asserts a failed release only when npm answered ... ok (110µs)
+     1 Test (deno on ubuntu-24.04)	uses job-level concurrency so stale checks cannot cancel active writers ... ok (2ms)
+     1 Test (deno on ubuntu-24.04)	uploads preview regeneration artifacts when screenshot rendering fails ... ok (219µs)
+     1 Test (deno on ubuntu-24.04)	skips the slow test matrix for pull requests with no code changes ... ok (584µs)
+     1 Test (deno on ubuntu-24.04)	skips test-compilation for excluded-only pushes ... ok (258µs)
+     1 Test (deno on ubuntu-24.04)	skips check-file-line-limits for excluded-only pushes ... ok (217µs)
+     1 Test (deno on ubuntu-24.04)	skips lint for excluded-only pushes ... ok (240µs)
+     1 Test (deno on ubuntu-24.04)	skips test for excluded-only pushes ... ok (198µs)
+     1 Test (deno on ubuntu-24.04)	skips validate-docs for excluded-only pushes ... ok (197µs)
+     1 Test (deno on ubuntu-24.04)	blocks an instant manual release after either quality gate fails ... ok (256µs)
+     1 Test (deno on ubuntu-24.04)	removes deprecated always-auth before npm commands in the release job ... ok (189µs)
+     1 Test (deno on ubuntu-24.04)	removes deprecated always-auth before npm commands in the instant-release job ... ok (198µs)
+     1 Test (deno on ubuntu-24.04)	bounds every job with a timeout backstop ... ok (184µs)
+     1 Test (deno on ubuntu-24.04)	ok | 746 passed (8 steps) | 0 failed (7s)
+     1 Test (deno on ubuntu-24.04)	Caching is not enabled. Caching is skipped.
+     1 Test (node on macos-15)	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Test (node on macos-15)	found 0 vulnerabilities
+     1 Test (node on macos-15)	bash scripts/run-with-budget-warning.sh 300 "Node.js test suite" npm test
+     1 Test (node on macos-15)	shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Test (node on macos-15)	Running Node.js test suite with a 300s budget (warning at 210s).
+     1 Test (node on macos-15)	> node --test --test-timeout=30000 tests/*.test.js
+     1 Test (node on macos-15)	✔ finds the newer release outside the vulnerable range (10.805958ms)
+     1 Test (node on macos-15)	✔ blocks fixable advisories and only warns about the rest (0.291208ms)
+     1 Test (node on macos-15)	✔ reports the failure as a GitHub error annotation (0.221416ms)
+     1 Test (node on macos-15)	✔ does not run later loaders once one has failed (0.168083ms)
+     1 Test (node on macos-15)	✔ never throws when the output file cannot be written (0.149959ms)
+     1 Test (node on macos-15)	✔ warns without failing for files above the warning threshold (120.98925ms)
+     1 Test (node on macos-15)	✔ still fails files over the hard limit (88.528708ms)
+     1 Test (node on macos-15)	✔ fails .js and .cjs files over the hard limit (87.854041ms)
+     1 Test (node on macos-15)	✔ fails Markdown files over the hard limit (62.704667ms)
+     1 Test (node on macos-15)	✔ fails workflow files under any name, including .yaml (75.347834ms)
+     1 Test (node on macos-15)	✔ exits 2 with an error when it examined nothing (59.714ms)
+     1 Test (node on macos-15)	✔ does not release on a GitHub network failure (106.110917ms)
+     1 Test (node on macos-15)	✔ checks a formatted file while skipping a consumed changeset deletion (243.255792ms)
+     1 Test (node on macos-15)	▶ extractErrorsSection
+     1 Test (node on macos-15)	✔ extractErrorsSection (4.241833ms)
+     1 Test (node on macos-15)	✔ ignores successful redirects outside the errors section (1.139667ms)
+     1 Test (node on macos-15)	✔ parses the full document when the errors section is absent (0.161792ms)
+     1 Test (node on macos-15)	✔ extracts every http error from a full report exactly once (0.24125ms)
+     1 Test (node on macos-15)	✔ reports errors that the Wayback Machine cannot answer (0.440334ms)
+     1 Test (node on macos-15)	✔ never classifies a non-http error as a URL (0.113333ms)
+     1 Test (node on macos-15)	✔ matches the error count lychee itself reports (0.130084ms)
+     1 Test (node on macos-15)	✔ fails when the only lychee errors have no http URL to archive (58.735375ms)
+     1 Test (node on macos-15)	▶ CI timeout policy
+     1 Test (node on macos-15)	✔ sets timeout-minutes for every release workflow job (3.456584ms)
+     1 Test (node on macos-15)	✔ sets timeout-minutes for every link workflow job (0.160042ms)
+     1 Test (node on macos-15)	✔ CI timeout policy (4.735209ms)
+     1 Test (node on macos-15)	✔ warns at the same share of the budget that the invariant allows (0.307125ms)
+     1 Test (node on macos-15)	✔ still fails when a single leg exceeds the allowance (0.555542ms)
+     1 Test (node on macos-15)	✔ reports a budget it cannot read and never skips one silently (0.099583ms)
+     1 Test (node on macos-15)	✔ returns 1 when a deletion failed (1.492541ms)
+     1 Test (node on macos-15)	✔ returns 1 when an emergency action fails even if the goal is met (0.20425ms)
+     1 Test (node on macos-15)	✔ throws when gh api exits non-zero with an unexpected error (0.172583ms)
+     1 Test (node on macos-15)	✔ fails when gh api exits non-zero with an unexpected error (100.639834ms)
+     1 Test (node on macos-15)	✔ treats already_exists as an explicit idempotent skip (114.560542ms)
+     1 Test (node on macos-15)	✔ widens when the lookup fails (375.378292ms)
+     1 Test (node on macos-15)	✔ keeps the push range when the lookup fails with no base SHA (327.256125ms)
+     1 Test (node on macos-15)	✔ skips the lookup entirely without push SHAs (309.79175ms)
+     1 Test (node on macos-15)	✔ holds failed and OOM killed containers until they are named (0.249125ms)
+     1 Test (node on macos-15)	✔ suppresses only DEP0005 warnings from download-artifact v8 (0.552167ms)
+     1 Test (node on macos-15)	✔ fails when husky leaves core.hooksPath unset (60.38225ms)
+     1 Test (node on macos-15)	✔ skips on CI (45.180375ms)
+     1 Test (node on macos-15)	✔ skips with HUSKY=0 (42.3055ms)
+     1 Test (node on macos-15)	✔ skips outside a git repository (44.582166ms)
+     1 Test (node on macos-15)	✔ returns a failure exit code for an incomplete JSON scan (3.552125ms)
+     1 Test (node on macos-15)	✔ preserves containers and images after repeated global size failures (4.508833ms)
+     1 Test (node on macos-15)	✔ retains one failed container size as unknown and scans the others (0.594125ms)
+     1 Test (node on macos-15)	✔ skips zombie metadata while retaining command paths of live processes (2.159958ms)
+     1 Test (node on macos-15)	✔ reports unreadable process names when the fallback is denied (0.284958ms)
+     1 Test (node on macos-15)	✔ marks failed layer inspection as unknown with zero estimated bytes (0.187666ms)
+     1 Test (node on macos-15)	✔ preserves readable shell paths while retaining denied PID identity (0.510125ms)
+     1 Test (node on macos-15)	✔ reports Full Disk Access when Safari inspection is denied (0.740583ms)
+     1 Test (node on macos-15)	✔ retains npm E404 diagnostics when publishing rejects with a generic exit error (0.239083ms)
+     1 Test (node on macos-15)	✔ skips a diff with insufficient host headroom (0.135084ms)
+     1 Test (node on macos-15)	✔ skips a diff before contacting the daemon when the candidate change budget is excessive (0.131042ms)
+     1 Test (node on macos-15)	✔ gives up with the real command error when the merge never succeeds (0.193667ms)
+     1 Test (node on macos-15)	✔ does not retry a permanent repository-policy merge rejection (0.14975ms)
+     1 Test (node on macos-15)	✔ propagates a failed pull-request check without attempting a merge (0.60425ms)
+     1 Test (node on macos-15)	▶ release landing failures and reuse
+     1 Test (node on macos-15)	✔ fails closed before pushing a branch when neither token is available (0.094875ms)
+     1 Test (node on macos-15)	✔ reports no open pull request when the lookup itself fails (0.054583ms)
+     1 Test (node on macos-15)	✔ release landing failures and reuse (0.58425ms)
+     1 Test (node on macos-15)	✔ fails for every nonzero Lychee exit even when an archive exists (1.035292ms)
+     1 Test (node on macos-15)	✔ downgrades a failure only when every unanswered link recovered (0.226292ms)
+     1 Test (node on macos-15)	▶ filterWarningsToChangedLines
+     1 Test (node on macos-15)	✔ keeps warnings on changed lines (0.247125ms)
+     1 Test (node on macos-15)	✔ drops warnings on unchanged lines of a changed file (0.1025ms)
+     1 Test (node on macos-15)	✔ drops warnings from files that were not touched at all (0.07925ms)
+     1 Test (node on macos-15)	✔ keeps every warning of a wholly new file (0.095ms)
+     1 Test (node on macos-15)	✔ always keeps errors regardless of the diff (0.095125ms)
+     1 Test (node on macos-15)	✔ filterWarningsToChangedLines (0.795375ms)
+     1 Test (node on macos-15)	✔ fails without merging when any changeset has an unparseable bump type (38.968583ms)
+     1 Test (node on macos-15)	✔ throws for unexpected registry failures (0.143584ms)
+     1 Test (node on macos-15)	✔ fails when neither packageManager nor devEngines is declared (45.24275ms)
+     1 Test (node on macos-15)	✔ fails on a declaration naming a manager the flow cannot use (46.57525ms)
+     1 Test (node on macos-15)	✔ warns but passes when a foreign lockfile sits under a declaration (34.712ms)
+     1 Test (node on macos-15)	✔ fails and names the lockfile when a foreign lockfile has no declaration (41.215209ms)
+     1 Test (node on macos-15)	✔ passes when jobs succeeded or were skipped (69.008542ms)
+     1 Test (node on macos-15)	✔ fails for a failed job on every ref (70.802875ms)
+     1 Test (node on macos-15)	✔ fails for a cancelled job on main (197.295959ms)
+     1 Test (node on macos-15)	✔ fails closed for a cancellation without branch and workflow context (97.956042ms)
+     1 Test (node on macos-15)	✔ uses a status function, so the gate runs when its needs fail (0.236417ms)
+     1 Test (node on macos-15)	✔ errors when main is at the run commit (a genuine overrun) (101.460458ms)
+     1 Test (node on macos-15)	✔ warns only when a moved branch could cancel that exact job (110.062959ms)
+     1 Test (node on macos-15)	✔ fails closed when cancel-in-progress is an expression (130.005959ms)
+     1 Test (node on macos-15)	✔ errors when the branch head cannot be resolved (141.939083ms)
+     1 Test (node on macos-15)	✔ errors without a network call when RUN_SHA is missing (117.1335ms)
+     1 Test (node on macos-15)	✔ fails when the base ref is unavailable (127.326959ms)
+     1 Test (node on macos-15)	✔ fails when the explicitly requested PR head is unavailable (220.159459ms)
+     1 Test (node on macos-15)	✔ does not accept a base fragment when the CI comparison fails (147.910875ms)
+     1 Test (node on macos-15)	▶ publish failure classifier
+     1 Test (node on macos-15)	✔ classifies a first-publish E404 as non-retryable (1.10025ms)
+     1 Test (node on macos-15)	✔ classifies authentication failures (401/403/auth) as non-retryable (0.182167ms)
+     1 Test (node on macos-15)	✔ treats transient/unknown failures as retryable (0.0875ms)
+     1 Test (node on macos-15)	✔ exposes the documented non-retryable patterns (0.176084ms)
+     1 Test (node on macos-15)	✔ publish failure classifier (2.566625ms)
+     1 Test (node on macos-15)	▶ isAlreadyPublishedError
+     1 Test (node on macos-15)	✔ isAlreadyPublishedError (1.0175ms)
+     1 Test (node on macos-15)	▶ publishWithRetry
+     1 Test (node on macos-15)	✔ fails within the verification bound when a version stays absent (0.221334ms)
+     1 Test (node on macos-15)	✔ fails without republishing when verification polling is exhausted (0.083333ms)
+     1 Test (node on macos-15)	✔ retries the publish command when the publish itself failed (0.080708ms)
+     1 Test (node on macos-15)	✔ fails fast on non-retryable publish errors (0.0785ms)
+     1 Test (node on macos-15)	✔ publishWithRetry (1.982625ms)
+     1 Test (node on macos-15)	▶ push failure classifier
+     1 Test (node on macos-15)	✔ reads the message of a thrown command error, not just its output (0.084167ms)
+     1 Test (node on macos-15)	✔ treats other failures (auth, network) as neither (0.110875ms)
+     1 Test (node on macos-15)	✔ push failure classifier (2.903959ms)
+     1 Test (node on macos-15)	▶ push-main-with-rebase-retry.mjs
+     1 Test (node on macos-15)	✔ fails fast on a rejection that neither a rebase nor a pull request can fix (127.240708ms)
+     1 Test (node on macos-15)	✔ push-main-with-rebase-retry.mjs (1381.52125ms)
+     1 Test (node on macos-15)	✔ marks a failure carrying a status code as final (1.035875ms)
+     1 Test (node on macos-15)	✔ marks ERROR, TIMEOUT, and UNKNOWN markers as never answered (0.421375ms)
+     1 Test (node on macos-15)	✔ keeps non-http failures out of the re-check even when unanswered (0.321292ms)
+     1 Test (node on macos-15)	✔ requires every failure in a non-empty unanswered-only report to recover (0.367459ms)
+     1 Test (node on macos-15)	✔ skips nothing when the recovered file is missing or empty (0.066375ms)
+     1 Test (node on macos-15)	✔ does not skip ordinary notes: ### Patch Changes
+     1 Test (node on macos-15)	✔ does not skip ordinary notes: ![build](https://img.shields.io/badge/build-passing-green) (0.236958ms)
+     1 Test (node on macos-15)	✔ does not skip ordinary notes: ![npm](https://img.shields.io.attacker.invalid/badge/npm-1-blue.svg) (0.9945ms)
+     1 Test (node on macos-15)	✔ does not skip ordinary notes: ![npm](https://img.shields.io@attacker.invalid/badge/npm-1-blue.svg) (0.144625ms)
+     1 Test (node on macos-15)	✔ does not skip ordinary notes: ![npm](https://attacker.invalid/img.shields.io/badge/npm-1-blue.svg) (0.083084ms)
+     1 Test (node on macos-15)	✔ does not skip ordinary notes: ![npm](http://img.shields.io/badge/npm-1-blue.svg) (0.063458ms)
+     1 Test (node on macos-15)	✔ does not skip ordinary notes: ![npm](https://user@img.shields.io/badge/npm-1-blue.svg) (0.079791ms)
+     1 Test (node on macos-15)	✔ does not skip ordinary notes: https://img.shields.io/badge/npm-1-blue.svg (0.060833ms)
+     1 Test (node on macos-15)	✔ fails on main and manual instant releases, reports on pull requests (0.162125ms)
+     1 Test (node on macos-15)	✔ fails in release mode when there is nothing to publish with (13.044334ms)
+     1 Test (node on macos-15)	✔ fails in release mode when Docker Hub refuses the write (204.530875ms)
+     1 Test (node on macos-15)	✔ fails in release mode when an npm token secret is present (161.038333ms)
+     1 Test (node on macos-15)	✔ fails in release mode without the OIDC permission npm needs (9.104041ms)
+     1 Test (node on macos-15)	✔ fails in release mode when npm rejects the trusted publisher (404) (121.596459ms)
+     1 Test (node on macos-15)	✔ only warns on a pull request when npm rejects the trusted publisher (98.906167ms)
+     1 Test (node on macos-15)	✔ fails when a required section is deleted but the file remains (41.7205ms)
+     1 Test (node on macos-15)	✔ fails a missing required document with its own message (40.322542ms)
+     1 Test (node on macos-15)	▶ run-with-budget-warning.sh
+     1 Test (node on macos-15)	✔ preserves the exit code of a failing command (42.114459ms)
+     1 Test (node on macos-15)	✔ fails with exit code 124 and a titled error when the budget expires (2384.337333ms)
+     1 Test (node on macos-15)	✔ warns while the overrun can still be acted on (2414.585667ms)
+     1 Test (node on macos-15)	✔ fails clearly when the private state parent is unavailable (16.117333ms)
+     1 Test (node on macos-15)	✔ run-with-budget-warning.sh (7714.323875ms)
+     1 Test (node on macos-15)	▶ run-with-budget-warning.sh argument validation
+     1 Test (node on macos-15)	✔ run-with-budget-warning.sh argument validation (17.626459ms)
+     1 Test (node on macos-15)	▶ run-with-budget-warning.sh privileged survivor handling
+     1 Test (node on macos-15)	✔ run-with-budget-warning.sh privileged survivor handling (0.264917ms)
+     1 Test (node on macos-15)	▶ run-with-budget-warning.sh SIGKILL escalation
+     1 Test (node on macos-15)	✔ run-with-budget-warning.sh SIGKILL escalation (6614.214708ms)
+     1 Test (node on macos-15)	✔ removes only deprecated always-auth entries from npmrc content (0.709083ms)
+     1 Test (node on macos-15)	✔ skips cleanly when setup-node did not create a user config file (0.081042ms)
+     1 Test (node on macos-15)	✔ fails closed on fixable high-severity advisories in every npm lock (4.496791ms)
+     1 Test (node on macos-15)	✔ skips the review with a warning when the dependency graph is disabled (14.207375ms)
+     1 Test (node on macos-15)	✔ fails on a rate-limited 403, which says nothing about the setting (17.1875ms)
+     1 Test (node on macos-15)	✔ fails on any other answer, on one annotation line (39.865958ms)
+     1 Test (node on macos-15)	▶ simulate-fresh-merge.sh fetch retry
+     1 Test (node on macos-15)	✔ survives a transient fetch failure (40.340042ms)
+     1 Test (node on macos-15)	✔ still fails when the base branch cannot be fetched at all (50.691375ms)
+     1 Test (node on macos-15)	✔ simulate-fresh-merge.sh fetch retry (91.175584ms)
+     1 Test (node on macos-15)	▶ transient link failures
+     1 Test (node on macos-15)	✔ classifies cached 503 and rejected 429 as retryable, preserving 404 (1.109625ms)
+     1 Test (node on macos-15)	✔ bounds persistent 503 errors by the shared wall-clock budget (0.192583ms)
+     1 Test (node on macos-15)	✔ transient link failures (4.959458ms)
+     1 Test (node on macos-15)	▶ isWindowsFileUrlError
+     1 Test (node on macos-15)	✔ isWindowsFileUrlError (1.644292ms)
+     1 Test (node on macos-15)	✔ reports the HTTP status when use.js cannot be fetched (0.404458ms)
+     1 Test (node on macos-15)	✔ retries a transient failure and returns the later success (0.220292ms)
+     1 Test (node on macos-15)	✔ preserves the original failure as the error cause (0.082833ms)
+     1 Test (node on macos-15)	✔ retries a non-2xx response instead of eval-ing an error page (0.096ms)
+     1 Test (node on macos-15)	✔ skips the check when nothing formattable is staged (0.125791ms)
+     1 Test (node on macos-15)	▶ version-and-commit.mjs push failure reporting
+     1 Test (node on macos-15)	✔ version-and-commit.mjs push failure reporting (0.260875ms)
+     1 Test (node on macos-15)	✔ reports a network failure as unknown and keeps the reason (0.187958ms)
+     1 Test (node on macos-15)	▶ formatFailureMessage
+     1 Test (node on macos-15)	✔ asserts a failed release only when npm answered (0.072375ms)
+     1 Test (node on macos-15)	✔ formatFailureMessage (0.18175ms)
+     1 Test (node on macos-15)	✔ uses job-level concurrency so stale checks cannot cancel active writers (1.184708ms)
+     1 Test (node on macos-15)	✔ uploads preview regeneration artifacts when screenshot rendering fails (0.219208ms)
+     1 Test (node on macos-15)	✔ skips the slow test matrix for pull requests with no code changes (0.493416ms)
+     1 Test (node on macos-15)	✔ skips test-compilation for excluded-only pushes (0.162333ms)
+     1 Test (node on macos-15)	✔ skips check-file-line-limits for excluded-only pushes (0.121334ms)
+     1 Test (node on macos-15)	✔ skips lint for excluded-only pushes (0.111458ms)
+     1 Test (node on macos-15)	✔ skips test for excluded-only pushes (0.105291ms)
+     1 Test (node on macos-15)	✔ skips validate-docs for excluded-only pushes (0.178541ms)
+     1 Test (node on macos-15)	✔ blocks an instant manual release after either quality gate fails (0.692417ms)
+     1 Test (node on macos-15)	✔ removes deprecated always-auth before npm commands in the release job (0.231125ms)
+     1 Test (node on macos-15)	✔ removes deprecated always-auth before npm commands in the instant-release job (0.131209ms)
+     1 Test (node on macos-15)	✔ bounds every job with a timeout backstop (0.143375ms)
+     1 Pipeline Status	Failed jobs:    release-preflight
+     1 Pipeline Status	##[error]Failing jobs: release-preflight
+     1 Pipeline Status	##[error]Process completed with exit code 1.
+=== run-37987850808.log
+     2 Regenerate Preview Images	npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerfu
+     2 Regenerate Preview Images	npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorb
+     2 Regenerate Preview Images	npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+     2 Regenerate Preview Images	npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+     2 Build web app	if-no-files-found: error
+     1 Regenerate Preview Images	* [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+     1 Regenerate Preview Images	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+     1 Regenerate Preview Images	npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+     1 Regenerate Preview Images	8 moderate severity vulnerabilities
+     1 Regenerate Preview Images	echo "::notice::Preview images regenerated and (if applicable) committed to main."
+     1 Regenerate Preview Images	echo "::notice::Preview images are already up to date."
+     1 Regenerate Preview Images	##[notice]Preview images are already up to date.
+     1 Build web app	npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerfu
+     1 Build web app	npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorb
+     1 Build web app	npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+     1 Build web app	npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+     1 Build web app	npm warn install-scripts 2 packages have install scripts not yet covered by allowScripts:
+     1 Build web app	npm warn install-scripts   electron-winstaller@5.4.0 (install: node ./script/select-7z-arch.js)
+     1 Build web app	npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
+     1 Build web app	npm warn install-scripts
+     1 Build web app	npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+     1 Build web app	##[end-action id=__actions_upload-pages-artifact.__run_2;outcome=skipped;conclusion=skipped;duration_ms=0]
+     1 Build web app	##[end-action id=__actions_upload-pages-artifact.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+     1 Package desktop app (ubuntu-24.04)	npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerfu
+     1 Package desktop app (ubuntu-24.04)	npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorb
+     1 Package desktop app (ubuntu-24.04)	npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+     1 Package desktop app (ubuntu-24.04)	npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+     1 Package desktop app (ubuntu-24.04)	npm warn install-scripts 2 packages have install scripts not yet covered by allowScripts:
+     1 Package desktop app (ubuntu-24.04)	npm warn install-scripts   electron-winstaller@5.4.0 (install: node ./script/select-7z-arch.js)
+     1 Package desktop app (ubuntu-24.04)	npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
+     1 Package desktop app (ubuntu-24.04)	npm warn install-scripts
+     1 Package desktop app (ubuntu-24.04)	npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+     1 Package desktop app (ubuntu-24.04)	echo "::error::Desktop package output was not created at examples/universal-app/out"
+     1 Package desktop app (ubuntu-24.04)	shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Package desktop app (ubuntu-24.04)	if-no-files-found: error
+     1 Package desktop app (ubuntu-24.04)	Failed to save: Unable to reserve cache with key node-cache-Linux-x64-npm-54df8d831db33d1a491273ee35ef98ac2928adb55423b9586731532fab264730, another job may be creating this cache.
+     1 Package desktop app (macos-15)	npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerfu
+     1 Package desktop app (macos-15)	npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorb
+     1 Package desktop app (macos-15)	npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+     1 Package desktop app (macos-15)	npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+     1 Package desktop app (macos-15)	npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+     1 Package desktop app (macos-15)	npm warn install-scripts   electron-winstaller@5.4.0 (install: node ./script/select-7z-arch.js)
+     1 Package desktop app (macos-15)	npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
+     1 Package desktop app (macos-15)	npm warn install-scripts   fsevents@2.3.3 (install: (install scripts present))
+     1 Package desktop app (macos-15)	npm warn install-scripts
+     1 Package desktop app (macos-15)	npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+     1 Package desktop app (macos-15)	echo "::error::Desktop package output was not created at examples/universal-app/out"
+     1 Package desktop app (macos-15)	shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Package desktop app (macos-15)	• skipped macOS application code signing  reason=cannot find valid "Developer ID Application" identity or custom non-Apple code signing certificate, it could cause some undefined behaviour, e.g. macOS localized description not visible, see 
+     1 Package desktop app (macos-15)	if-no-files-found: error
+     1 Package desktop app (windows-2025)	npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerfu
+     1 Package desktop app (windows-2025)	npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorb
+     1 Package desktop app (windows-2025)	npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+     1 Package desktop app (windows-2025)	npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+     1 Package desktop app (windows-2025)	npm warn install-scripts 2 packages have install scripts not yet covered by allowScripts:
+     1 Package desktop app (windows-2025)	npm warn install-scripts   electron-winstaller@5.4.0 (install: node ./script/select-7z-arch.js)
+     1 Package desktop app (windows-2025)	npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
+     1 Package desktop app (windows-2025)	npm warn install-scripts
+     1 Package desktop app (windows-2025)	npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+     1 Package desktop app (windows-2025)	echo "::error::Desktop package output was not created at examples/universal-app/out"
+     1 Package desktop app (windows-2025)	shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+     1 Package desktop app (windows-2025)	• no code signing certificate configured, signing is skipped  path=out\win-unpacked\Universal Example App.exe
+     1 Package desktop app (windows-2025)	if-no-files-found: error
+     1 Deploy GitHub Pages	timeout: 600000
+     1 Deploy GitHub Pages	error_count: 10
+     1 Deploy GitHub Pages	(node:2247) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+     1 Deploy GitHub Pages	(Use `node --trace-deprecation ...` to show where the warning was created)
+     1 Pipeline Status	Failed jobs:    <none>
+     1 Pipeline Status	All required jobs succeeded or were legitimately skipped.
+=== run-37987850809.log
+     1 zizmor	fail-on-no-inputs: true
+     1 zizmor	shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+     1 zizmor	GHA_ZIZMOR_FAIL_ON_NO_INPUTS: true
+     1 zizmor	##[end-action id=__zizmorcore_zizmor-action.__github_codeql-action;outcome=skipped;conclusion=skipped;duration_ms=0]
+     1 zizmor	WARN audit: zizmor: zizmor is running in offline mode by default; some audits and auto-fixes will not be available. see https://docs.zizmor.sh/usage/#operating-modes for details
+     1 Pipeline Status	Failed jobs:    <none>
+     1 Pipeline Status	All required jobs succeeded or were legitimately skipped.
+=== run-37987850832.log
+     9 CodeQL (actions)	"pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+     6 CodeQL (javascript-typescript)	"pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+     6 CodeQL (actions)	"description" : "Controls the level of verbosity of the extractor. The supported levels are (in order of increasing verbosity):\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or progress++\n  - p
+     4 CodeQL (javascript-typescript)	"description" : "Controls the level of verbosity of the extractor. The supported levels are (in order of increasing verbosity):\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or progress++\n  - p
+     3 CodeQL (actions)	"skip_types" : {
+     3 CodeQL (actions)	"title" : "Skip type extraction for TypeScript",
+     3 CodeQL (actions)	"description" : "Whether to skip the extraction of types in a TypeScript application",
+     3 CodeQL (actions)	"title" : "DEPRECATED - Whether to use buildless (standalone) extraction.",
+     3 CodeQL (actions)	"description" : "DEPRECATED: Use `--build-mode none` instead.\nA value indicating, which type of extraction the autobuilder should perform. If 'true', then the standalone extractor will be used, otherwise tracing extraction will be performe
+     3 CodeQL (actions)	"description" : "Controls the level of verbosity of the CodeQL Python extractor.\nThe supported levels are (in order of increasing verbosity):\n\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or 
+     3 CodeQL (actions)	"scale_timeouts" : {
+     3 CodeQL (actions)	"title" : "Value to scale compiler introspection timeouts with",
+     2 CodeQL (javascript-typescript)	"skip_types" : {
+     2 CodeQL (javascript-typescript)	"title" : "Skip type extraction for TypeScript",
+     2 CodeQL (javascript-typescript)	"description" : "Whether to skip the extraction of types in a TypeScript application",
+     2 CodeQL (javascript-typescript)	"title" : "DEPRECATED - Whether to use buildless (standalone) extraction.",
+     2 CodeQL (javascript-typescript)	"description" : "DEPRECATED: Use `--build-mode none` instead.\nA value indicating, which type of extraction the autobuilder should perform. If 'true', then the standalone extractor will be used, otherwise tracing extraction will be performe
+     2 CodeQL (javascript-typescript)	"description" : "Controls the level of verbosity of the CodeQL Python extractor.\nThe supported levels are (in order of increasing verbosity):\n\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or 
+     2 CodeQL (javascript-typescript)	"scale_timeouts" : {
+     2 CodeQL (javascript-typescript)	"title" : "Value to scale compiler introspection timeouts with",
+     1 Audit npm lock (examples/universal-app)	##[notice]Lower-severity advisories, not blocking: 8 moderate (run npm audit for details)
+     1 Audit npm lock (examples/universal-app)	Failed to save: Unable to reserve cache with key node-cache-Linux-x64-npm-4a83abccb8a3b3e93f6fd303556bd7ca4acbe052f769f7fe1d7146b0af89aefa, another job may be creating this cache.
+     1 CodeQL (javascript-typescript)	"suppressesMissingFileBaselineWarning": true
+     1 CodeQL (javascript-typescript)	skip-queries: false
+     1 CodeQL (javascript-typescript)	expect-error: false
+     1 CodeQL (javascript-typescript)	No precomputed diff ranges found; skipping diff-informed analysis stage.
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:43] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/publish-failure-classifier.mjs
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:43] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/publish-retry.mjs
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:44] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/publish-failure-classifier.mjs (13 ms)
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:44] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/publish-retry.mjs (22 ms)
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:44] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/push-failure-classifier.mjs
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:44] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/push-main-with-rebase-retry.mjs
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:44] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/push-failure-classifier.mjs (10 ms)
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:44] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/push-main-with-rebase-retry.mjs (42 ms)
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:44] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/ci-timeouts.test.js
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:44] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/ci-timeouts.test.js (153 ms)
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/publish-failure-classifier.test.js
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/publish-retry.test.js
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/publish-failure-classifier.test.js (23 ms)
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/push-failure-classifier.test.js
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/push-failure-classifier.test.js (20 ms)
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/push-main-with-rebase-retry.test.js
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/publish-retry.test.js (82 ms)
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/push-main-with-rebase-retry.test.js (88 ms)
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/run-with-budget-warning.test.js
+     1 CodeQL (javascript-typescript)	[2026-10-09 20:34:45] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/run-with-budget-warning.test.js (42 ms)
+     1 CodeQL (javascript-typescript)	[85/89] Loaded /opt/hostedtoolcache/CodeQL/2.27.2/x64/codeql/qlpacks/codeql/javascript-queries/2.4.7/Diagnostics/ExtractionErrors.qlx.
+     1 CodeQL (javascript-typescript)	Starting evaluation of codeql/javascript-queries/Diagnostics/ExtractionErrors.ql.
+     1 CodeQL (javascript-typescript)	[2/89 eval 4.3s] Evaluation done; writing results to codeql/javascript-queries/Diagnostics/ExtractionErrors.bqrs.
+     1 CodeQL (javascript-typescript)	Interpreting /opt/hostedtoolcache/CodeQL/2.27.2/x64/codeql/qlpacks/codeql/javascript-queries/2.4.7/Diagnostics/ExtractionErrors.ql...
+     1 CodeQL (javascript-typescript)	... found results file at /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Diagnostics/ExtractionErrors.bqrs.
+     1 CodeQL (javascript-typescript)	Interpreted diagnostic query "Extraction errors" (js/diagnostics/extraction-errors) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Diagnostics/ExtractionErrors.bqrs.
+     1 CodeQL (actions)	"suppressesMissingFileBaselineWarning": true
+     1 CodeQL (actions)	Analyzing default branch. Skipping downloading of TRAP caches.
+     1 CodeQL (actions)	skip-queries: false
+     1 CodeQL (actions)	expect-error: false
+     1 CodeQL (actions)	No precomputed diff ranges found; skipping diff-informed analysis stage.
+     1 CodeQL (actions)	[11/18] Loaded /opt/hostedtoolcache/CodeQL/2.27.2/x64/codeql/qlpacks/codeql/actions-queries/0.6.37/Security/CWE-1395/UseOfKnownVulnerableAction.qlx.
+     1 CodeQL (actions)	Starting evaluation of codeql/actions-queries/Security/CWE-1395/UseOfKnownVulnerableAction.ql.
+     1 CodeQL (actions)	[2/18 eval 1.2s] Evaluation done; writing results to codeql/actions-queries/Security/CWE-1395/UseOfKnownVulnerableAction.bqrs.
+     1 CodeQL (actions)	Interpreting /opt/hostedtoolcache/CodeQL/2.27.2/x64/codeql/qlpacks/codeql/actions-queries/0.6.37/Security/CWE-1395/UseOfKnownVulnerableAction.ql...
+     1 CodeQL (actions)	... found results file at /home/runner/work/_temp/codeql_databases/actions/results/codeql/actions-queries/Security/CWE-1395/UseOfKnownVulnerableAction.bqrs.
+     1 CodeQL (actions)	Interpreted problem query "Use of a known vulnerable action" (actions/vulnerable-action) at path /home/runner/work/_temp/codeql_databases/actions/results/codeql/actions-queries/Security/CWE-1395/UseOfKnownVulnerableAction.bqrs.
+     1 CodeQL (actions)	Skipping upload of TRAP cache for actions as it is too small
+     1 Pipeline Status	Failed jobs:    <none>
+     1 Pipeline Status	All required jobs succeeded or were legitimately skipped.
+=== run-37987851154.log
+     4 Check Links	shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+     1 Check Links	args: --verbose --no-progress --cache --max-cache-age 1d --max-retries 3 --timeout 30 --hidden --extensions md,html --exclude-path docs/case-studies --exclude-path examples/universal-app/index.html --exclude-path tests/fixtures .
+     1 Check Links	fail: false
+     1 Check Links	failIfEmpty: true
+     1 Check Links	echo "Cannot find lychee binary in $TEMP_DIR. Did the archive structure change?" >&2
+     1 Check Links	INPUT_ARGS: --verbose --no-progress --cache --max-cache-age 1d --max-retries 3 --timeout 30 --hidden --extensions md,html --exclude-path docs/case-studies --exclude-path examples/universal-app/index.html --exclude-path tests/fixtures .
+     1 Check Links	INPUT_FAIL: false
+     1 Check Links	INPUT_FAILIFEMPTY: true
+     1 Check Links	| ⏳ Timeouts    | 0     |
+     1 Check Links	| 🚫 Errors      | 0     |
+     1 Check Links	##[notice]Summary report available at: https://github.com/link-foundation/disk-space-saviour/actions/runs/37987851154#summary-114014205240
+     1 Pipeline Status	Failed jobs:    <none>
+     1 Pipeline Status	All required jobs succeeded or were legitimately skipped.

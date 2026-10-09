@@ -1,0 +1,12 @@
+37987850808	114014204211	notice	.github	Preview images are already up to date.
+37987850808	114014204705	notice	.github	Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.
+37987851154	114014205240	notice	.github	Summary report available at: https://github.com/link-foundation/disk-space-saviour/actions/runs/37987851154#summary-114014205240
+37987850798	114014203731	failure	.github	Process completed with exit code 1.
+37987850798	114014203731	failure	.github	release-preflight: refusing to release with 1 refused credential(s)
+37987850798	114014203731	failure	.github	release-preflight: npm refused the OIDC package exchange (404) -- the trusted publisher on npmjs.com does not match this repository and workflow (see dev/log/issues/29/pulls/30)
+37987850798	114014399282	notice	.github	Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.
+37987850798	114014399411	notice	.github	Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.
+37987850798	114014399508	notice	.github	Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.
+37987850798	114015175252	failure	.github	Process completed with exit code 1.
+37987850798	114015175252	failure	.github	Failing jobs: release-preflight
+37987850832	114014204381	notice	.github	Lower-severity advisories, not blocking: 8 moderate (run npm audit for details)
