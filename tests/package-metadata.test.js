@@ -11,6 +11,7 @@ import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import { runCli } from '../src/cli.js';
+import { readOnlyRuntime } from './helpers/fixtures.js';
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 const lockJson = JSON.parse(readFileSync('package-lock.json', 'utf8'));
@@ -29,7 +30,10 @@ describe('publishable package metadata', () => {
     expect(packageJson.repository.url).toBe(
       'git+https://github.com/link-foundation/disk-space-saviour.git'
     );
-    const running = process.env.GITHUB_REPOSITORY;
+    // Deno runs the suite without --allow-env, where reading it throws.
+    const running = readOnlyRuntime()
+      ? undefined
+      : process.env.GITHUB_REPOSITORY;
     if (running) {
       expect(packageJson.repository.url).toBe(
         `git+https://github.com/${running}.git`
