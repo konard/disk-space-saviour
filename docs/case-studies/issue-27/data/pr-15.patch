@@ -1,0 +1,3224 @@
+diff --git a/.changeset/container-reclaimable-inspection.md b/.changeset/container-reclaimable-inspection.md
+new file mode 100644
+index 0000000..140449e
+--- /dev/null
++++ b/.changeset/container-reclaimable-inspection.md
+@@ -0,0 +1,5 @@
++---
++'disk-space-saviour': minor
++---
++
++Make Docker cleanup reports resilient to size-query races and count writable-layer cache bytes separately from immutable image data. Improve process matching, privileged read-only liveness inspection, per-hash npx protection, stopped-container Git inspection and recovery-ref recognition. Add aged isolation-log, sanitized-upload, Claude Code and Copilot CLI cleanup candidates, direct opam download-cache removal, investigation-hold age controls, and complete scan audits with grouped hints and watched processes.
+diff --git a/.gitkeep b/.gitkeep
+deleted file mode 100644
+index 269a1a7..0000000
+--- a/.gitkeep
++++ /dev/null
+@@ -1,15 +0,0 @@
+-# .gitkeep file auto-generated at 2026-07-20T10:47:17.147Z for PR creation at branch issue-104-fea61a10d5f1 for issue https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/104
+-# .gitkeep file auto-generated at 2026-07-20T10:53:27.981Z for PR creation at branch issue-106-baf7ec38511b for issue https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/106
+-# Updated: 2026-07-20T11:05:28.272Z
+-# Updated: 2026-07-20T11:57:21.324Z
+-# Updated: 2026-08-20T04:51:29.997Z
+-# Updated: 2026-08-20T04:45:43.150Z
+-# Updated: 2026-08-22T18:54:00.247Z
+-# Updated: 2026-08-28T10:55:01.069Z
+-# Updated: 2026-08-28T11:00:47.941Z
+-# Updated: 2026-08-28T11:06:19.563Z
+-# Updated: 2026-08-28T20:58:13.218Z
+-# Updated: 2026-09-02T07:41:29.166Z
+-# Updated: 2026-09-03T19:38:41.567Z
+-# Updated: 2026-09-05T09:22:21.104Z
+-# Updated: 2026-09-05T09:36:45.491Z
+diff --git a/README.md b/README.md
+index 221f4ee..a4cf48d 100644
+--- a/README.md
++++ b/README.md
+@@ -92,7 +92,7 @@ framework build caches), Python, Rust, JVM (Gradle, Maven, Kotlin, Android),
+ Go, C/C++ (CMake, ccache, vcpkg, Conan), .NET, PHP, Ruby, Swift/Xcode, Dart,
+ Haskell, Scala, Elixir, OCaml, Lean, Julia, R, Zig, and scripting languages.
+ Also covered: version managers (nvm, pyenv, rbenv, SDKMAN!, rustup, elan,
+-ghcup, opam, swiftly, VS Code Server), Playwright, playwright-go, Puppeteer
++ghcup, opam, swiftly, VS Code Server, Claude Code and Copilot CLI), Playwright, playwright-go, Puppeteer
+ and Cypress browsers, HTTP caches of Chrome, Chromium, Edge, Brave, Opera,
+ Opera GX, Vivaldi, Arc, Yandex Browser, Naver Whale, 360, QQ Browser, Firefox,
+ LibreWolf, Waterfox, Zen and Floorp, IDE caches (JetBrains, VS Code, Cursor,
+@@ -130,12 +130,28 @@ reports, core dumps and journald logs.
+   process was lost. A build that simply finishes during the cleanup also
+   stops it: an exit cannot be told apart from a crash.
+ - **Git awareness.** A project or container is not touched while it has
+-  uncommitted changes, unpushed commits or stashes. The blocker is shown in
+-  the report. Stopped containers with Git work require an exact
++  unsaved changes, unpushed commits or stashes. Stopped-container scans show
++  Git state before cleanup. Unstaged and untracked files can be recognized
++  as preserved when their bytes and modes all match one cached remote ref,
++  such as `origin/recovery/<branch>`. No remote fetch is performed; missing
++  refs, staged work and unreadable files remain blockers. Detached upstream
++  checkouts are accepted only when their commit is reachable from a remote
++  ref. Nested Docker layer copies and temporary Codex plugin checkouts are
++  excluded from this inspection. Unsaved container work requires an exact
+   `--allow-dirty-container ID` override.
+ - **Audit log on every run.** Each run, dry runs included, writes
+   `dss-<command>-<time>-<pid>.json` with every decision, the bytes freed
+-  and left per environment, and disk usage before and after.
++  and left per environment, and disk usage before and after. Scan audits
++  include every candidate and its blockers; blocked candidates do not
++  contribute to reclaimable tier totals.
++
++Long-lived `npm exec`/`npx` servers allow idle npm download and node-gyp
++header caches to be cleaned. Active npx hashes remain protected through
++their child command paths, working directories and open files; other
++hashes are separate candidates subject to the age window. Install commands
++still block relevant caches. Old isolation logs and sanitized upload staging
++are moderate-tier candidates. Opam download cleanup removes its cache
++directory directly and does not invoke `opam clean` or migrate the root.
+ 
+ ## Docker
+ 
+@@ -155,7 +171,11 @@ three kinds of Docker data:
+   the tier totals match what `clean --tier … --yes` removes.
+ - **Running containers** are never stopped, restarted or removed. They are
+   scanned and cleaned from the inside through `docker exec`, with the same
+-  rules and liveness checks as the host.
++  rules and liveness checks as the host. An unreadable `/proc` probe is
++  retried with a read-only root `docker exec --privileged` inspection. If
++  this is denied or incomplete, cleanup stays blocked and names the
++  unreadable processes. This also applies when dss runs inside a container
++  with access to its Docker daemon.
+ - **Stopped containers** are listed with their size, image, command, owner
+   session (`HIVE_MIND_PARENT_SESSION_ID` and other session labels or
+   environment variables, else a session id in the container name), task
+@@ -169,6 +189,24 @@ three kinds of Docker data:
+   killed) are never removed by a tier or by `--remove-stopped-containers`,
+   in emergency mode too. Name each one with `--remove-container ID|NAME`
+   (a full name, or an id prefix of at least 12 characters) to remove it.
++  Alternatively, `--investigation-max-age 7d` lifts holds for containers
++  that ended at least seven days ago; removal still requires consent and
++  Git checks. The default keeps investigation holds indefinitely.
++
++Container cache sizes count changed writable-layer file blocks and mounted
++data. Immutable image data is reported separately as `imageBytes` and is
++excluded from reclaimable totals, including the host scan when dss runs
++inside an identifiable container. Image-only caches stay visible and blocked;
++rebuild the image to remove that data. These estimates exclude directory
++metadata overhead. A small stopped container pinning a large image is shown
++even below `--min-size`; its potential image bytes require a separate image
++removal after the container is removed.
++
++Docker discovery uses a size-free container listing and measures each
++container independently. Failed size queries are retried once; objects
++remain visible with `sizeUnknown` when measurement fails. Scans continue
++through other objects and nested daemons, report partial errors, and return
++a nonzero CLI exit status when discovery is incomplete.
+ 
+ `--recursive` follows Docker-in-Docker: a container that runs its own daemon
+ is scanned as a new environment, down to `--depth` levels (default 3). The
+diff --git a/experiments/issue-14-container.mjs b/experiments/issue-14-container.mjs
+new file mode 100644
+index 0000000..11d7be8
+--- /dev/null
++++ b/experiments/issue-14-container.mjs
+@@ -0,0 +1,126 @@
++/** Bounded Docker reproduction of non-dumpable processes and image caches. */
++import assert from 'node:assert/strict';
++import { promises as fsp } from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { ShellEnv } from '../src/env/shell.js';
++import { containerExecutor, hostExecutor, runProcess } from '../src/exec.js';
++import { LivenessProbe } from '../src/liveness.js';
++import { clean } from '../src/clean.js';
++import { scan } from '../src/scan.js';
++
++const BASE =
++  'busybox@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e';
++const MIB = 1024 * 1024;
++const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'dss-issue14-'));
++const tag = `dss-issue14:${process.pid}`;
++let id;
++async function command(argv) {
++  const result = await runProcess(argv);
++  assert.equal(result.code, 0, `${argv[0]} ${argv[1]}: ${result.stderr}`);
++  return result.stdout.trim();
++}
++try {
++  await fsp.writeFile(
++    path.join(dir, 'sleeper.c'),
++    '#include <sys/prctl.h>\n#include <unistd.h>\nint main(void) { prctl(PR_SET_DUMPABLE, 0); sleep(120); return 0; }\n'
++  );
++  await command([
++    'gcc',
++    '-static',
++    '-O2',
++    path.join(dir, 'sleeper.c'),
++    '-o',
++    path.join(dir, 'sleeper'),
++  ]);
++  await fsp.writeFile(
++    path.join(dir, 'Dockerfile'),
++    `FROM ${BASE}\nRUN mkdir -p /home/box/.npm/_cacache && head -c ${4 * MIB} /dev/zero > /home/box/.npm/_cacache/image\nCOPY sleeper /sleeper\nCMD ["/sleeper"]\n`
++  );
++  await command(['docker', 'build', '-q', '-t', tag, dir]);
++  id = `dss-issue14-${process.pid}`;
++  await command([
++    'docker',
++    'run',
++    '-d',
++    '--name',
++    id,
++    tag,
++    'sh',
++    '-c',
++    'ulimit -v 131072; exec /sleeper',
++  ]);
++  const denied = await runProcess([
++    'docker',
++    'exec',
++    '--user',
++    '0',
++    id,
++    'readlink',
++    '/proc/1/cwd',
++  ]);
++  assert.notEqual(
++    denied.code,
++    0,
++    'normal root exec must reproduce missing ptrace capability'
++  );
++  const env = new ShellEnv(containerExecutor(hostExecutor(), id), {
++    homes: ['/home/box'],
++    tmpDirs: [],
++  });
++  const live = new LivenessProbe(env, { staleAgeMs: 0 });
++  await live.refresh();
++  assert.equal(live.probeError, false, env.probeDiagnostic);
++  assert.ok(env.probeExecutor, 'the privileged read-only fallback succeeded');
++  const options = {
++    env,
++    docker: false,
++    roots: [],
++    scanners: ['global'],
++    minSize: 0,
++    olderThan: '0s',
++    noNative: true,
++    auditDir: null,
++  };
++  const before = await scan(options);
++  const imageOnly = before.items.find((item) => item.rule === 'npm-cache');
++  assert.equal(imageOnly.bytes, 0);
++  assert.ok(imageOnly.imageBytes >= 4 * MIB);
++  assert.ok(
++    imageOnly.blockers.some((reason) => reason.includes('image layer'))
++  );
++  await command([
++    'docker',
++    'exec',
++    id,
++    'sh',
++    '-c',
++    `head -c ${MIB} /dev/zero > /home/box/.npm/_cacache/writable`,
++  ]);
++  const report = await scan(options);
++  const cache = report.items.find((item) => item.rule === 'npm-cache');
++  assert.equal(cache.bytes, MIB);
++  assert.ok(cache.imageBytes >= 4 * MIB);
++  const audit = await clean(report, {
++    ...options,
++    dryRun: false,
++    yes: true,
++    only: ['npm-cache'],
++  });
++  assert.equal(audit.freedBytes, MIB);
++  console.log(
++    JSON.stringify({
++      rootProbeExit: denied.code,
++      privilegedProbe: 'passed',
++      imageBytes: imageOnly.imageBytes,
++      reclaimableBytes: cache.bytes,
++      freedBytes: audit.freedBytes,
++    })
++  );
++} finally {
++  if (id) {
++    await runProcess(['docker', 'rm', '-f', id]);
++  }
++  await runProcess(['docker', 'image', 'rm', tag]);
++  await fsp.rm(dir, { recursive: true, force: true });
++}
+diff --git a/experiments/issue-14-git-copy.mjs b/experiments/issue-14-git-copy.mjs
+new file mode 100644
+index 0000000..5a48b26
+--- /dev/null
++++ b/experiments/issue-14-git-copy.mjs
+@@ -0,0 +1,56 @@
++/**
++ * Repeat copied-repository inspection after commits, through a symlinked
++ * temporary root like macOS /var. Run with the desired Git version on PATH.
++ * Fixture commands disable automatic maintenance so copying a stopped
++ * repository cannot race a background writer. Inputs are capped at 20 commits.
++ */
++import assert from 'node:assert/strict';
++import { cpSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
++import { join } from 'node:path';
++import { containerGitState } from '../src/docker/containers.js';
++import {
++  git,
++  pushedRepo,
++  removeRoot,
++  tempRoot,
++} from '../tests/helpers/fixtures.js';
++
++const root = tempRoot('dss-git-copy-probe-');
++const previousTmp = process.env.TMPDIR;
++try {
++  const tmp = join(root, 'tmp');
++  mkdirSync(tmp);
++  symlinkSync(tmp, join(root, 'tmp-link'));
++  process.env.TMPDIR = join(root, 'tmp-link');
++  const repo = pushedRepo(join(root, 'repo'));
++  git(repo, 'checkout', '-q', '--detach', 'origin/main');
++  const docker = {
++    diff: () => Promise.resolve('C /work/repo/README.md\n'),
++    pathExists: (_id, target) =>
++      Promise.resolve(target === '/work/repo/.git/HEAD'),
++    copyOut: (_id, _source, destination) => {
++      try {
++        cpSync(repo, join(destination, 'repo'), { recursive: true });
++      } catch (error) {
++        console.error(error.stack);
++        throw error;
++      }
++      return Promise.resolve({ code: 0 });
++    },
++  };
++  assert.deepEqual((await containerGitState(docker, 'box')).blockers, []);
++  for (let attempt = 0; attempt < 20; attempt++) {
++    writeFileSync(join(repo, 'README.md'), `unpublished ${attempt}`);
++    git(repo, 'commit', '-qam', 'unpublished');
++    const result = await containerGitState(docker, 'box');
++    assert.match(result.blockers.join(), /unpushed/);
++  }
++  console.log('20 copied detached-repository inspections passed');
++} finally {
++  if (previousTmp === undefined) {
++    delete process.env.TMPDIR;
++  } else {
++    process.env.TMPDIR = previousTmp;
++  }
++  removeRoot(root);
++}
+diff --git a/experiments/issue-14-process-probe.mjs b/experiments/issue-14-process-probe.mjs
+new file mode 100644
+index 0000000..30444f3
+--- /dev/null
++++ b/experiments/issue-14-process-probe.mjs
+@@ -0,0 +1,16 @@
++/** Measure three finite, read-only local process probes on a busy host. */
++import { performance } from 'node:perf_hooks';
++import { LocalEnv } from '../src/env/local.js';
++
++const env = new LocalEnv();
++for (let attempt = 0; attempt < 3; attempt++) {
++  const started = performance.now();
++  const processes = await env.processes();
++  console.log(
++    JSON.stringify({
++      attempt,
++      processes: processes.length,
++      elapsedMs: Math.round(performance.now() - started),
++    })
++  );
++}
+diff --git a/src/clean.js b/src/clean.js
+index d0b6f55..732a991 100644
+--- a/src/clean.js
++++ b/src/clean.js
+@@ -18,12 +18,14 @@ import path from 'node:path';
+ import { finished } from 'node:stream/promises';
+ 
+ import { backupDirectory, startAudit, writeAudit } from './audit.js';
++import { configureContainerHost } from './docker/writable.js';
+ import { DockerCli, assertAllowed, parseDockerSize } from './docker/cli.js';
+ import {
+   containerGitState,
+   containerNamed,
+   gitBlockersForRemoval,
+   investigationBlocker,
++  investigationExpired,
+   runningBindMounts,
+ } from './docker/containers.js';
+ import { imageNamed } from './docker/images.js';
+@@ -35,9 +37,10 @@ import { LivenessProbe } from './liveness.js';
+ import { resolveOptions } from './options.js';
+ import { isWithin } from './paths.js';
+ import { OTHER_RULES } from './rules/other.js';
+-import { compareVersions } from './rules/versions.js';
++import { compareVersions, VERSION_RULES } from './rules/versions.js';
++import { scanVersions } from './scanners/versions.js';
+ import { analyzeRustProfile } from './scanners/rust.js';
+-import { filterItems, revalidateReport } from './scan.js';
++import { filterItems, revalidateReport, selfContainerIds } from './scan.js';
+ 
+ const STOPPED = new Set(['exited', 'created', 'dead']);
+ const COMMAND_TIMEOUT_MS = 30 * 60 * 1000;
+@@ -123,6 +126,18 @@ async function browserRevisionBlocker(env, item) {
+   return null;
+ }
+ 
++async function configureStorage(env) {
++  if (env.kind === 'host' && !env.writableLayer) {
++    await configureContainerHost(env, await selfContainerIds(env));
++  }
++}
++
++function imageOnly(bytes, usages) {
++  return (
++    bytes === 0 && [...usages.values()].some((usage) => usage.imageBytes > 0)
++  );
++}
++
+ export class Cleaner {
+   /**
+    * @param {object} report output of `scan()`
+@@ -241,6 +256,7 @@ export class Cleaner {
+     if (type === 'none' || item.paths.length === 0) {
+       return { item };
+     }
++    await configureStorage(ctx.env);
+     let paths = item.paths;
+     if (item.recheck?.type === 'rust') {
+       const current = await analyzeRustProfile(ctx.env, item.recheck.profile, {
+@@ -263,10 +279,16 @@ export class Cleaner {
+     const fresh = {
+       ...item,
+       paths,
+-      bytes: type === 'remove' ? sumBytes(usages, paths) : item.bytes,
++      bytes: sumBytes(usages, paths),
+       newestMtimeMs: newest || item.newestMtimeMs,
+       action: type === 'remove' ? { ...item.action, paths } : item.action,
+     };
++    if (imageOnly(fresh.bytes, usages)) {
++      return {
++        reason:
++          'all bytes are in the image layer; rebuild the image to reclaim them',
++      };
++    }
+     const staticBlocker = await this.#staticBlocker(ctx, fresh);
+     if (staticBlocker) {
+       return { reason: staticBlocker };
+@@ -306,6 +328,27 @@ export class Cleaner {
+   }
+ 
+   async #staticBlocker(ctx, item) {
++    if (item.recheck?.type === 'version') {
++      const rule = VERSION_RULES.find(
++        (candidate) => candidate.id === item.rule
++      );
++      const candidates = await scanVersions(
++        {
++          ...ctx,
++          options: {
++            ...this.options,
++            homes: [item.recheck.home],
++            roots: this.report.options.roots ?? [],
++          },
++          now: this.options.now(),
++          liveness: null,
++        },
++        { rules: [rule] }
++      );
++      if (!candidates.some((candidate) => candidate.path === item.path)) {
++        return `${item.path} is now current, pinned, or the newest installed version`;
++      }
++    }
+     if (
+       item.recheck?.type === 'pyenv-envs' &&
+       (await ctx.env.list(ctx.env.path.join(item.path, 'envs'))).length > 0
+@@ -609,11 +652,15 @@ function containerConsent(item, options) {
+   const { containerId, name } = item.action;
+   const named = containerNamed(options.removeContainers, containerId, name);
+   const dirtyAllowed = options.allowDirtyContainers?.includes(containerId);
+-  if (!named && !dirtyAllowed) {
++  const expired = investigationExpired(
++    { FinishedAt: item.container?.owner?.finishedAt },
++    options
++  );
++  if (!named && !dirtyAllowed && !expired) {
+     return item;
+   }
+   const lifted = (reason) =>
+-    (named && reason === item.container?.investigation) ||
++    ((named || expired) && reason === item.container?.investigation) ||
+     (dirtyAllowed &&
+       item.container?.gitBlockers?.includes(reason) &&
+       /^Git repository .+ has /.test(reason));
+@@ -636,6 +683,7 @@ export function planItems(report, options) {
+ /** Options that only the cleaning run itself may grant. */
+ export const CONFIRMATION_FLAGS = [
+   'removeStoppedContainers',
++  'investigationMaxAge',
+   'removeContainers',
+   'removeImages',
+   'includeVolumes',
+diff --git a/src/cli.js b/src/cli.js
+index 9658085..0698d91 100644
+--- a/src/cli.js
++++ b/src/cli.js
+@@ -54,6 +54,7 @@ Consent:
+   -y, --yes                  delete without asking (non-interactive use)
+   --dry-run                  never delete, show the plan
+   --remove-stopped-containers  allow docker rm of verified stopped containers
++  --investigation-max-age AGE  lift investigation holds older than AGE (opt-in)
+   --remove-container ID|NAME  remove this stopped container, even one kept
+                              for investigation (repeat)
+   --remove-image REF         remove this unused image (repo:tag or id;
+@@ -94,6 +95,7 @@ const OPTIONS = {
+   yes: { type: 'boolean', short: 'y' },
+   'dry-run': { type: 'boolean' },
+   'remove-stopped-containers': { type: 'boolean' },
++  'investigation-max-age': { type: 'string' },
+   'remove-container': { type: 'string', multiple: true },
+   'remove-image': { type: 'string', multiple: true },
+   'remove-unused-images': { type: 'boolean' },
+@@ -168,6 +170,7 @@ export function toOptions(values, paths = []) {
+     until: values.until,
+     path: values.path,
+     removeStoppedContainers: values['remove-stopped-containers'],
++    investigationMaxAge: values['investigation-max-age'],
+     removeContainers: values['remove-container'],
+     removeImages: values['remove-image'],
+     includeVolumes: values['include-volumes'],
+@@ -240,6 +243,7 @@ export function scanAudit(report) {
+       totals: report.totals,
+       environments: report.environments.map((env) => env.id),
+       errors: report.errors,
++      items: report.items,
+     },
+     entries: report.items.map((item) => ({
+       id: item.id,
+@@ -301,7 +305,7 @@ class Cli {
+         'Run `dss clean --tier safe` to see the plan, add --yes to delete.',
+       ].join('\n')
+     );
+-    return 0;
++    return report.errors.length > 0 ? 1 : 0;
+   }
+ 
+   async loadReport(options, values) {
+diff --git a/src/docker/cli.js b/src/docker/cli.js
+index c1e2500..a519c0e 100644
+--- a/src/docker/cli.js
++++ b/src/docker/cli.js
+@@ -208,11 +208,29 @@ export class DockerCli {
+   }
+ 
+   async containers() {
++    const output = await this.json([
++      'ps',
++      '--all',
++      '--no-trunc',
++      '--format',
++      '{{.ID}}\\t{{.Names}}\\t{{.State}}\\t{{.Status}}\\t{{.Image}}',
++    ]);
++    return output
++      .trim()
++      .split('\n')
++      .filter(Boolean)
++      .map((line) => {
++        const [ID, Names, State, Status, Image] = line.split('\t');
++        return { ID, Names, State, Status, Image };
++      });
++  }
++
++  async images() {
+     return jsonLines(
+       await this.json([
+-        'ps',
++        'image',
++        'ls',
+         '--all',
+-        '--size',
+         '--no-trunc',
+         '--format',
+         '{{json .}}',
+@@ -220,6 +238,16 @@ export class DockerCli {
+     );
+   }
+ 
++  async containerSize(id) {
++    const [entry] = JSON.parse(
++      await this.json(['inspect', '--type', 'container', '--size', id])
++    );
++    if (!Number.isFinite(entry?.SizeRw) || entry.SizeRw < 0) {
++      throw new Error(`size unknown for container ${id}`);
++    }
++    return { bytes: entry.SizeRw, virtualBytes: entry.SizeRootFs ?? 0 };
++  }
++
+   async inspect(ids) {
+     if (ids.length === 0) {
+       return [];
+diff --git a/src/docker/containers.js b/src/docker/containers.js
+index c254348..a482cc5 100644
+--- a/src/docker/containers.js
++++ b/src/docker/containers.js
+@@ -14,6 +14,7 @@ import path from 'node:path';
+ 
+ import { GitInspector, stateBlockers } from '../git.js';
+ import { LocalEnv } from '../env/local.js';
++import { trace } from '../exec.js';
+ import { repoRootsFromDiff } from './cli.js';
+ 
+ export const COPY_EXCLUDES = [
+@@ -95,8 +96,7 @@ export function ownerOf(ps, inspected) {
+   return {
+     name,
+     image: ps.Image,
+-    command: ps.Command ? ps.Command.replace(/^"|"$/g, '') : null,
+-    createdAt: ps.CreatedAt ?? null,
++    ...containerMetadata(ps, inspected),
+     finishedAt: inspected?.State?.FinishedAt ?? null,
+     exitCode: typeof state?.ExitCode === 'number' ? state.ExitCode : null,
+     oomKilled: Boolean(state?.OOMKilled),
+@@ -108,6 +108,18 @@ export function ownerOf(ps, inspected) {
+   };
+ }
+ 
++function containerMetadata(ps, inspected) {
++  return {
++    command: ps.Command
++      ? ps.Command.replace(/^"|"$/g, '')
++      : [
++          ...(inspected?.Config?.Entrypoint ?? []),
++          ...(inspected?.Config?.Cmd ?? []),
++        ].join(' ') || null,
++    createdAt: ps.CreatedAt ?? inspected?.Created ?? null,
++  };
++}
++
+ /** Counters and flags such as `1` or `true` are not session ids. */
+ function sessionLike(value) {
+   const text = String(value).trim();
+@@ -180,10 +192,28 @@ export function containerNamed(names, id, name) {
+   );
+ }
+ 
++export function investigationExpired(state, options = {}) {
++  const age = options.investigationMaxAgeMs;
++  const finished = Date.parse(state?.FinishedAt);
++  return (
++    age !== null &&
++    age !== undefined &&
++    Number.isFinite(age) &&
++    age >= 0 &&
++    Number.isFinite(finished) &&
++    finished > 0 &&
++    (options.now?.() ?? Date.now()) - finished >= age
++  );
++}
++
+ /** Blocker of a container kept for investigation that was not named. */
+ export function investigationBlocker(state, id, name, options = {}) {
+   const reason = investigationReason(state);
+-  if (!reason || containerNamed(options.removeContainers, id, name)) {
++  if (
++    !reason ||
++    investigationExpired(state, options) ||
++    containerNamed(options.removeContainers, id, name)
++  ) {
+     return null;
+   }
+   return `${reason}; remove it only with --remove-container ${id.slice(0, SHORT_ID)}`;
+@@ -294,6 +324,18 @@ function excludedWorkBlockers(checked, changed, blockers) {
+ }
+ 
+ export async function containerGitState(docker, id, options = {}) {
++  try {
++    return await inspectContainerGitState(docker, id, options);
++  } catch (error) {
++    trace('container Git inspection failed', id, error.stack ?? error.message);
++    return {
++      repos: [],
++      blockers: [`cannot verify Git work in the container: ${error.message}`],
++    };
++  }
++}
++
++async function inspectContainerGitState(docker, id, options) {
+   const diff = await docker.diff(id);
+   if (diff === null) {
+     return {
+@@ -301,13 +343,17 @@ export async function containerGitState(docker, id, options = {}) {
+       blockers: ['cannot list the writable layer (`docker diff` failed)'],
+     };
+   }
+-  const roots = new Set(repoRootsFromDiff(diff));
++  const relevantDiff = diff
++    .split('\n')
++    .filter((line) => !excludedRepoPath(line.slice(2)))
++    .join('\n');
++  const roots = new Set(repoRootsFromDiff(relevantDiff));
+   const maxRepos = options.maxRepos ?? DEFAULT_MAX_REPOS;
+   const blockers = [];
+   if (roots.has('/')) {
+     blockers.push('the container root is a Git repository');
+   }
+-  const changed = diff
++  const changed = relevantDiff
+     .split('\n')
+     .map((line) => /^[ACD] (\/.+)$/.exec(line.trim())?.[1])
+     .filter(Boolean);
+@@ -324,7 +370,9 @@ export async function containerGitState(docker, id, options = {}) {
+     return { repos, blockers };
+   }
+   // `docker cp` copies to this machine, so Git always runs locally.
+-  const git = new GitInspector(options.env ?? new LocalEnv());
++  const git = new GitInspector(options.env ?? new LocalEnv(), {
++    recognizePreserved: true,
++  });
+   for (const root of checked) {
+     const state = await copyAndCheck(docker, id, root, git);
+     repos.push(state);
+@@ -332,3 +380,11 @@ export async function containerGitState(docker, id, options = {}) {
+   }
+   return { repos, blockers };
+ }
++
++function excludedRepoPath(target) {
++  return (
++    /^\/var\/lib\/docker\/(?:overlay2|fuse-overlayfs|btrfs|containerd)\//.test(
++      target
++    ) || /\/\.codex\/(?:.*\/)?\.tmp\/plugins[^/]*(?:\/|$)/.test(target)
++  );
++}
+diff --git a/src/docker/scan.js b/src/docker/scan.js
+index 4bd649f..ca38a0b 100644
+--- a/src/docker/scan.js
++++ b/src/docker/scan.js
+@@ -27,7 +27,6 @@ import { block, makeItem } from '../items.js';
+ import { DockerCli, parseDockerSize } from './cli.js';
+ import {
+   containerGitState,
+-  containerNamed,
+   gitBlockersForRemoval,
+   investigationBlocker,
+   isHostBindSource,
+@@ -67,7 +66,9 @@ function daemonItems(daemon, verbose, df, options, users) {
+   const unused = images.filter((image) => image.Containers === '0');
+   const dangling = unused.filter((image) => image.Tag === '<none>');
+   const danglingBytes = dangling.reduce(
+-    (sum, image) => sum + parseDockerSize(image.UniqueSize ?? image.Size),
++    (sum, image) =>
++      sum +
++      (image.sizeUnknown ? 0 : parseDockerSize(image.UniqueSize ?? image.Size)),
+     0
+   );
+   const measure = { volume: daemon.rootDir, parse: 'docker' };
+@@ -80,6 +81,7 @@ function daemonItems(daemon, verbose, df, options, users) {
+         description: `${dangling.length} dangling Docker images`,
+         target: `daemon:${daemon.id}:dangling`,
+         bytes: danglingBytes,
++        sizeUnknown: dangling.some((image) => image.sizeUnknown),
+         reason: 'untagged images no container uses',
+         action: {
+           type: 'command',
+@@ -121,7 +123,9 @@ function daemonItems(daemon, verbose, df, options, users) {
+   }
+   for (const image of taggedImages(unused)) {
+     const name = `${image.Repository}:${image.Tag}`;
+-    const bytes = parseDockerSize(image.UniqueSize ?? image.Size);
++    const bytes = image.sizeUnknown
++      ? 0
++      : parseDockerSize(image.UniqueSize ?? image.Size);
+     const summary = { ref: name, id: image.ID };
+     items.push(
+       makeItem(env, {
+@@ -131,6 +135,7 @@ function daemonItems(daemon, verbose, df, options, users) {
+         description: `unused Docker image ${name}`,
+         target: `daemon:${daemon.id}:image:${image.ID}`,
+         bytes,
++        sizeUnknown: Boolean(image.sizeUnknown),
+         tier: 'moderate',
+         reason: 'no container uses it; remove it only after deciding per image',
+         requiresConfirmation: 'removeImages',
+@@ -256,7 +261,7 @@ export async function imageHints(docker, verbose) {
+ }
+ 
+ async function stoppedItem(daemon, ps, inspected, options) {
+-  const sizes = containerSizes(ps.Size);
++  const sizes = ps.sizes ?? { bytes: 0, virtualBytes: 0 };
+   const owner = ownerOf(ps, inspected);
+   const kept = investigationBlocker(
+     inspected?.State,
+@@ -271,6 +276,7 @@ async function stoppedItem(daemon, ps, inspected, options) {
+     description: `stopped container ${owner.name} (${ps.Image})`,
+     target: `daemon:${daemon.id}:container:${ps.ID}`,
+     bytes: sizes.bytes,
++    sizeUnknown: ps.sizeUnknown ?? false,
+     tier: 'moderate',
+     reason: 'stopped container, its writable layer is deleted by `docker rm`',
+     requiresConfirmation: 'removeStoppedContainers',
+@@ -280,6 +286,8 @@ async function stoppedItem(daemon, ps, inspected, options) {
+       state: ps.State,
+       owner,
+       investigation: kept,
++      pinnedImage: ps.pinnedImage ?? null,
++      sizeUnknown: ps.sizeUnknown ?? false,
+     },
+     action: {
+       type: 'docker-rm',
+@@ -293,21 +301,12 @@ async function stoppedItem(daemon, ps, inspected, options) {
+   if (kept) {
+     block(item, kept);
+   }
+-  if (
+-    options.removeStoppedContainers ||
+-    containerNamed(options.removeContainers, ps.ID, owner.name)
+-  ) {
+-    const git = await containerGitState(daemon.docker, ps.ID);
+-    item.container.repos = git.repos;
+-    item.container.gitBlockers = git.blockers;
+-    gitBlockersForRemoval(git, ps.ID, options).forEach((reason) =>
+-      block(item, reason)
+-    );
+-  } else {
+-    item.container.repos = [];
+-    item.container.gitBlockers = [];
+-    item.container.gitCheckDeferred = true;
+-  }
++  const git = await containerGitState(daemon.docker, ps.ID);
++  item.container.repos = git.repos;
++  item.container.gitBlockers = git.blockers;
++  gitBlockersForRemoval(git, ps.ID, options).forEach((reason) =>
++    block(item, reason)
++  );
+   return item;
+ }
+ 
+@@ -321,6 +320,24 @@ function matchesFilter(ps, filters) {
+   );
+ }
+ 
++function pinnedImage(ps, all, inspected, inventory) {
++  const imageId = inspected.get(ps.ID)?.Image;
++  const image = (inventory.Images ?? []).find(
++    (row) => row.ID === imageId || `${row.Repository}:${row.Tag}` === ps.Image
++  );
++  const users = all.filter((row) =>
++    imageId ? inspected.get(row.ID)?.Image === imageId : row.Image === ps.Image
++  );
++  return image && users.length === 1 && STOPPED.has(ps.State)
++    ? {
++        ref: ps.Image,
++        id: image.ID,
++        bytes: parseDockerSize(image.UniqueSize),
++        sizeUnknown: !image.UniqueSize,
++      }
++    : null;
++}
++
+ class DockerScan {
+   constructor(options, scanEnvironment) {
+     this.options = options;
+@@ -334,6 +351,7 @@ class DockerScan {
+       hints: [],
+       bindMounts: [],
+       volumes: [],
++      errors: [],
+     };
+   }
+ 
+@@ -356,8 +374,59 @@ class DockerScan {
+       depth,
+       rootDir: info.DockerRootDir ?? null,
+     };
+-    const df = await docker.systemDf();
+-    const verbose = await docker.systemDfVerbose();
++    // Discover without a global writable-layer walk. Size failures must
++    // never discard the object list or prevent nested daemon discovery.
++    const all = await this.bestEffort(
++      record.env.id,
++      () => docker.containers(),
++      []
++    );
++    const images = await this.bestEffort(
++      record.env.id,
++      () => docker.images(),
++      []
++    );
++    const inspected = new Map(
++      (
++        await this.bestEffort(
++          record.env.id,
++          () => docker.inspect(all.map((ps) => ps.ID)),
++          []
++        )
++      ).map((c) => [c.Id, c])
++    );
++    const df = await this.bestEffort(
++      record.env.id,
++      () => docker.systemDf(),
++      []
++    );
++    const verbose = await this.bestEffort(
++      record.env.id,
++      () => docker.systemDfVerbose(),
++      null
++    );
++    const inventory = verbose ?? {
++      Images: images.map((image) => ({
++        ...image,
++        Containers: String(
++          all.filter(
++            (ps) =>
++              inspected.get(ps.ID)?.Image === image.ID ||
++              ps.Image === `${image.Repository}:${image.Tag}`
++          ).length
++        ),
++        sizeUnknown: true,
++      })),
++    };
++    for (const ps of all) {
++      ps.sizes = await this.bestEffort(
++        record.env.id,
++        () => docker.containerSize(ps.ID),
++        null
++      );
++      ps.sizeUnknown = ps.sizes === null;
++      ps.pinnedImage = pinnedImage(ps, all, inspected, inventory);
++    }
+     this.result.daemons.push({
+       id,
+       env: record.env.id,
+@@ -378,15 +447,15 @@ class DockerScan {
+     this.result.items.push(
+       ...daemonItems(
+         daemon,
+-        verbose,
++        inventory,
+         df,
+         this.options,
+-        await this.users(verbose)
++        await this.users(inventory)
+       )
+     );
+     if (this.options.includeVolumes) {
+       this.result.volumes.push(
+-        ...(verbose.Volumes ?? [])
++        ...(inventory.Volumes ?? [])
+           .filter((volume) => volume.Links === '0')
+           .map((volume) => ({
+             daemon: id,
+@@ -396,8 +465,8 @@ class DockerScan {
+           }))
+       );
+     }
+-    this.result.hints.push(...(await imageHints(docker, verbose)));
+-    await this.containers(daemon, record, depth, inherited);
++    this.result.hints.push(...(await imageHints(docker, inventory)));
++    await this.containers(daemon, record, depth, inherited, all, inspected);
+   }
+ 
+   /** Last users of images, read once and only when an image needs them. */
+@@ -412,14 +481,21 @@ class DockerScan {
+     return this.lastUsers;
+   }
+ 
+-  async containers(daemon, record, depth, inherited) {
+-    const all = await daemon.docker.containers();
+-    const inspected = new Map(
+-      (await daemon.docker.inspect(all.map((ps) => ps.ID))).map((c) => [
+-        c.Id,
+-        c,
+-      ])
+-    );
++  async bestEffort(env, operation, fallback) {
++    let error;
++    for (let attempt = 0; attempt < 2; attempt++) {
++      try {
++        return await operation();
++      } catch (caught) {
++        error = caught;
++        trace('Docker inspection retry', env, error.message);
++      }
++    }
++    this.result.errors.push({ env, scanner: 'docker', message: error.message });
++    return fallback;
++  }
++
++  async containers(daemon, record, depth, inherited, all, inspected) {
+     if (record.env.kind === 'host') {
+       for (const ps of all.filter((row) => row.State === 'running')) {
+         for (const mount of inspected.get(ps.ID)?.Mounts ?? []) {
+@@ -443,7 +519,7 @@ class DockerScan {
+   }
+ 
+   async container(daemon, record, depth, ps, inspected) {
+-    const sizes = containerSizes(ps.Size);
++    const sizes = ps.sizes ?? { bytes: 0, virtualBytes: 0 };
+     const owner = ownerOf(ps, inspected);
+     const entry = {
+       id: ps.ID,
+@@ -455,6 +531,8 @@ class DockerScan {
+       daemonEnv: record.env.id,
+       depth,
+       bytes: sizes.bytes,
++      sizeUnknown: ps.sizeUnknown,
++      pinnedImage: ps.pinnedImage ?? null,
+       virtualBytes: sizes.virtualBytes,
+       owner,
+       env: null,
+@@ -510,7 +588,15 @@ class DockerScan {
+     });
+     this.result.items.push(...(await this.scanEnvironment(env)));
+     if (await env.which('docker')) {
+-      await this.daemon({ env, executor, chain }, depth, true);
++      try {
++        await this.daemon({ env, executor, chain }, depth, true);
++      } catch (error) {
++        this.result.errors.push({
++          env: env.id,
++          scanner: 'docker',
++          message: error.message,
++        });
++      }
+     }
+   }
+ }
+diff --git a/src/docker/writable.js b/src/docker/writable.js
+new file mode 100644
+index 0000000..c964180
+--- /dev/null
++++ b/src/docker/writable.js
+@@ -0,0 +1,121 @@
++/** Reclaimable file blocks in a container, excluding immutable image data. */
++import { DockerCli } from './cli.js';
++import { isWithin } from '../paths.js';
++
++export class WritableLayer {
++  constructor(executor, id) {
++    this.docker = new DockerCli(executor);
++    this.id = id;
++  }
++
++  async measure(env, usages) {
++    usages = new Map([...usages].filter(([, usage]) => usage));
++    if (usages.size === 0) {
++      return usages;
++    }
++    const diff = await this.docker.diff(this.id);
++    const [container] = await this.docker.inspect([this.id]).catch(() => []);
++    if (diff === null || !container) {
++      return new Map(
++        [...usages].map(([target, usage]) => [
++          target,
++          {
++            ...usage,
++            totalBytes: usage.bytes,
++            bytes: 0,
++            imageBytes: 0,
++            sizeUnknown: true,
++          },
++        ])
++      );
++    }
++    const mounts = (container.Mounts ?? [])
++      .map((mount) => mount.Destination)
++      .filter(Boolean);
++    const inside = (target, root) => isWithin(target, root, env.path);
++    const changed = [
++      ...new Set(
++        diff
++          .split('\n')
++          .map((line) => /^[AC] (\/.+)$/.exec(line)?.[1])
++          .filter(Boolean)
++      ),
++    ].filter(
++      (file) =>
++        [...usages.keys()].some((target) => inside(file, target)) &&
++        !mounts.some((mount) => inside(file, mount))
++    );
++    const stats = await env.statMany(changed);
++    const mountRoots = [
++      ...new Set(
++        mounts.filter((mount) =>
++          [...usages.keys()].some(
++            (target) => inside(mount, target) && mount !== target
++          )
++        )
++      ),
++    ];
++    const mountedUsage = mountRoots.length
++      ? await env.rawUsageMany(mountRoots)
++      : new Map();
++    return new Map(
++      [...usages].map(([target, usage]) => {
++        if (mounts.some((mount) => inside(target, mount))) {
++          return [target, { ...usage, totalBytes: usage.bytes, imageBytes: 0 }];
++        }
++        let bytes = 0;
++        const seen = new Set();
++        for (const [file, stat] of stats) {
++          // Docker diff's C directories include unchanged lower-layer children.
++          // Count file blocks only, with hard-linked inodes counted once.
++          if (
++            !inside(file, target) ||
++            stat.type === 'dir' ||
++            seen.has(stat.inode ?? file)
++          ) {
++            continue;
++          }
++          seen.add(stat.inode ?? file);
++          bytes += stat.bytes;
++        }
++        for (const mount of mountRoots.filter((mount) =>
++          inside(mount, target)
++        )) {
++          if (
++            !mountRoots.some((other) => other !== mount && inside(mount, other))
++          ) {
++            bytes += mountedUsage.get(mount)?.bytes ?? 0;
++          }
++        }
++        bytes = Math.min(usage.bytes, bytes);
++        return [
++          target,
++          {
++            ...usage,
++            totalBytes: usage.bytes,
++            bytes,
++            imageBytes: Math.max(0, usage.bytes - bytes),
++          },
++        ];
++      })
++    );
++  }
++}
++
++/** Attach storage accounting to the host adapter when dss runs in Docker. */
++export async function configureContainerHost(env, ids) {
++  if (!ids.length || !(await env.which('docker'))) {
++    return;
++  }
++  const docker = new DockerCli(env.executor);
++  const containers = await docker.inspect(ids).catch(() => []);
++  const own = containers.find((container) => ids.includes(container.Id));
++  if (own) {
++    env.writableLayer = new WritableLayer(env.executor, own.Id);
++    const { ShellEnv } = await import('../env/shell.js');
++    const { containerExecutor } = await import('../exec.js');
++    env.processInspector = new ShellEnv(
++      containerExecutor(env.executor, own.Id)
++    );
++  }
++}
+diff --git a/src/env/local.js b/src/env/local.js
+index c69952e..da2956e 100644
+--- a/src/env/local.js
++++ b/src/env/local.js
+@@ -222,6 +222,7 @@ export class LocalEnv {
+       size: stats.size,
+       bytes: diskBytes(stats),
+       mtimeMs: stats.mtimeMs,
++      inode: `${stats.dev}:${stats.ino}`,
+     };
+   }
+ 
+@@ -290,6 +291,17 @@ export class LocalEnv {
+    * file mtime.
+    */
+   async usage(target) {
++    return (await this.usageMany([target])).get(target) ?? null;
++  }
++
++  async statMany(targets) {
++    const entries = await Promise.all(
++      targets.map(async (target) => [target, await this.stat(target)])
++    );
++    return new Map(entries.filter(([, stat]) => stat));
++  }
++
++  async rawUsage(target) {
+     const root = await safeLstat(target);
+     if (!root) {
+       return null;
+@@ -447,9 +459,16 @@ export class LocalEnv {
+   }
+ 
+   async usageMany(targets) {
++    const usages = await this.rawUsageMany(targets);
++    return this.writableLayer
++      ? this.writableLayer.measure(this, usages)
++      : usages;
++  }
++
++  async rawUsageMany(targets) {
+     const usages = new Map();
+     for (const target of targets) {
+-      usages.set(target, await this.usage(target));
++      usages.set(target, await this.rawUsage(target));
+     }
+     return usages;
+   }
+@@ -492,6 +511,13 @@ export class LocalEnv {
+ 
+   async processes() {
+     const selfPids = new Set([process.pid, process.ppid]);
++    if (this.processInspector?.probeExecutor) {
++      return (
++        (await this.processInspector.processes())?.filter(
++          (proc) => !selfPids.has(proc.pid)
++        ) ?? null
++      );
++    }
+     if (this.platform === 'linux') {
+       return (await this.#linuxProcesses()).filter(
+         (proc) => !selfPids.has(proc.pid)
+@@ -530,15 +556,18 @@ export class LocalEnv {
+   }
+ 
+   async #linuxProcesses() {
+-    let pids = [];
+-    try {
+-      pids = (await fsp.readdir('/proc')).filter((name) => /^\d+$/.test(name));
+-    } catch {
+-      return [];
+-    }
++    const pids = (await fsp.readdir('/proc')).filter((name) =>
++      /^\d+$/.test(name)
++    );
+     const processes = [];
+     for (const pid of pids) {
+       const base = `/proc/${pid}`;
++      const stat = parseProcStat(
++        await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
++      );
++      if (stat.state === 'Z') {
++        continue;
++      }
+       let name;
+       try {
+         name = (await fsp.readFile(`${base}/comm`, 'utf8')).trim();
+@@ -550,12 +579,6 @@ export class LocalEnv {
+       const cmdline = await fsp
+         .readFile(`${base}/cmdline`, 'utf8')
+         .catch(() => '');
+-      const stat = parseProcStat(
+-        await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
+-      );
+-      if (stat.state === 'Z') {
+-        continue;
+-      }
+       processes.push({
+         pid: Number(pid),
+         name,
+@@ -563,6 +586,7 @@ export class LocalEnv {
+         cwd,
+         aliases: processAliases(exe, cmdline.split('\0')[0]),
+         command: cmdline.replaceAll('\0', ' '),
++        argv: cmdline.split('\0').filter(Boolean),
+       });
+     }
+     return processes;
+@@ -574,6 +598,20 @@ export class LocalEnv {
+    * @returns {Promise<Set<string>|null>}
+    */
+   async openPaths({ strict = true } = {}) {
++    try {
++      return await this.rawOpenPaths({ strict });
++    } catch (error) {
++      if (this.processInspector) {
++        const paths = await this.processInspector.openPaths();
++        this.probeDiagnostic = this.processInspector.probeDiagnostic;
++        return paths;
++      }
++      this.probeDiagnostic = error.message;
++      throw error;
++    }
++  }
++
++  async rawOpenPaths({ strict = true } = {}) {
+     if (this.platform === 'linux') {
+       const paths = new Set();
+       let pids = [];
+@@ -584,6 +622,12 @@ export class LocalEnv {
+       }
+       for (const pid of pids) {
+         const base = `/proc/${pid}`;
++        const state = parseProcStat(
++          await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
++        );
++        if (state.state === 'Z') {
++          continue;
++        }
+         for (const link of ['cwd', 'exe']) {
+           const target = await fsp
+             .readlink(`${base}/${link}`)
+diff --git a/src/env/shell.js b/src/env/shell.js
+index ecda3c4..781e3e4 100644
+--- a/src/env/shell.js
++++ b/src/env/shell.js
+@@ -8,8 +8,9 @@
+  */
+ 
+ import path from 'node:path';
++import { WritableLayer } from '../docker/writable.js';
+ 
+-import { shellQuote } from '../exec.js';
++import { containerExecutor, shellQuote, trace } from '../exec.js';
+ import { DEFAULT_SKIP_NAMES, parseDf, processAliases } from './local.js';
+ 
+ const STAT_FORMAT = '%F|%s|%b|%B|%Y|%n';
+@@ -44,18 +45,26 @@ for p in /proc/[0-9]*; do
+   e=$(readlink "$p/exe" 2>/dev/null)
+   a=$(tr '\\000' '\\n' < "$p/cmdline" 2>/dev/null | head -n 1)
+   w=$(readlink "$p/cwd" 2>/dev/null)
++  q=$(tr '\\000' ' ' < "$p/cmdline" 2>/dev/null)
+   t=$(sed 's/.*) //' "$p/stat" 2>/dev/null | cut -d' ' -f1,20)
+-  printf '%s|%s|%s|%s|%s|%s\\n' "\${p#/proc/}" "$t" "$c" "$e" "$a" "$w"
++  printf '%s|%s|%s|%s|%s|%s|%s\\n' "\${p#/proc/}" "$t" "$c" "$e" "$a" "$w" "$q"
+ done`;
+ 
+ const OPEN_PATHS_SCRIPT = `failed=0
+ for p in /proc/[0-9]*; do
+   [ -d "$p" ] || continue
+-  ls "$p/fd" >/dev/null 2>&1 || { [ -d "$p" ] && failed=1; continue; }
++  state=$(sed 's/.*) //' "$p/stat" 2>/dev/null | cut -d' ' -f1)
++  [ "$state" = Z ] && continue
++  unreadable=0
++  ls "$p/fd" >/dev/null 2>&1 || unreadable=1
+   for l in "$p/cwd" "$p/exe" "$p"/fd/*; do
+     [ -L "$l" ] || continue
+-    readlink "$l" 2>/dev/null || failed=1
++    readlink "$l" 2>/dev/null || { [ -L "$l" ] && unreadable=1; }
+   done
++  if [ "$unreadable" = 1 ] && [ -d "$p" ]; then
++    printf 'unreadable pid %s (%s)\\n' "\${p#/proc/}" "$(cat "$p/comm" 2>/dev/null)" >&2
++    failed=1
++  fi
+ done
+ exit "$failed"`;
+ 
+@@ -156,6 +165,10 @@ export class ShellEnv {
+    */
+   constructor(executor, options = {}) {
+     this.executor = executor;
++    this.writableLayer =
++      executor.parent && executor.containerId
++        ? new WritableLayer(executor.parent, executor.containerId)
++        : null;
+     this.id = options.id ?? executor.label;
+     this.kind = options.kind ?? 'container';
+     this.label = options.label ?? executor.label;
+@@ -289,6 +302,34 @@ export class ShellEnv {
+    * @returns {Promise<Map<string, object>>}
+    */
+   async usageMany(targets) {
++    const usages = await this.rawUsageMany(targets);
++    return this.writableLayer
++      ? this.writableLayer.measure(this, usages)
++      : usages;
++  }
++
++  async statMany(targets) {
++    const stats = new Map();
++    for (const batch of batches(targets)) {
++      const result = await this.executor.run([
++        'stat',
++        '-c',
++        `${STAT_FORMAT}|%d:%i`,
++        '--',
++        ...batch,
++      ]);
++      for (const line of result.stdout.split('\n').filter(Boolean)) {
++        const end = line.lastIndexOf('|');
++        const stat = parseStatLine(line.slice(0, end));
++        if (stat) {
++          stats.set(stat.name, { ...stat, inode: line.slice(end + 1) });
++        }
++      }
++    }
++    return stats;
++  }
++
++  async rawUsageMany(targets) {
+     const usages = new Map();
+     for (const batch of batches(targets)) {
+       const result = await this.sh(USAGE_MANY_SCRIPT, batch);
+@@ -384,14 +425,18 @@ export class ShellEnv {
+   }
+ 
+   async processes() {
+-    const result = await this.sh(PROCESS_SCRIPT);
++    const result = await (this.probeExecutor ?? this.executor).run([
++      'sh',
++      '-c',
++      PROCESS_SCRIPT,
++    ]);
+     if (result.code !== 0) {
+       return null;
+     }
+     const [selfPid, ...lines] = result.stdout.split('\n');
+     return lines
+       .map((line) =>
+-        /^(\d+)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|(.*)$/.exec(line)
++        /^(\d+)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|(.*)$/.exec(line)
+       )
+       .filter((m) => m && !m[2].startsWith('Z '))
+       .map((m) => ({
+@@ -400,13 +445,43 @@ export class ShellEnv {
+         name: m[3],
+         aliases: processAliases(m[4], m[5]),
+         cwd: m[6] || null,
++        command: m[7],
+       }))
+       .filter((proc) => String(proc.pid) !== selfPid.trim());
+   }
+ 
+   async openPaths() {
+-    const result = await this.sh(OPEN_PATHS_SCRIPT);
++    let result = await (this.probeExecutor ?? this.executor).run([
++      'sh',
++      '-c',
++      OPEN_PATHS_SCRIPT,
++    ]);
++    this.probeDiagnostic = null;
++    if (
++      result.code !== 0 &&
++      this.executor.parent &&
++      this.executor.containerId
++    ) {
++      const diagnostic = result.stderr.trim();
++      trace(
++        'retrying process inspection as privileged root',
++        this.id,
++        diagnostic
++      );
++      const inspector = containerExecutor(
++        this.executor.parent,
++        this.executor.containerId,
++        { user: '0', privileged: true }
++      );
++      result = await inspector.run(['sh', '-c', OPEN_PATHS_SCRIPT]);
++      if (result.code !== 0) {
++        this.probeDiagnostic = `${diagnostic}; privileged inspection failed: ${result.stderr.trim()}`;
++      } else {
++        this.probeExecutor = inspector;
++      }
++    }
+     if (result.code !== 0) {
++      this.probeDiagnostic ??= result.stderr.trim();
+       return null;
+     }
+     return new Set(
+diff --git a/src/exec.js b/src/exec.js
+index a24983d..060f298 100644
+--- a/src/exec.js
++++ b/src/exec.js
+@@ -161,6 +161,7 @@ export function containerExecutor(parent, containerId, options = {}) {
+     docker,
+     'exec',
+     ...(interactive ? ['-i'] : []),
++    ...(options.privileged ? ['--privileged'] : []),
+     ...(options.user ? ['--user', options.user] : []),
+     containerId,
+     ...argv,
+diff --git a/src/git-preserved.js b/src/git-preserved.js
+new file mode 100644
+index 0000000..77ea692
+--- /dev/null
++++ b/src/git-preserved.js
+@@ -0,0 +1,120 @@
++/** Verify unstaged work against cached remote refs without running filters. */
++import { createHash } from 'node:crypto';
++import { createReadStream, promises as fsp } from 'node:fs';
++import path from 'node:path';
++
++async function blob(root, file, algorithm) {
++  const target = path.join(root, file);
++  const stat = await fsp.lstat(target).catch((error) => {
++    if (['ENOENT', 'ENOTDIR'].includes(error.code)) {
++      return null;
++    }
++    throw error;
++  });
++  if (!stat) {
++    return null;
++  }
++  if (!stat.isFile() && !stat.isSymbolicLink()) {
++    throw new Error('non-file change');
++  }
++  const link = stat.isSymbolicLink()
++    ? Buffer.from(await fsp.readlink(target))
++    : null;
++  const hash = createHash(algorithm);
++  hash.update(`blob ${link ? link.length : stat.size}\0`);
++  if (link) {
++    hash.update(link);
++  } else {
++    for await (const chunk of createReadStream(target)) {
++      hash.update(chunk);
++    }
++  }
++  return {
++    oid: hash.digest('hex'),
++    mode: link ? '120000' : stat.mode & 0o111 ? '100755' : '100644',
++  };
++}
++
++/** All changes must be preserved by one ref; staged changes remain protected. */
++export async function preservedWork(root, git) {
++  const status = await git([
++    'status',
++    '--porcelain=v1',
++    '-z',
++    '--untracked-files=all',
++  ]);
++  if (status.code !== 0) {
++    return {};
++  }
++  const records = status.stdout.split('\0').filter(Boolean);
++  const untracked = records.filter((line) => line.startsWith('?? ')).length;
++  const result = { untracked, dirty: records.length };
++  if (
++    !records.length ||
++    records.length > 2000 ||
++    records.some((line) => ![' ', '?'].includes(line[0]))
++  ) {
++    return result;
++  }
++  const refs = await git([
++    'for-each-ref',
++    '--format=%(refname)',
++    'refs/remotes',
++  ]);
++  const format = await git(['rev-parse', '--show-object-format']);
++  if (refs.code !== 0 || format.code !== 0) {
++    return result;
++  }
++  const algorithm = format.stdout.trim();
++  if (!['sha1', 'sha256'].includes(algorithm)) {
++    return result;
++  }
++  try {
++    const files = new Map();
++    for (const record of records) {
++      const file = record.slice(3);
++      files.set(file, await blob(root, file, algorithm));
++    }
++    for (const ref of refs.stdout
++      .trim()
++      .split('\n')
++      .filter(Boolean)
++      .slice(0, 100)) {
++      const tree = await git([
++        'ls-tree',
++        '-r',
++        '-z',
++        ref,
++        '--',
++        ...[...files.keys()].map((file) => `:(literal)${file}`),
++      ]);
++      if (tree.code !== 0) {
++        continue;
++      }
++      const saved = new Map(
++        tree.stdout
++          .split('\0')
++          .filter(Boolean)
++          .map((line) => {
++            const tab = line.indexOf('\t');
++            const [mode, , oid] = line.slice(0, tab).split(' ');
++            return [line.slice(tab + 1), { mode, oid }];
++          })
++      );
++      if (
++        [...files].every(([file, current]) =>
++          current
++            ? saved.get(file)?.oid === current.oid &&
++              saved.get(file)?.mode === current.mode
++            : !saved.has(file)
++        )
++      ) {
++        result.preservedOn = ref.replace(/^refs\/remotes\//, '');
++        break;
++      }
++    }
++  } catch {
++    // Unreadable files and unsupported changes keep the original blocker.
++  }
++  return result;
++}
+diff --git a/src/git.js b/src/git.js
+index b70b07a..f207016 100644
+--- a/src/git.js
++++ b/src/git.js
+@@ -15,6 +15,7 @@ import os from 'node:os';
+ import path from 'node:path';
+ 
+ import { trace } from './exec.js';
++import { preservedWork } from './git-preserved.js';
+ 
+ const GIT_FLAGS = [
+   '--no-optional-locks',
+@@ -93,7 +94,7 @@ export function stateBlockers(label, state) {
+     return [`${label}: ${state.error}`];
+   }
+   const problems = [];
+-  if (state.dirty > 0) {
++  if (state.dirty > 0 && !state.preservedOn) {
+     problems.push(plural(state.dirty, 'uncommitted change'));
+   }
+   if (state.unpushed > 0) {
+@@ -111,8 +112,9 @@ export class GitInspector {
+   /**
+    * @param {object} env environment adapter
+    */
+-  constructor(env) {
++  constructor(env, options = {}) {
+     this.env = env;
++    this.options = options;
+     this.states = new Map();
+     this.roots = new Map();
+     this.available = null;
+@@ -224,6 +226,9 @@ export class GitInspector {
+       return state;
+     }
+     state.dirty = countLines(status.stdout);
++    if (this.options.recognizePreserved && state.dirty > 0) {
++      Object.assign(state, await preservedWork(root, git));
++    }
+     const unpushed = await git([
+       'log',
+       'HEAD',
+diff --git a/src/index.d.ts b/src/index.d.ts
+index be50326..846141d 100644
+--- a/src/index.d.ts
++++ b/src/index.d.ts
+@@ -34,6 +34,8 @@ export interface ScanOptions {
+   exclude?: string[] | string;
+   includeVolumes?: boolean;
+   removeStoppedContainers?: boolean;
++  /** Opt-in age after which failed containers may pass the investigation hold. */
++  investigationMaxAge?: Duration | null;
+   /**
+    * Stopped containers (name, id or id prefix of 12+ characters) the
+    * operator approves one by one, including ones kept for investigation.
+@@ -97,6 +99,12 @@ export interface Item {
+   path: string | null;
+   paths: string[];
+   bytes: number;
++  /** Merged filesystem bytes, including image data, when measured in Docker. */
++  totalBytes?: number;
++  /** Immutable image bytes excluded from reclaimable totals. */
++  imageBytes?: number;
++  /** The object was discovered but its reclaimable size could not be measured. */
++  sizeUnknown?: boolean;
+   newestMtimeMs: number;
+   tier: Tier;
+   reason: string;
+diff --git a/src/liveness.js b/src/liveness.js
+index e4f9a86..49c0cf9 100644
+--- a/src/liveness.js
++++ b/src/liveness.js
+@@ -1,16 +1,20 @@
+ /**
+  * Liveness checks: is anything using a path right now?
+  *
+- * Three independent signals, any of which blocks deletion:
++ * Independent signals, any of which blocks deletion:
+  * - recent writes: newest file mtime inside the stale-age window;
+  * - a relevant tool is running (by process name), optionally only when its
+  *   working directory is inside the project;
+  * - a process holds a file, working directory, or executable inside the path
+  *   (`/proc/<pid>/{fd,cwd,exe}` on Linux, `lsof` on macOS).
++ * - a command argument names a path inside the item (including scripts
++ *   whose interpreter has already closed its input descriptor).
+  *
+  * The cleaner refreshes the probe right before acting on each item.
+  */
+ 
++import path from 'node:path';
++
+ import { isWithin } from './paths.js';
+ import { formatDuration } from './units.js';
+ 
+@@ -25,6 +29,76 @@ function nameMatches(name, candidate) {
+   );
+ }
+ 
++/** Arguments preserved by /proc; command titles are a fallback. */
++export function processArgs(proc) {
++  return (
++    proc.argv ??
++    (proc.command ?? '')
++      .match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g)
++      ?.map((arg) => arg.replace(/^["']|["']$/g, '')) ??
++    []
++  );
++}
++
++function scriptIndex(args) {
++  const first = path.posix.basename(args[0] ?? '');
++  if (!/^(node|nodejs|bun|deno|python[\d.]*|bash|sh)$/.test(first)) {
++    return 0;
++  }
++  // Only the interpreter's script operand; option values and arbitrary
++  // arguments are not executable names.
++  let index = 1;
++  while (args[index]?.startsWith('-')) {
++    if (['-e', '--eval', '-p', '--print', '-c'].includes(args[index])) {
++      return -1;
++    }
++    index += ['-r', '--require', '--import', '--loader'].includes(args[index])
++      ? 2
++      : 1;
++  }
++  return index;
++}
++
++function commandNames(proc) {
++  const args = processArgs(proc);
++  const first = path.posix.basename(args[0] ?? '');
++  const names = [first];
++  if (/^npm(?: |$)/.test(proc.name ?? '') || /^npm(?: |$)/.test(first)) {
++    names.push('npm');
++  }
++  const index = scriptIndex(args);
++  if (index > 0) {
++    const script = path.posix.basename(args[index] ?? '');
++    names.push(
++      script,
++      ...(script === 'npm-cli.js' ? ['npm'] : []),
++      ...(script === 'npx-cli.js' ? ['npx'] : [])
++    );
++  }
++  // An explicit npm launcher package is also a tool (e.g. Playwright MCP).
++  if (isNpmExec(proc)) {
++    const packageArg = args.find((arg) => /^@[^/]+\/[^/]+$/.test(arg));
++    if (packageArg) {
++      names.push(packageArg.slice(1).split('/')[0]);
++    }
++  }
++  return names;
++}
++
++export function isNpmExec(proc) {
++  const args = processArgs(proc);
++  const index = scriptIndex(args);
++  const executable = path.posix.basename(args[Math.max(index, 0)] ?? '');
++  return (
++    /^npm (exec|x)(?: |$)|^npx(?: |$)/.test(proc.name ?? '') ||
++    /^npm (exec|x)(?: |$)|^npx(?: |$)/.test(args[0] ?? '') ||
++    (index >= 0 &&
++      (['npx', 'npx-cli.js'].includes(executable) ||
++        (['npm', 'npm-cli.js'].includes(executable) &&
++          ['exec', 'x'].includes(args[index + 1]))))
++  );
++}
++
+ /**
+  * Name of `proc` that matches one of `names`, or null. Besides the kernel
+  * name (`comm`, which programs may rename: Node.js calls its main thread
+@@ -32,18 +106,12 @@ function nameMatches(name, candidate) {
+  * base names.
+  */
+ export function matchingName(proc, names) {
+-  const own = [proc.name ?? '', ...(proc.aliases ?? [])];
++  const own = [proc.name ?? '', ...(proc.aliases ?? []), ...commandNames(proc)];
+   for (const name of own) {
+     if (name && names.some((candidate) => nameMatches(name, candidate))) {
+       return name;
+     }
+   }
+-  const commandWords = (proc.command ?? '').toLowerCase().split(/[^a-z0-9_-]+/);
+-  for (const candidate of names) {
+-    if (commandWords.includes(candidate.toLowerCase())) {
+-      return candidate;
+-    }
+-  }
+   return null;
+ }
+ 
+@@ -68,10 +136,10 @@ export class LivenessProbe {
+     if (!force && this.now() - this.refreshedAt < this.refreshMs) {
+       return;
+     }
++    this.openPaths = await this.env.openPaths().catch(() => null);
+     const processes = await this.env.processes().catch(() => null);
+     this.listed = processes !== null;
+     this.processes = processes ?? [];
+-    this.openPaths = await this.env.openPaths().catch(() => null);
+     this.probeError =
+       (processes === null || this.openPaths === null) &&
+       (this.env.platform === 'linux' || this.env.platform === 'darwin');
+@@ -111,12 +179,18 @@ export class LivenessProbe {
+     return null;
+   }
+ 
+-  runningTool(names, cwd) {
++  runningTool(names, cwd, item = {}) {
+     if (!names || names.length === 0) {
+       return null;
+     }
+     const pathApi = this.env.path;
+     for (const proc of this.processes) {
++      if (
++        ['npm-cache', 'node-gyp-cache', 'npx-cache'].includes(item.rule) &&
++        isNpmExec(proc)
++      ) {
++        continue;
++      }
+       const name = matchingName(proc, names);
+       if (!name) {
+         continue;
+@@ -169,6 +243,25 @@ export class LivenessProbe {
+     return open;
+   }
+ 
++  commandUsage(paths) {
++    for (const proc of this.processes) {
++      for (const arg of processArgs(proc)) {
++        const candidate = arg.startsWith('/')
++          ? arg
++          : proc.cwd && !arg.startsWith('-')
++            ? this.env.path.resolve(proc.cwd, arg)
++            : null;
++        if (
++          candidate &&
++          paths.some((target) => isWithin(candidate, target, this.env.path))
++        ) {
++          return `in use: ${candidate} (pid ${proc.pid})`;
++        }
++      }
++    }
++    return null;
++  }
++
+   /**
+    * First reason the item is busy, or null when it is idle. Items with
+    * `checks.perPath` leave open files to `openPathsOf`: the caller skips
+@@ -180,11 +273,12 @@ export class LivenessProbe {
+     const paths = checks.perPath ? [] : (item.paths ?? []);
+     return (
+       (this.probeError
+-        ? 'cannot verify process and open-file activity'
++        ? `cannot verify process and open-file activity${this.env.probeDiagnostic ? `: ${this.env.probeDiagnostic}` : ''}`
+         : null) ??
+       (checks.mtime === false ? null : this.recentWrite(item.newestMtimeMs)) ??
+-      this.runningTool(checks.busy, checks.cwd) ??
+-      this.openInside(paths)
++      this.runningTool(checks.busy, checks.cwd, item) ??
++      this.openInside(paths) ??
++      this.commandUsage(paths)
+     );
+   }
+ }
+diff --git a/src/options.js b/src/options.js
+index b37daa7..238cd5f 100644
+--- a/src/options.js
++++ b/src/options.js
+@@ -21,6 +21,7 @@ export const DEFAULTS = {
+   exclude: [],
+   includeVolumes: false,
+   removeStoppedContainers: false,
++  investigationMaxAge: null,
+   removeContainers: [],
+   removeImages: [],
+   allowDirtyRepos: false,
+@@ -77,6 +78,10 @@ export function resolveOptions(input = {}) {
+     dockerDepth: Number(merged.dockerDepth),
+     staleAgeMs: toMs(staleAge),
+     inactiveMs: toMs(merged.inactive),
++    investigationMaxAgeMs:
++      merged.investigationMaxAge === null
++        ? null
++        : toMs(merged.investigationMaxAge),
+     minSizeBytes: toBytes(merged.minSize),
+     journalKeepBytes: toBytes(merged.journalKeep),
+     containerFilter: toList(merged.containers),
+diff --git a/src/report.js b/src/report.js
+index 8dae7e5..ff8607a 100644
+--- a/src/report.js
++++ b/src/report.js
+@@ -4,7 +4,7 @@
+  */
+ 
+ import { TIERS, consentFlag } from './items.js';
+-import { formatBytes } from './units.js';
++import { formatBytes, formatDuration } from './units.js';
+ 
+ const DEFAULT_LIMIT = 25;
+ 
+@@ -51,7 +51,12 @@ function itemLine(item, showEnv) {
+   const confirm = item.requiresConfirmation
+     ? `  (needs ${consentFlag(item)})`
+     : '';
+-  return `  ${pad(formatBytes(item.bytes), 10)}  ${env}${item.rule}  ${itemLocation(item)}${confirm}`;
++  const storage = item.sizeUnknown
++    ? '  (reclaimable size unknown)'
++    : item.imageBytes
++      ? `  (${formatBytes(item.imageBytes)} in image; rebuild the image to reclaim)`
++      : '';
++  return `  ${pad(formatBytes(item.bytes), 10)}  ${env}${item.rule}  ${itemLocation(item)}${confirm}${storage}`;
+ }
+ 
+ function limited(lines, limit) {
+@@ -108,7 +113,12 @@ function repoSummary(repo) {
+   }
+   const parts = [];
+   if (repo.dirty) {
+-    parts.push(`${repo.dirty} uncommitted`);
++    parts.push(
++      `${repo.dirty} uncommitted${repo.untracked ? ` (${repo.untracked} untracked)` : ''}`
++    );
++    if (repo.preservedOn) {
++      parts.push(`uncommitted work preserved on ${repo.preservedOn}`);
++    }
+   }
+   if (repo.unpushed) {
+     parts.push(`${repo.unpushed} unpushed`);
+@@ -155,6 +165,14 @@ function containerLines(container, stoppedItems) {
+     lines.push(`      ${ended}`);
+   }
+   const item = stoppedItems.get(container.id);
++  if (container.sizeUnknown) {
++    lines.push('      writable layer size unknown');
++  }
++  if (container.pinnedImage) {
++    lines.push(
++      `      ${formatBytes(container.pinnedImage.bytes)} unique image bytes pinned by this container (${container.pinnedImage.ref}); after removing it, approve the unused image separately with --remove-image ${container.pinnedImage.ref}`
++    );
++  }
+   if (item?.container?.investigation) {
+     lines.push(`      ${item.container.investigation}`);
+   }
+@@ -192,6 +210,25 @@ function imageLine(item) {
+     )}) unused, ${formatBytes(image.bytes)}, ${created}${lastUseText(image.lastUsedBy)}${consent}`;
+ }
+ 
++function investigationSummary(docker, stoppedItems, createdAt) {
++  const lines = [];
++  const kept = docker.containers.filter(
++    (container) => stoppedItems.get(container.id)?.container?.investigation
++  );
++  if (kept.length) {
++    const dates = kept
++      .map((container) => Date.parse(container.owner?.finishedAt))
++      .filter(Number.isFinite);
++    const age = dates.length
++      ? `, oldest ${formatDuration(Math.max(0, Date.parse(createdAt) - Math.min(...dates)))}`
++      : '';
++    lines.push(
++      `  ${formatBytes(kept.reduce((sum, container) => sum + container.bytes, 0))} in ${kept.length} containers kept for investigation${age}`
++    );
++  }
++  return lines;
++}
++
+ function dockerSection(report) {
+   const docker = report.docker;
+   if (!docker || docker.daemons.length === 0) {
+@@ -202,7 +239,11 @@ function dockerSection(report) {
+       .filter((item) => item.container)
+       .map((item) => [item.container.id, item])
+   );
+-  const lines = ['', 'DOCKER'];
++  const lines = [
++    '',
++    'DOCKER',
++    ...investigationSummary(docker, stoppedItems, report.createdAt),
++  ];
+   for (const daemon of docker.daemons) {
+     lines.push(
+       `  daemon ${daemon.name} (depth ${daemon.depth}, ${daemon.serverVersion}, ${daemon.driver}) via ${daemon.env}`
+@@ -214,9 +255,20 @@ function dockerSection(report) {
+   for (const item of report.items.filter((entry) => entry.image)) {
+     lines.push(imageLine(item));
+   }
++  const grouped = new Map();
+   for (const hint of docker.hints ?? []) {
++    const key = `${(hint.images ?? [hint.image]).join(', ')}\0${hint.hint}`;
++    const group = grouped.get(key);
++    if (group) {
++      group.bytes += hint.bytes;
++      group.layers += 1;
++    } else {
++      grouped.set(key, { ...hint, layers: 1 });
++    }
++  }
++  for (const hint of grouped.values()) {
+     lines.push(
+-      `  hint ${(hint.images ?? [hint.image]).join(', ')}: ${formatBytes(hint.bytes)} layer, ${hint.hint}`
++      `  hint ${(hint.images ?? [hint.image]).join(', ')}: ${formatBytes(hint.bytes)} in ${hint.layers} layer${hint.layers === 1 ? '' : 's'}, ${hint.hint}`
+     );
+   }
+   for (const volume of docker.volumes ?? []) {
+@@ -246,7 +298,7 @@ function errorsSection(errors) {
+   }
+   return [
+     '',
+-    'ERRORS',
++    'ERRORS (scan incomplete)',
+     ...errors.map(
+       (error) => `  ${error.env} ${error.scanner}: ${error.message}`
+     ),
+@@ -310,7 +362,7 @@ function healthLines(records) {
+     if (!record.available) {
+       return `  ${record.envLabel}: processes could not be listed`;
+     }
+-    return `  ${record.envLabel}: ${record.watched.length} watched processes still running`;
++    return `  ${record.envLabel}: ${record.watched.length} watched processes still running: ${record.watched.map((proc) => `${proc.name} (pid ${proc.pid})`).join(', ')}`;
+   });
+   return lines.length > 0 ? ['', 'Task health:', ...lines] : [];
+ }
+diff --git a/src/rules/ecosystems.js b/src/rules/ecosystems.js
+index 6ef2f90..3ec0852 100644
+--- a/src/rules/ecosystems.js
++++ b/src/rules/ecosystems.js
+@@ -31,6 +31,7 @@ export const ECOSYSTEMS = [
+     caches: [
+       {
+         id: 'npm-cache',
++        mtime: true,
+         description: 'npm download cache',
+         paths: ['~/.npm/_cacache', '{LOCALAPPDATA}/npm-cache/_cacache'],
+         native: { tool: 'npm', argv: ['npm', 'cache', 'clean', '--force'] },
+@@ -39,7 +40,8 @@ export const ECOSYSTEMS = [
+       {
+         id: 'npx-cache',
+         description: 'npx package cache',
+-        paths: ['~/.npm/_npx', '{LOCALAPPDATA}/npm-cache/_npx'],
++        paths: ['~/.npm/_npx/*', '{LOCALAPPDATA}/npm-cache/_npx/*'],
++        minAge: 'stale',
+         busy: ['npm', 'npx'],
+       },
+       {
+@@ -84,6 +86,7 @@ export const ECOSYSTEMS = [
+       },
+       {
+         id: 'node-gyp-cache',
++        mtime: true,
+         description: 'node-gyp headers cache',
+         paths: ['~/.cache/node-gyp', '~/Library/Caches/node-gyp'],
+         busy: ['node-gyp', 'npm'],
+@@ -724,7 +727,6 @@ export const ECOSYSTEMS = [
+         id: 'opam-download-cache',
+         description: 'opam download cache',
+         paths: ['~/.opam/download-cache'],
+-        native: { tool: 'opam', argv: ['opam', 'clean', '--download-cache'] },
+         busy: ['opam', 'dune', 'ocaml'],
+       },
+     ],
+diff --git a/src/rules/other.js b/src/rules/other.js
+index 8292ec8..9eb3ff4 100644
+--- a/src/rules/other.js
++++ b/src/rules/other.js
+@@ -464,6 +464,29 @@ export const OTHER_RULES = [
+     aggregate: true,
+     paths: ['/var/lib/systemd/coredump/*', '/var/crash/*', '/cores/*'],
+   },
++  {
++    id: 'start-command-isolation-logs',
++    ecosystem: 'agents',
++    scope: 'tmp',
++    description: 'old start-command Docker isolation logs',
++    tier: 'moderate',
++    paths: ['{TMP}/start-command/logs/isolation/docker/*.log'],
++    minAge: 'stale',
++    busy: [],
++  },
++  {
++    id: 'sanitized-upload-staging',
++    ecosystem: 'agents',
++    scope: 'tmp',
++    description: 'old sanitized log upload staging data',
++    tier: 'moderate',
++    paths: [
++      '{TMP}/log-tmp-hive-mind-log-upload-*-sanitized-*',
++      '{TMP}/log-home-box-hive-telegram-bot-*',
++    ],
++    minAge: 'stale',
++    busy: [],
++  },
+   {
+     id: 'gh-issue-solver-workdirs',
+     ecosystem: 'tmp',
+diff --git a/src/rules/versions.js b/src/rules/versions.js
+index 9f57830..4538530 100644
+--- a/src/rules/versions.js
++++ b/src/rules/versions.js
+@@ -101,6 +101,29 @@ export function compareVersions(left, right) {
+ }
+ 
+ export const VERSION_RULES = [
++  {
++    id: 'claude-code-versions',
++    ecosystem: 'agents',
++    manager: 'Claude Code',
++    description: 'Claude Code binary',
++    dirs: ['~/.local/share/claude/versions/*'],
++    installTypes: ['file'],
++    defaultLinks: ['~/.local/bin/claude'],
++    busy: ['claude'],
++    recheck: true,
++  },
++  {
++    id: 'copilot-cli-versions',
++    ecosystem: 'agents',
++    manager: 'Copilot CLI',
++    description: 'Copilot CLI package',
++    dirs: ['~/.cache/copilot/pkg/*/*'],
++    defaultLinks: ['~/.local/bin/copilot'],
++    linkVersion: (target) => /\/pkg\/[^/]+\/([^/]+)/.exec(target ?? '')?.[1],
++    busy: ['copilot'],
++    recheck: true,
++  },
++
+   {
+     id: 'nvm-node',
+     ecosystem: 'javascript',
+diff --git a/src/scan.js b/src/scan.js
+index 53a00c5..f6ac2f3 100644
+--- a/src/scan.js
++++ b/src/scan.js
+@@ -3,6 +3,7 @@
+  * Docker, inside running containers and nested daemons. Never deletes.
+  */
+ 
++import { configureContainerHost } from './docker/writable.js';
+ import { scanDocker } from './docker/scan.js';
+ import { LocalEnv } from './env/local.js';
+ import { block, tierTotals } from './items.js';
+@@ -43,6 +44,7 @@ const RESCAN_OPTIONS = new Set([
+   'exclude',
+   'includeVolumes',
+   'removeStoppedContainers',
++  'investigationMaxAge',
+   'removeContainers',
+   'removeImages',
+   'allowDirtyRepos',
+@@ -164,6 +166,32 @@ export async function scanEnvironment(env, options, extra = {}) {
+     }
+     trace('scanner', name, 'in', env.id, `${Date.now() - started}ms`);
+   }
++  if (env.writableLayer) {
++    const usages = await env.usageMany([
++      ...new Set(items.flatMap((item) => item.paths)),
++    ]);
++    for (const item of items.filter((entry) => entry.paths.length > 0)) {
++      const measured = item.paths
++        .map((target) => usages.get(target))
++        .filter(Boolean);
++      item.bytes = measured.reduce((sum, usage) => sum + usage.bytes, 0);
++      item.totalBytes = measured.reduce(
++        (sum, usage) => sum + (usage.totalBytes ?? usage.bytes),
++        0
++      );
++      item.imageBytes = measured.reduce(
++        (sum, usage) => sum + (usage.imageBytes ?? 0),
++        0
++      );
++      item.sizeUnknown = measured.some((usage) => usage.sizeUnknown);
++      if (!item.sizeUnknown && item.bytes === 0 && item.imageBytes > 0) {
++        block(
++          item,
++          'all bytes are in the image layer; rebuild the image to reclaim them'
++        );
++      }
++    }
++  }
+   return items;
+ }
+ 
+@@ -173,7 +201,7 @@ export async function scanEnvironment(env, options, extra = {}) {
+  * @returns {Promise<string[]>}
+  */
+ export async function selfContainerIds(env) {
+-  if (env.platform !== 'linux') {
++  if (env.platform !== 'linux' || typeof env.readText !== 'function') {
+     return [];
+   }
+   const ids = new Set();
+@@ -237,7 +265,10 @@ function underDaemonRoot(item, daemons, pathApi) {
+ export function filterItems(items, options, daemons = [], pathApi) {
+   return items.filter(
+     (item) =>
+-      item.bytes >= options.minSizeBytes &&
++      (item.bytes >= options.minSizeBytes ||
++        item.sizeUnknown ||
++        item.imageBytes >= options.minSizeBytes ||
++        item.container?.pinnedImage?.bytes >= options.minSizeBytes) &&
+       matchesOnly(item, options.only) &&
+       !excluded(item, options.exclude, pathApi) &&
+       !underDaemonRoot(item, daemons, pathApi)
+@@ -269,6 +300,7 @@ async function dockerSection(env, options, errors) {
+       { ...options, selfContainerIds: await selfContainerIds(env) },
+       (inner) => scanEnvironment(inner, options, { errors })
+     );
++    errors.push(...result.errors);
+     if (options.docker === true && result.daemons.length === 0) {
+       errors.push({
+         env: env.id,
+@@ -314,6 +346,7 @@ export async function scan(input = {}) {
+   const env = input.env ?? new LocalEnv();
+   const startedAt = options.now();
+   const errors = [];
++  await configureContainerHost(env, await selfContainerIds(env));
+   const hostItems =
+     options.host === false
+       ? []
+diff --git a/src/scanners/global.js b/src/scanners/global.js
+index b6639df..0bbdd4d 100644
+--- a/src/scanners/global.js
++++ b/src/scanners/global.js
+@@ -142,7 +142,7 @@ async function buildItem(context, rule, base, group) {
+     checks: {
+       busy: rule.busy ?? [],
+       cwd: scope === 'tmp' ? paths[0] : null,
+-      mtime: scope === 'tmp' || Boolean(rule.minAge),
++      mtime: rule.mtime ?? (scope === 'tmp' || Boolean(rule.minAge)),
+     },
+   });
+   block(item, blocker);
+diff --git a/src/scanners/versions.js b/src/scanners/versions.js
+index a549c8e..3bf49bc 100644
+--- a/src/scanners/versions.js
++++ b/src/scanners/versions.js
+@@ -26,7 +26,11 @@ async function installDirs(env, rule, home) {
+       if ((rule.exclude ?? []).includes(name)) {
+         continue;
+       }
+-      if ((await env.stat(candidate))?.type !== 'dir') {
++      if (
++        !(rule.installTypes ?? ['dir']).includes(
++          (await env.stat(candidate))?.type
++        )
++      ) {
+         continue;
+       }
+       if (
+@@ -86,7 +90,11 @@ async function managerRefs(env, rule, home, installs) {
+     refs.push(...(await aliasRefs(env, expand(rule.aliasDir))));
+   }
+   for (const link of rule.defaultLinks ?? []) {
+-    refs.push(...linkRefs(await env.readLink(expand(link))));
++    const target = await env.readLink(expand(link));
++    refs.push(...linkRefs(target));
++    if (rule.linkVersion) {
++      refs.push(rule.linkVersion(target));
++    }
+   }
+   if (rule.currentLink) {
+     const parents = new Set(installs.map((dir) => env.path.dirname(dir)));
+@@ -195,7 +203,11 @@ async function ruleItems(context, rule, home, pins) {
+       tier: 'moderate',
+       reason: `not the ${rule.manager} default, not pinned by a scanned project, not the newest`,
+       checks: { busy: rule.busy ?? [], cwd: dir, mtime: true },
+-      recheck: rule.id === 'pyenv-python' ? { type: 'pyenv-envs' } : null,
++      recheck: rule.recheck
++        ? { type: 'version', home }
++        : rule.id === 'pyenv-python'
++          ? { type: 'pyenv-envs' }
++          : null,
+     });
+     await blockPyenvEnvironments(env, rule, dir, item);
+     const busy = scanTimeBusy(context, item);
+diff --git a/tests/docker.test.js b/tests/docker.test.js
+index 23d8a9f..2742c30 100644
+--- a/tests/docker.test.js
++++ b/tests/docker.test.js
+@@ -417,7 +417,7 @@ describe('cleaning stopped containers', () => {
+     });
+ 
+     const entries = audit.entries.filter((e) => e.kind === 'container');
+-    expect(entries.length).toBe(3);
++    expect(entries.length).toBe(2);
+     for (const entry of entries) {
+       expect(entry.status).toBe('skipped');
+       expect(entry.reason).toContain('--remove-stopped-containers');
+@@ -552,7 +552,7 @@ describe('cleaning stopped containers', () => {
+         },
+       });
+ 
+-      expect(asked).toEqual(['s-3', 's-2']);
++      expect(asked).toEqual(['s-2']);
+       expect(audit.entries.every((e) => e.status === 'skipped')).toBe(true);
+       expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
+     } finally {
+diff --git a/tests/helpers/fake-docker.js b/tests/helpers/fake-docker.js
+index 2cdbe07..9e70c93 100644
+--- a/tests/helpers/fake-docker.js
++++ b/tests/helpers/fake-docker.js
+@@ -10,6 +10,7 @@ import { EventEmitter } from 'node:events';
+ import { PassThrough } from 'node:stream';
+ import { setImmediate } from 'node:timers';
+ 
++import { parseDockerSize } from '../../src/docker/cli.js';
+ import { scanDocker } from '../../src/docker/scan.js';
+ import { makeItem } from '../../src/items.js';
+ import { resolveOptions } from '../../src/options.js';
+@@ -120,15 +121,32 @@ export class FakeDockerWorld {
+       info: () => ok(JSON.stringify(daemon.info)),
+       system: () => this.#systemDf(daemon, sub, args),
+       ps: () =>
+-        ok(daemon.containers.map((c) => JSON.stringify(psRow(c))).join('\n')),
++        ok(
++          daemon.containers
++            .map((c) => {
++              const row = psRow(c);
++              return [row.ID, row.Names, row.State, row.Status, row.Image].join(
++                '\t'
++              );
++            })
++            .join('\n')
++        ),
+       inspect: () =>
+         ok(
+           JSON.stringify(
+             args
+-              .slice(3)
++              .slice(args.includes('--size') ? 4 : 3)
+               .map((id) => this.#find(name, id))
+               .filter(Boolean)
+-              .map(inspectObject)
++              .map((container) => ({
++                ...inspectObject(container),
++                ...(args.includes('--size')
++                  ? {
++                      SizeRw: parseDockerSize(container.size),
++                      SizeRootFs: 80e6,
++                    }
++                  : {}),
++              }))
+           )
+         ),
+       diff: () => {
+@@ -172,6 +190,11 @@ export class FakeDockerWorld {
+   }
+ 
+   #image(daemon, sub, args) {
++    if (sub === 'ls') {
++      return ok(
++        (daemon.images ?? []).map((image) => JSON.stringify(image)).join('\n')
++      );
++    }
+     if (sub !== 'rm') {
+       return fail(`unsupported: docker image ${sub}`);
+     }
+@@ -248,6 +271,7 @@ function inspectObject(container) {
+       Error: container.error ?? '',
+       FinishedAt: container.finishedAt ?? '2026-09-20T10:00:00Z',
+     },
++    Image: container.imageId ?? container.image ?? 'ubuntu:24.04',
+     Config: {
+       Labels: container.labels ?? {},
+       Env: container.env ?? [],
+@@ -316,7 +340,7 @@ export async function scanWorld(fake, input = {}) {
+       ...result.environments,
+     ],
+     docker: result,
+-    errors: [],
++    errors: result.errors,
+     startedAt: options.now(),
+   });
+   return { env, result, report, scanned };
+diff --git a/tests/helpers/fixtures.js b/tests/helpers/fixtures.js
+index c4ed0b9..a76ad85 100644
+--- a/tests/helpers/fixtures.js
++++ b/tests/helpers/fixtures.js
+@@ -164,11 +164,17 @@ function gitEnv() {
+ }
+ 
+ export function git(cwd, ...args) {
+-  return execFileSync('git', ['-c', 'init.defaultBranch=main', ...args], {
+-    cwd,
+-    env: gitEnv(),
+-    stdio: ['ignore', 'pipe', 'pipe'],
+-  }).toString();
++  // Stopped-repository fixtures must have no background writers: detached
++  // maintenance can remove objects/maintenance.lock during a recursive copy.
++  return execFileSync(
++    'git',
++    ['-c', 'init.defaultBranch=main', '-c', 'maintenance.auto=false', ...args],
++    {
++      cwd,
++      env: gitEnv(),
++      stdio: ['ignore', 'pipe', 'pipe'],
++    }
++  ).toString();
+ }
+ 
+ /**
+@@ -179,6 +185,7 @@ export function pushedRepo(dir) {
+   const remote = `${dir}-remote.git`;
+   mkdirSync(dir, { recursive: true });
+   git(dirname(dir), 'init', '-q', '--bare', remote);
++  git(remote, 'config', 'maintenance.auto', 'false');
+   git(dir, 'init', '-q');
+   writeFileSync(join(dir, 'README.md'), 'fixture\n');
+   writeFileSync(join(dir, '.gitignore'), 'node_modules/\n');
+diff --git a/tests/integration/dind.mjs b/tests/integration/dind.mjs
+index deef272..7f9802b 100644
+--- a/tests/integration/dind.mjs
++++ b/tests/integration/dind.mjs
+@@ -178,8 +178,9 @@ function checkScan(report) {
+   assert.deepEqual(stopped.blockers, []);
+   assert.equal(stopped.requiresConfirmation, 'removeStoppedContainers');
+   const unsaved = stoppedNamed(report.items, 'unsaved-work');
+-  assert.equal(unsaved.container.gitCheckDeferred, true);
+-  assert.deepEqual(unsaved.container.repos, []);
++  assert.notEqual(unsaved.container.gitCheckDeferred, true);
++  assert.ok(unsaved.container.repos.length > 0);
++  assert.ok(unsaved.blockers.length > 0);
+   assert.ok(report.errors.length === 0, JSON.stringify(report.errors));
+ }
+ 
+diff --git a/tests/issue-14-caches.test.js b/tests/issue-14-caches.test.js
+new file mode 100644
+index 0000000..af2e21f
+--- /dev/null
++++ b/tests/issue-14-caches.test.js
+@@ -0,0 +1,202 @@
++import { describe, it, expect } from 'test-anywhere';
++import { existsSync, mkdirSync, symlinkSync, rmSync } from 'node:fs';
++import { join } from 'node:path';
++import { scan } from '../src/scan.js';
++import { clean } from '../src/clean.js';
++import { scanAudit, runCli } from '../src/cli.js';
++import { investigationBlocker } from '../src/docker/containers.js';
++import {
++  fixtureEnv,
++  tempRoot,
++  removeRoot,
++  writeBlob,
++  age,
++  DAY_MS,
++  readOnlyRuntime,
++  scanInput,
++} from './helpers/fixtures.js';
++
++async function fixture(callback) {
++  if (readOnlyRuntime()) {
++    return;
++  }
++  const root = tempRoot('dss-issue14-');
++  try {
++    await callback(root, join(root, 'home'), fixtureEnv(root));
++  } finally {
++    removeRoot(root);
++  }
++}
++
++describe('issue 14 missing caches and logs', () => {
++  it('deletes opam download files without ever invoking opam', async () =>
++    fixture(async (root, home, env) => {
++      const target = join(home, '.opam/download-cache');
++      writeBlob(join(target, 'blob'));
++      env.currentHome = home;
++      env.which = async (command) => command === 'opam';
++      const report = await scan(
++        scanInput(env, [], { scanners: ['global'], noNative: false })
++      );
++      expect(
++        report.items.find((item) => item.rule === 'opam-download-cache').action
++          .type
++      ).toBe('remove');
++      await clean(report, { env, audit: false, docker: false });
++      expect(existsSync(target)).toBe(false);
++    }));
++
++  it('finds aged isolation logs and sanitized upload staging paths', async () =>
++    fixture(async (root, home, env) => {
++      const tmp = join(root, 'tmp');
++      env.tmpDirs = async () => [tmp];
++      const log = join(tmp, 'start-command/logs/isolation/docker/task.log');
++      const staging = join(
++        tmp,
++        'log-tmp-hive-mind-log-upload-123-sanitized-456'
++      );
++      writeBlob(log);
++      writeBlob(join(staging, 'payload.log'));
++      writeBlob(join(tmp, 'log-home-box-hive-telegram-bot-456/payload.log'));
++      writeBlob(
++        join(
++          tmp,
++          'log-tmp-hive-mind-log-upload-active-sanitized-new/payload.log'
++        )
++      );
++      age(log, 3 * DAY_MS);
++      age(staging, 3 * DAY_MS);
++      const report = await scan(scanInput(env, [], { scanners: ['global'] }));
++      expect(
++        report.items.some(
++          (item) =>
++            item.rule === 'start-command-isolation-logs' && item.path === log
++        )
++      ).toBe(true);
++      expect(
++        report.items.some(
++          (item) =>
++            item.rule === 'sanitized-upload-staging' && item.path === staging
++        )
++      ).toBe(true);
++      expect(
++        report.items.some((item) => item.path.includes('active-sanitized'))
++      ).toBe(false);
++    }));
++
++  it('keeps newest and current Claude binaries and Copilot packages', async () =>
++    fixture(async (root, home, env) => {
++      const versions = join(home, '.local/share/claude/versions');
++      const packages = join(home, '.cache/copilot/pkg/linux-x64');
++      for (const version of ['2.1.288', '2.1.289', '2.1.292']) {
++        writeBlob(join(versions, version));
++      }
++      for (const version of ['1.0.91', '1.0.92']) {
++        writeBlob(join(packages, version, 'copilot'));
++      }
++      mkdirSync(join(home, '.local/bin'), { recursive: true });
++      symlinkSync(join(versions, '2.1.289'), join(home, '.local/bin/claude'));
++      age(root, 3 * DAY_MS);
++      const report = await scan(scanInput(env, [], { scanners: ['versions'] }));
++      expect(
++        report.items
++          .filter((item) => item.rule === 'claude-code-versions')
++          .map((item) => item.path)
++      ).toEqual([join(versions, '2.1.288')]);
++      expect(
++        report.items
++          .filter((item) => item.rule === 'copilot-cli-versions')
++          .map((item) => item.path)
++      ).toEqual([join(packages, '1.0.91')]);
++      rmSync(join(versions, '2.1.292'));
++      rmSync(join(home, '.local/bin/claude'));
++      symlinkSync(join(versions, '2.1.288'), join(home, '.local/bin/claude'));
++      const audit = await clean(report, {
++        env,
++        tier: 'moderate',
++        docker: false,
++        audit: false,
++      });
++      expect(
++        audit.entries.find((entry) => entry.rule === 'claude-code-versions')
++          .status
++      ).toBe('skipped');
++      expect(existsSync(join(versions, '2.1.288'))).toBe(true);
++    }));
++});
++
++describe('issue 14 reporting and consent', () => {
++  it('embeds the scan items and blockers in the audit report', () => {
++    if (readOnlyRuntime()) {
++      return;
++    }
++    const item = {
++      id: 'x',
++      env: 'host',
++      rule: 'npm-cache',
++      blockers: ['busy'],
++    };
++    const audit = scanAudit({ environments: [{ id: 'host' }], items: [item] });
++    expect(audit.report.items).toEqual([item]);
++  });
++
++  it('returns a failure exit code for an incomplete JSON scan', async () => {
++    if (readOnlyRuntime()) {
++      return;
++    }
++    const root = tempRoot();
++    let output = '';
++    let errors = '';
++    try {
++      const code = await runCli(
++        ['docker', 'scan', '--json', '--audit-dir', root],
++        {
++          io: {
++            stdout: (text) => {
++              output += text;
++            },
++            stderr: (text) => {
++              errors += text;
++            },
++          },
++          api: {
++            scan: async () => ({
++              items: [],
++              environments: [],
++              errors: [{ message: 'snapshot missing' }],
++            }),
++          },
++        }
++      );
++      expect(code).toBe(1);
++      expect(JSON.parse(output).errors[0].message).toBe('snapshot missing');
++      expect(errors).toBe('');
++    } finally {
++      removeRoot(root);
++    }
++  });
++
++  it('lifts investigation holds only past the explicit age and a known end time', () => {
++    const now = () => Date.parse('2026-10-08T12:00:00Z');
++    const options = { now, investigationMaxAgeMs: 48 * 3600e3 };
++    expect(
++      investigationBlocker(
++        { ExitCode: 1, FinishedAt: '2026-10-05T12:00:00Z' },
++        'abc',
++        'box',
++        options
++      )
++    ).toBe(null);
++    expect(
++      investigationBlocker(
++        { ExitCode: 1, FinishedAt: '2026-10-08T11:00:00Z' },
++        'abc',
++        'box',
++        options
++      )
++    ).toMatch(/investigation/);
++    expect(
++      investigationBlocker({ ExitCode: 1 }, 'abc', 'box', options)
++    ).toMatch(/investigation/);
++  });
++});
+diff --git a/tests/issue-14-docker.test.js b/tests/issue-14-docker.test.js
+new file mode 100644
+index 0000000..43cd148
+--- /dev/null
++++ b/tests/issue-14-docker.test.js
+@@ -0,0 +1,146 @@
++import { describe, it, expect } from 'test-anywhere';
++import { DockerCli } from '../src/docker/cli.js';
++import { filterItems } from '../src/scan.js';
++import { resolveOptions } from '../src/options.js';
++import { formatReport } from '../src/report.js';
++import {
++  FakeDockerWorld,
++  daemonInfo,
++  scanWorld,
++} from './helpers/fake-docker.js';
++
++function world() {
++  return new FakeDockerWorld({
++    host: {
++      info: daemonInfo('HOST', 'host-daemon'),
++      containers: [
++        {
++          id: 'a1',
++          name: 'failed-task',
++          state: 'exited',
++          exitCode: 127,
++          size: '573kB',
++          image: 'resume/task:1',
++        },
++      ],
++      images: [
++        {
++          ID: 'img',
++          Repository: 'resume/task',
++          Tag: '1',
++          Containers: '1',
++          Size: '5GB',
++          UniqueSize: '4.4GB',
++        },
++      ],
++    },
++  });
++}
++
++function brokenDf(fake) {
++  const original = fake.run.bind(fake);
++  fake.run = (argv) =>
++    argv[0] === 'docker' && argv[1] === 'system'
++      ? {
++          code: 1,
++          stdout: '',
++          stderr: 'snapshotter.Usage failed: no such file or directory',
++        }
++      : original(argv);
++}
++
++describe('issue 14 Docker discovery', () => {
++  it('does not ask docker ps to compute writable layer sizes', async () => {
++    const calls = [];
++    const docker = new DockerCli({
++      run: async (argv) => {
++        calls.push(argv);
++        return {
++          code: 0,
++          stdout: 'abc\tbox\trunning\tUp 1 hour\timg\n',
++          stderr: '',
++        };
++      },
++    });
++    const containers = await docker.containers();
++    expect(calls[0]).not.toContain('--size');
++    expect(calls[0].at(-1)).not.toContain('{{json .}}');
++    expect(containers[0].ID).toBe('abc');
++  });
++
++  it('preserves containers and images after repeated global size failures', async () => {
++    const fake = world();
++    brokenDf(fake);
++    const { result } = await scanWorld(fake);
++    expect(result.daemons.length).toBe(1);
++    expect(result.containers.length).toBe(1);
++    expect(result.errors.length > 0).toBe(true);
++    expect(
++      result.items.some((item) => item.container?.name === 'failed-task')
++    ).toBe(true);
++  });
++
++  it('shows the image pinned by a small stopped container as potential bytes', async () => {
++    const { result } = await scanWorld(world());
++    const item = result.items.find((entry) => entry.container);
++    expect(item.container.pinnedImage.bytes).toBe(4.4e9);
++    expect(item.bytes).toBe(573e3);
++    expect(filterItems([item], resolveOptions({ minSize: '1M' }))).toEqual([
++      item,
++    ]);
++    expect(formatReport((await scanWorld(world())).report)).toMatch(
++      /4.1 GiB.*image/
++    );
++  });
++
++  it('checks stopped Git work in a plain scan', async () => {
++    const fake = world();
++    fake.daemons.host.containers[0].diff = 'A /work/repo/.git/HEAD\n';
++    const { result } = await scanWorld(fake);
++    const item = result.items.find((entry) => entry.container);
++    expect(item.container.gitCheckDeferred).not.toBe(true);
++    expect(item.container.gitBlockers.length > 0).toBe(true);
++  });
++
++  it('retains one failed container size as unknown and scans the others', async () => {
++    const fake = world();
++    fake.daemons.host.images = [];
++    const original = fake.run.bind(fake);
++    fake.run = (argv) =>
++      argv.includes('--size') && argv[1] === 'inspect'
++        ? { code: 1, stdout: '', stderr: 'rw layer snapshot not found' }
++        : original(argv);
++    const { result } = await scanWorld(fake);
++    expect(result.containers[0].sizeUnknown).toBe(true);
++    expect(result.containers[0].bytes).toBe(0);
++    const item = result.items.find((entry) => entry.container);
++    expect(item.sizeUnknown).toBe(true);
++    expect(filterItems([item], resolveOptions({ minSize: '1M' }))).toEqual([
++      item,
++    ]);
++    expect(
++      result.errors.some((error) => error.message.includes('rw layer snapshot'))
++    ).toBe(true);
++  });
++
++  it('retains dangling images with unavailable size measurements', async () => {
++    const fake = world();
++    fake.daemons.host.images.push({
++      ID: 'dangling',
++      Repository: '<none>',
++      Tag: '<none>',
++      Containers: '0',
++      Size: '1GB',
++      UniqueSize: '1GB',
++    });
++    brokenDf(fake);
++    const { result } = await scanWorld(fake);
++    const item = result.items.find(
++      (entry) => entry.rule === 'docker-dangling-images'
++    );
++    expect(item.sizeUnknown).toBe(true);
++    expect(filterItems([item], resolveOptions({ minSize: '1M' }))).toEqual([
++      item,
++    ]);
++  });
++});
+diff --git a/tests/issue-14-git.test.js b/tests/issue-14-git.test.js
+new file mode 100644
+index 0000000..b44ab90
+--- /dev/null
++++ b/tests/issue-14-git.test.js
+@@ -0,0 +1,112 @@
++import { describe, it, expect } from 'test-anywhere';
++import { cpSync, rmSync, writeFileSync } from 'node:fs';
++import { basename, join } from 'node:path';
++import { containerGitState } from '../src/docker/containers.js';
++import {
++  git,
++  pushedRepo,
++  readOnlyRuntime,
++  removeRoot,
++  tempRoot,
++} from './helpers/fixtures.js';
++
++async function inspect(repo, diff = 'C /work/repo/README.md\n') {
++  return containerGitState(
++    {
++      diff: async () => diff,
++      pathExists: async (_id, target) => target === '/work/repo/.git/HEAD',
++      copyOut: async (_id, _source, destination) => {
++        cpSync(repo, join(destination, basename('/work/repo')), {
++          recursive: true,
++        });
++        return { code: 0 };
++      },
++    },
++    'box'
++  );
++}
++
++describe('issue 14 preserved container work', () => {
++  it('recognizes modified and untracked files saved together on a remote recovery ref', async () => {
++    if (readOnlyRuntime()) {
++      return;
++    }
++    const root = tempRoot();
++    try {
++      const repo = pushedRepo(join(root, 'repo'));
++      git(repo, 'checkout', '-qb', 'recovery/task');
++      writeFileSync(join(repo, 'README.md'), 'saved changes\n');
++      writeFileSync(join(repo, 'new file.txt'), 'saved new file\n');
++      git(repo, 'add', '.');
++      git(repo, 'commit', '-qm', 'save work');
++      git(repo, 'push', '-q', 'origin', 'recovery/task');
++      git(repo, 'checkout', '-q', 'main');
++      git(repo, 'branch', '-D', 'recovery/task');
++      writeFileSync(join(repo, 'README.md'), 'saved changes\n');
++      writeFileSync(join(repo, 'new file.txt'), 'saved new file\n');
++      const result = await inspect(repo);
++      expect(result.blockers).toEqual([]);
++      expect(result.repos[0].preservedOn).toBe('origin/recovery/task');
++      expect(result.repos[0].untracked).toBe(1);
++      writeFileSync(join(repo, 'new file.txt'), 'unsaved change\n');
++      expect((await inspect(repo)).blockers.join()).toMatch(/uncommitted/);
++    } finally {
++      removeRoot(root);
++    }
++  });
++
++  it('requires deletions to match the saved ref and keeps staged work protected', async () => {
++    if (readOnlyRuntime()) {
++      return;
++    }
++    const root = tempRoot();
++    try {
++      const repo = pushedRepo(join(root, 'repo'));
++      rmSync(join(repo, 'README.md'));
++      expect((await inspect(repo)).blockers.join()).toMatch(/uncommitted/);
++      git(repo, 'checkout', '--', 'README.md');
++      writeFileSync(join(repo, 'README.md'), 'staged work');
++      git(repo, 'add', '.');
++      expect((await inspect(repo)).blockers.join()).toMatch(/uncommitted/);
++    } finally {
++      removeRoot(root);
++    }
++  });
++
++  it('ignores nested Docker layer copies and temporary Codex plugin checkouts', async () => {
++    const copied = [];
++    const result = await containerGitState(
++      {
++        diff: async () =>
++          'A /var/lib/docker/fuse-overlayfs/abc/diff/work/repo/.git/HEAD\nA /home/box/.codex/.tmp/plugins-123/vendor/.git/HEAD\n',
++        pathExists: async () => {
++          throw new Error('excluded paths must not be probed');
++        },
++        copyOut: async (_id, source) => {
++          copied.push(source);
++          return { code: 1 };
++        },
++      },
++      'box'
++    );
++    expect(copied).toEqual([]);
++    expect(result.blockers).toEqual([]);
++  });
++
++  it('accepts a detached upstream commit but protects a new detached commit', async () => {
++    if (readOnlyRuntime()) {
++      return;
++    }
++    const root = tempRoot();
++    try {
++      const repo = pushedRepo(join(root, 'repo'));
++      git(repo, 'checkout', '-q', '--detach', 'origin/main');
++      expect((await inspect(repo)).blockers).toEqual([]);
++      writeFileSync(join(repo, 'README.md'), 'unpublished');
++      git(repo, 'commit', '-qam', 'unpublished');
++      expect((await inspect(repo)).blockers.join()).toMatch(/unpushed/);
++    } finally {
++      removeRoot(root);
++    }
++  });
++});
+diff --git a/tests/issue-14-liveness.test.js b/tests/issue-14-liveness.test.js
+new file mode 100644
+index 0000000..110a9bb
+--- /dev/null
++++ b/tests/issue-14-liveness.test.js
+@@ -0,0 +1,245 @@
++import { describe, it, expect } from 'test-anywhere';
++import { promises as fsp } from 'node:fs';
++import path from 'node:path';
++import { LivenessProbe, matchingName } from '../src/liveness.js';
++import { ShellEnv } from '../src/env/shell.js';
++import { LocalEnv } from '../src/env/local.js';
++import { containerExecutor } from '../src/exec.js';
++import { readOnlyRuntime } from './helpers/fixtures.js';
++
++const cache = (rule, target) => ({
++  rule,
++  paths: [target],
++  newestMtimeMs: 1,
++  checks: { busy: ['npm', 'npx'], mtime: false },
++});
++
++async function live(processes, open = []) {
++  const probe = new LivenessProbe(
++    {
++      path: path.posix,
++      processes: async () => processes,
++      openPaths: async () => new Set(open),
++    },
++    { staleAgeMs: 0 }
++  );
++  await probe.refresh();
++  return probe;
++}
++
++describe('issue 14 process matching', () => {
++  it('does not match tool names in directory components or arguments', () => {
++    for (const command of [
++      'node /home/box/.bun/bin/hive-telegram-bot bun',
++      'node /work/npm/server.js',
++      'bash -c echo cargo',
++    ]) {
++      expect(
++        matchingName({ name: command.split(' ')[0], command }, [
++          'bun',
++          'npm',
++          'cargo',
++        ])
++      ).toBe(null);
++    }
++    expect(
++      matchingName(
++        {
++          name: 'node',
++          command: 'node /usr/lib/node_modules/npm/bin/npm-cli.js install',
++        },
++        ['npm']
++      )
++    ).toBe('npm');
++  });
++
++  it('allows idle download/header caches alongside an npm exec server', async () => {
++    const probe = await live([
++      { pid: 7, name: 'npm exec', command: 'npm exec @playwright/mcp@latest' },
++    ]);
++    for (const rule of ['npm-cache', 'node-gyp-cache']) {
++      expect(probe.busyReason(cache(rule, '/home/box/.cache/data'))).toBe(null);
++    }
++    expect(
++      probe.busyReason(cache('npm-cache', '/home/box/.npm/_cacache'))
++    ).toBe(null);
++  });
++
++  it('protects only the npx hash used by an exec child', async () => {
++    const probe = await live([
++      { pid: 7, name: 'npm exec', command: 'npm exec @playwright/mcp@latest' },
++      {
++        pid: 8,
++        name: 'node',
++        command: 'node /home/box/.npm/_npx/active/node_modules/.bin/mcp',
++      },
++    ]);
++    expect(
++      probe.busyReason(cache('npx-cache', '/home/box/.npm/_npx/idle'))
++    ).toBe(null);
++    expect(
++      probe.busyReason(cache('npx-cache', '/home/box/.npm/_npx/active'))
++    ).toMatch(/in use/);
++  });
++
++  it('still blocks real npm installs and open cache files', async () => {
++    const install = await live([
++      { pid: 9, name: 'npm', command: 'npm install' },
++    ]);
++    expect(
++      install.busyReason(cache('npm-cache', '/home/box/.npm/_cacache'))
++    ).toMatch(/npm is running/);
++    const open = await live([], ['/home/box/.npm/_cacache/blob']);
++    expect(
++      open.busyReason(cache('npm-cache', '/home/box/.npm/_cacache'))
++    ).toMatch(/in use/);
++  });
++
++  it('recognizes npm process titles and does not waive install activity from a package argument', async () => {
++    const install = await live([
++      { pid: 9, name: 'npm install', argv: ['npm install'] },
++    ]);
++    expect(install.busyReason(cache('npm-cache', '/cache'))).toMatch(
++      /npm is running/
++    );
++    const argument = await live([
++      { pid: 10, name: 'npm', argv: ['npm', 'install', '/tmp/npx-cli.js'] },
++    ]);
++    expect(argument.busyReason(cache('npm-cache', '/cache'))).toMatch(
++      /npm is running/
++    );
++  });
++
++  it('protects an installed script named in a process command after its descriptor closes', async () => {
++    const probe = await live([
++      {
++        pid: 12,
++        name: 'node',
++        cwd: '/home/box/.cache/copilot/pkg/linux-x64/1.0.91',
++        argv: ['node', './copilot.js'],
++      },
++    ]);
++    expect(
++      probe.busyReason({
++        rule: 'copilot-cli-versions',
++        paths: ['/home/box/.cache/copilot/pkg/linux-x64/1.0.91'],
++        checks: { busy: ['copilot'], mtime: false },
++      })
++    ).toMatch(/in use/);
++  });
++});
++
++describe('issue 14 Docker process inspection', () => {
++  it('skips zombie metadata while retaining command paths of live processes', async () => {
++    if (readOnlyRuntime()) {
++      return;
++    }
++    const zombie = '/proc/2147483600';
++    const live = '/proc/2147483601';
++    const original = {
++      readdir: fsp.readdir,
++      readFile: fsp.readFile,
++      readlink: fsp.readlink,
++    };
++    const reads = [];
++    fsp.readdir = async (target, ...args) =>
++      target === '/proc'
++        ? ['2147483600', '2147483601']
++        : original.readdir(target, ...args);
++    fsp.readFile = async (target, ...args) => {
++      if (target.startsWith(zombie) || target.startsWith(live)) {
++        reads.push(target);
++        if (target.endsWith('/stat')) {
++          const state = target.startsWith(zombie) ? 'Z' : 'S';
++          return `1 (agent) ${state} ${Array(18).fill('0').join(' ')} 123`;
++        }
++        return target.endsWith('/comm')
++          ? 'node\n'
++          : '/usr/bin/node\0/cache/active/server.js\0';
++      }
++      return original.readFile(target, ...args);
++    };
++    fsp.readlink = async (target, ...args) => {
++      if (target.startsWith(zombie) || target.startsWith(live)) {
++        reads.push(target);
++        return target.endsWith('/cwd') ? '/cache/active' : '/usr/bin/node';
++      }
++      return original.readlink(target, ...args);
++    };
++    try {
++      const processes = await new LocalEnv({ platform: 'linux' }).processes();
++      expect(processes.length).toBe(1);
++      expect(processes[0].argv).toEqual([
++        '/usr/bin/node',
++        '/cache/active/server.js',
++      ]);
++      expect(reads.filter((target) => target.startsWith(zombie))).toEqual([
++        `${zombie}/stat`,
++      ]);
++    } finally {
++      Object.assign(fsp, original);
++    }
++  });
++
++  it('uses the same read-only fallback when dss runs inside the container', async () => {
++    if (readOnlyRuntime()) {
++      return;
++    }
++    const env = new LocalEnv();
++    env.rawOpenPaths = async () => {
++      throw new Error('EACCES: pid 7 (dockerd)');
++    };
++    env.processInspector = {
++      probeExecutor: {},
++      openPaths: async () => new Set(['/cache/open']),
++      processes: async () => [{ pid: 7, name: 'dockerd' }],
++    };
++    expect([...(await env.openPaths())]).toEqual(['/cache/open']);
++    expect(await env.processes()).toEqual([{ pid: 7, name: 'dockerd' }]);
++  });
++  it('retries an incomplete probe as a privileged root read-only exec', async () => {
++    const calls = [];
++    const parent = {
++      label: 'host',
++      run: async (argv) => {
++        calls.push(argv);
++        return argv.includes('--privileged')
++          ? { code: 0, stdout: '/home/box/cache/open\n', stderr: '' }
++          : { code: 1, stdout: '', stderr: 'unreadable pid 7 (dockerd)\n' };
++      },
++    };
++    const env = new ShellEnv(containerExecutor(parent, 'box'));
++    expect([...(await env.openPaths())]).toEqual(['/home/box/cache/open']);
++    expect(calls[1].slice(0, 6)).toEqual([
++      'docker',
++      'exec',
++      '--privileged',
++      '--user',
++      '0',
++      'box',
++    ]);
++    expect(calls[1]).not.toContain('rm');
++  });
++
++  it('reports unreadable process names when the fallback is denied', async () => {
++    const env = new ShellEnv(
++      containerExecutor(
++        {
++          label: 'host',
++          run: async (argv) => ({
++            code: 1,
++            stdout: '',
++            stderr: argv.includes('--privileged')
++              ? 'denied'
++              : 'unreadable pid 7 (dockerd)\n',
++          }),
++        },
++        'box'
++      )
++    );
++    const probe = new LivenessProbe(env, { staleAgeMs: 0 });
++    env.processes = async () => [];
++    await probe.refresh();
++    expect(probe.busyReason(cache('npm-cache', '/cache'))).toMatch(/dockerd/);
++  });
++});
+diff --git a/tests/issue-14-storage.test.js b/tests/issue-14-storage.test.js
+new file mode 100644
+index 0000000..874f37e
+--- /dev/null
++++ b/tests/issue-14-storage.test.js
+@@ -0,0 +1,101 @@
++import { describe, it, expect } from 'test-anywhere';
++import path from 'node:path';
++import { scanEnvironment } from '../src/scan.js';
++import { resolveOptions } from '../src/options.js';
++import { ShellEnv } from '../src/env/shell.js';
++import { containerExecutor } from '../src/exec.js';
++
++const ok = (stdout = '') => ({ code: 0, stdout, stderr: '' });
++
++function storageEnv({ diff = '', mounts = [], fail = false } = {}) {
++  const parent = {
++    label: 'host',
++    run: async (argv) => {
++      if (argv[1] === 'diff') {
++        return fail ? { code: 1, stdout: '', stderr: 'failed' } : ok(diff);
++      }
++      if (argv[1] === 'inspect') {
++        return ok(JSON.stringify([{ Id: 'box', Mounts: mounts }]));
++      }
++      return ok();
++    },
++  };
++  const env = new ShellEnv(containerExecutor(parent, 'box'));
++  env.path = path.posix;
++  // Actual merged usage includes 900 image bytes and 100 writable bytes.
++  env.rawUsageMany = async (targets) =>
++    new Map(
++      targets.map((target) => [
++        target,
++        {
++          bytes: target === '/cache/volume' ? 200 : 1000,
++          newestMtimeMs: 1,
++        },
++      ])
++    );
++  env.statMany = async (targets) =>
++    new Map(
++      targets.map((target) => [
++        target,
++        {
++          type: target === '/cache' ? 'dir' : 'file',
++          bytes: 100,
++          inode: target,
++        },
++      ])
++    );
++  return env;
++}
++
++describe('issue 14 writable-layer usage', () => {
++  it('counts changed files without walking a changed directory into lower layers', async () => {
++    const env = storageEnv({
++      diff: 'C /cache\nA /cache/new\nD /cache/deleted\n',
++    });
++    const usage = (await env.usageMany(['/cache'])).get('/cache');
++    expect(usage.bytes).toBe(100);
++    expect(usage.imageBytes).toBe(900);
++    expect(usage.totalBytes).toBe(1000);
++  });
++
++  it('reports an unchanged image cache as zero reclaimable bytes', async () => {
++    const env = storageEnv();
++    expect((await env.usageMany(['/cache'])).get('/cache').bytes).toBe(0);
++  });
++
++  it('includes mounted data and never double counts it as layer data', async () => {
++    const env = storageEnv({
++      diff: 'A /cache/new\nA /cache/volume/data\n',
++      mounts: [{ Type: 'volume', Destination: '/cache/volume' }],
++    });
++    expect((await env.usageMany(['/cache'])).get('/cache').bytes).toBe(300);
++    expect(
++      (await env.usageMany(['/cache/volume'])).get('/cache/volume').bytes
++    ).toBe(200);
++  });
++
++  it('marks failed layer inspection as unknown with zero estimated bytes', async () => {
++    const env = storageEnv({ fail: true });
++    const usage = (await env.usageMany(['/cache'])).get('/cache');
++    expect(usage.bytes).toBe(0);
++    expect(usage.sizeUnknown).toBe(true);
++  });
++
++  it('keeps image-only caches visible in a real scanner report', async () => {
++    const env = storageEnv();
++    env.homeDirs = async () => ['/home/box'];
++    env.tmpDirs = async () => [];
++    env.processes = async () => [];
++    env.openPaths = async () => new Set();
++    env.existsMany = async (targets) =>
++      new Set(targets.filter((target) => target === '/home/box/.npm/_cacache'));
++    env.listMany = async () => new Map();
++    const items = await scanEnvironment(
++      env,
++      resolveOptions({ scanners: ['global'], noNative: true })
++    );
++    const item = items.find((entry) => entry.rule === 'npm-cache');
++    expect(item.bytes).toBe(0);
++    expect(item.imageBytes).toBe(1000);
++  });
++});
+diff --git a/tests/scan-caches.test.js b/tests/scan-caches.test.js
+index be8726d..0b72617 100644
+--- a/tests/scan-caches.test.js
++++ b/tests/scan-caches.test.js
+@@ -37,6 +37,7 @@ function cacheScan() {
+       const pattern = rule.paths.find((p) => p.startsWith('~/'));
+       const dir = join(home, pattern.slice(2).replaceAll('*', 'x'));
+       writeBlob(join(dir, `${rule.id}.bin`), 32 * 1024);
++      age(dir, 3 * DAY_MS);
+       dirs.set(rule.id, dir);
+     }
+     const report = await scan(
