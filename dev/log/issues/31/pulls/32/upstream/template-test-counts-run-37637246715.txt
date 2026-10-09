@@ -1,0 +1,10 @@
+# js-ai-driven-development-pipeline-template run 37637246715 (main 4973fc4): tests reported per runner
+Test (bun on macos-15) |  569 pass
+Test (bun on ubuntu-24.04) |  569 pass
+Test (bun on windows-2025) |  532 pass
+Test (deno on macos-15) | ok | 417 passed (8 steps) | 0 failed (4s)
+Test (deno on ubuntu-24.04) | ok | 417 passed (8 steps) | 0 failed (2s)
+Test (deno on windows-2025) | ok | 417 passed (8 steps) | 0 failed (5s)
+Test (node on macos-15) | ℹ tests 569
+Test (node on ubuntu-24.04) | ℹ tests 569
+Test (node on windows-2025) | ℹ tests 528
