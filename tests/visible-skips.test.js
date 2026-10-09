@@ -99,6 +99,28 @@ describe('test registration', () => {
   }
 });
 
+describe('test file discovery', () => {
+  // Node runs tests/*.test.js and deno.json includes tests/, but a bare
+  // `bun test` collects every file named like a test anywhere in the tree,
+  // so a test-named file elsewhere changes only Bun's counts.
+  const BUN_TEST_NAME = /[._](?:test|spec)\.[cm]?[jt]sx?$/;
+  const SKIPPED_DIRS = new Set(['.git', 'node_modules', 'tests']);
+
+  function testNamedFiles(dir) {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const entryPath = dir === '.' ? entry.name : `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        return SKIPPED_DIRS.has(entry.name) ? [] : testNamedFiles(entryPath);
+      }
+      return BUN_TEST_NAME.test(entry.name) ? [entryPath] : [];
+    });
+  }
+
+  it('keeps test-named files inside tests/, so every runner runs the same set', () => {
+    expect(testNamedFiles('.')).toEqual([]);
+  });
+});
+
 describe('Deno CI leg', () => {
   const workflow = readFileSync('.github/workflows/release.yml', 'utf8');
 

@@ -1,6 +1,7 @@
 // Minimal reproduction for test-anywhere: on Deno, describe.skip registers
 // nothing, so the skipped suite is missing from the summary instead of being
-// reported as ignored. Run with: node --test / bun test / deno test <file>
+// reported as ignored. Not named *.test.* so the suite runners skip it; run with
+// node --test, bun test ./<file> or deno test <file>.
 import { describe, it, expect } from 'test-anywhere';
 
 describe('runs', () => {
