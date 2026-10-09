@@ -13,12 +13,12 @@
  * install fails, it logs the reason and passes, so offline development and
  * sandboxed runs are not blocked by an unreachable CDN.
  *
- * It also skips on Windows: use-m imports the resolved file by its bare
- * absolute path, which the ESM loader rejects there with
- * ERR_UNSUPPORTED_ESM_URL_SCHEME ("On Windows, absolute paths must be valid
- * file:// URLs"). That is an upstream loader bug in use-m, independent of the
- * namespace shape this shim normalises, and the Linux and macOS runs of this
- * same test still cover the interop.
+ * On Windows it runs too, and skips only when the ESM loader rejects a bare
+ * drive-letter path with ERR_UNSUPPORTED_ESM_URL_SCHEME ("On Windows,
+ * absolute paths must be valid file:// URLs"). use-m converts such paths to
+ * file:// URLs before importing them; the skip keeps an older or regressed
+ * use-m from failing the Windows leg on a loader bug that is independent of
+ * the namespace shape this shim normalises.
  */
 
 import { describe, it, expect } from 'test-anywhere';
@@ -53,19 +53,25 @@ async function networkSkipReason() {
 }
 
 /**
+ * Whether use-m hit the Windows ESM loader's bare-path rejection.
+ * @param {unknown} error
+ * @param {string} [platform]
+ * @returns {boolean}
+ */
+export function isWindowsFileUrlError(error, platform = process.platform) {
+  return (
+    platform === 'win32' &&
+    (error?.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
+      /ERR_UNSUPPORTED_ESM_URL_SCHEME/.test(error?.message ?? ''))
+  );
+}
+
+/**
  * Load command-stream through the real use-m, or return null after logging
- * why the test environment cannot (offline, sandboxed fetch, Windows).
+ * why the test environment cannot (offline, sandboxed fetch, Windows loader).
  * @returns {Promise<Record<string, unknown>|null>} command-stream exports
  */
 async function loadOrSkip() {
-  if (process.platform === 'win32') {
-    console.log(
-      'Skipping: use-m imports resolved paths without a file:// scheme, ' +
-        'which the Windows ESM loader rejects (ERR_UNSUPPORTED_ESM_URL_SCHEME).'
-    );
-    return null;
-  }
-
   const skipReason = await networkSkipReason();
   if (skipReason) {
     console.log(`Skipping: ${skipReason}, so use-m cannot be evaluated.`);
@@ -75,6 +81,13 @@ async function loadOrSkip() {
   try {
     return await loadCommandStream();
   } catch (error) {
+    if (isWindowsFileUrlError(error)) {
+      console.log(
+        'Skipping: use-m imported a path without a file:// scheme, which ' +
+          'the Windows ESM loader rejects (ERR_UNSUPPORTED_ESM_URL_SCHEME).'
+      );
+      return null;
+    }
     if (
       /fetch|network|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|registry/i.test(
         error.message
@@ -86,6 +99,25 @@ async function loadOrSkip() {
     throw error;
   }
 }
+
+describe('isWindowsFileUrlError', () => {
+  const loaderError = Object.assign(new Error("Received protocol 'c:'"), {
+    code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME',
+  });
+
+  it('matches the loader rejection only on Windows', () => {
+    expect(isWindowsFileUrlError(loaderError, 'win32')).toBe(true);
+    expect(isWindowsFileUrlError(loaderError, 'linux')).toBe(false);
+  });
+
+  it('matches the code when use-m rethrows it inside a message', () => {
+    const wrapped = new Error(
+      'Failed to import: ERR_UNSUPPORTED_ESM_URL_SCHEME on c:/x.js'
+    );
+    expect(isWindowsFileUrlError(wrapped, 'win32')).toBe(true);
+    expect(isWindowsFileUrlError(new Error('boom'), 'win32')).toBe(false);
+  });
+});
 
 describe('use-m loads command-stream on this Node version', () => {
   it('exposes a callable $ from command-stream', async () => {
