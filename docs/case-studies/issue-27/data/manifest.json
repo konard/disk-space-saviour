@@ -54,15 +54,15 @@
     "encoding": "utf8"
   },
   {
-    "path": "moby-image-changes.go",
-    "originalBytes": 1443,
-    "originalSha256": "8d9de4bb8965ed547a5eb46e291ca2a1d596e2999a1ad323fa1c5cd4918b0b76",
+    "path": "run-37975901140.json",
+    "originalBytes": 39242,
+    "originalSha256": "36c8c4e529da18c6329fb23c9a2997528f138fdfe986dc1eb44d54eb0b016756",
     "encoding": "utf8"
   },
   {
-    "path": "moby-container-changes.go",
-    "originalBytes": 0,
-    "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "path": "moby-image-changes.go",
+    "originalBytes": 1443,
+    "originalSha256": "8d9de4bb8965ed547a5eb46e291ca2a1d596e2999a1ad323fa1c5cd4918b0b76",
     "encoding": "utf8"
   },
   {
@@ -174,6 +174,60 @@
     "encoding": "gzip"
   },
   {
+    "path": "tests/shell-boundaries-before.log.gz",
+    "originalBytes": 4124,
+    "originalSha256": "a13f40fdbc50ab96d46a501af9568f6aaa5b9f1dc2c9c7e246bad26c943ebe92",
+    "encoding": "gzip"
+  },
+  {
+    "path": "tests/globstar-regression-before.log.gz",
+    "originalBytes": 2142,
+    "originalSha256": "3a1fc6b02b77a7fcd0f0283b59d50ebe9397dd4972f4bdb03e00c619eea22e57",
+    "encoding": "gzip"
+  },
+  {
+    "path": "tests/globstar-shell-before.log.gz",
+    "originalBytes": 481,
+    "originalSha256": "3a66bd152883a3eae3c1054e4443821f043606954bcc80c6000beaf26fe0f2f5",
+    "encoding": "gzip"
+  },
+  {
+    "path": "tests/globstar-shell-after.log.gz",
+    "originalBytes": 106,
+    "originalSha256": "e7837ff1e1a25392e043350a5b43e3c7af421c4c627a24d8430e8f87c970f0be",
+    "encoding": "gzip"
+  },
+  {
+    "path": "tests/focus-ci-fix.log.gz",
+    "originalBytes": 5915,
+    "originalSha256": "fd43241441fe8e3874e89fd2a9fe54758d7dd2a122f7811fc2233f3d8bbc5f36",
+    "encoding": "gzip"
+  },
+  {
+    "path": "tests/node-ci-fix.log.gz",
+    "originalBytes": 70959,
+    "originalSha256": "98f5cde0f4fdad8a584ecb096c86cd8189c43dee568742894497879453764394",
+    "encoding": "gzip"
+  },
+  {
+    "path": "tests/bun-ci-fix.log.gz",
+    "originalBytes": 82254,
+    "originalSha256": "29572a89d85f7821a5d0e874a18033c1a74b642a50090b287a26de5bc68d637d",
+    "encoding": "gzip"
+  },
+  {
+    "path": "tests/deno-ci-fix.log.gz",
+    "originalBytes": 51151,
+    "originalSha256": "5edb78bd67cd2c32cabb89e8c6f8596e7c722dc4a84602a3076a054d7b229ac2",
+    "encoding": "gzip"
+  },
+  {
+    "path": "tests/check-ci-fix.log.gz",
+    "originalBytes": 50276,
+    "originalSha256": "e05cf0b84f106eff81bd7febf458a5bd67390fe789f13f32c70370221ce5b359",
+    "encoding": "gzip"
+  },
+  {
     "path": "ci-logs/checks-release-37847771589.log.gz",
     "originalBytes": 2075620,
     "originalSha256": "d9ccbd06062aca38fd48570223c14f3564d0594f61728ebef7b15ba82c475594",
@@ -183,6 +237,12 @@
     "path": "ci-logs/checks-release-37948829224.log.gz",
     "originalBytes": 2125322,
     "originalSha256": "3d0e9bee7d195b7363ff687af9d1e3b6b6ae0d669d96cea2351f74bad937f1f7",
+    "encoding": "gzip"
+  },
+  {
+    "path": "ci-logs/checks-release-37975901140.log.gz",
+    "originalBytes": 2461487,
+    "originalSha256": "27669f2696c7faf130a51cf252f2875632e55909eefbc8d256b38c3dda004e8a",
     "encoding": "gzip"
   }
 ]

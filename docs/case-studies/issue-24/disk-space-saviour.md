@@ -32,3 +32,12 @@ Run `node --test --test-timeout=30000 tests/issue-27-boundaries.test.js tests/is
 Exclusion tests do not need real containerd mounts. Pruning traces are visible
 with verbose mode and the tests distinguish correct results from avoiding the
 underlying read.
+
+Final review also reproduced shell measurement crossing an excluded descendant:
+discovering the path blocked deletion, but the subsequent `du` still walked it.
+Shell measurements now omit ancestors containing excluded, mounted or runtime
+data before either recursive command runs. A real Linux shell regression covers
+zero-depth globstars: `find` does not share JavaScript's optional `**/` semantics.
+Its pruning expressions conservatively recognize those boundaries; final item
+matching still uses the common path matcher. The finite reproduction is
+`node experiments/issue-27-shell-boundaries.mjs`; before/after logs are archived.

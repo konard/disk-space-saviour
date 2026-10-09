@@ -23,8 +23,8 @@ projects. This investigation concerns disk-space-saviour only.
 - [x] Run focused tests, then all Node/Bun/Deno suites, available integration
       tests, lint, formatting, duplication, syntax and file limits. Save logs.
 - [x] Add a release changeset; commit useful atomic steps after local checks.
-- [ ] Merge current default branch if necessary; push only the prepared branch.
-- [ ] Review PR diff, update title/body with reproduction, tests, limitations,
+- [x] Merge current default branch if necessary; push only the prepared branch.
+- [x] Review PR diff, update title/body with reproduction, tests, limitations,
       requirement mapping and all ten full closing references.
 - [ ] Verify fresh CI timestamps and SHAs; download and fix failing checks.
 - [ ] Mark PR 28 ready and verify a clean tree and completed background commands.
@@ -53,15 +53,15 @@ The branch starts at package version 0.14.1. npm `latest` still reports 0.13.1.
 PR 15 already changes npx to per-hash entries and removes opam download caches
 directly. PR 20 already guards the Deno environment metadata comparison. These
 must be retained and verified; neither means the aggregate issue is complete.
-The latest main release run (37948829224) still failed after PR 20. The original
+The latest main release run (37998829224) still failed after PR 20. The original
 release failure (37847771589) and fresh run are being archived under `ci-logs/`.
 
 ## Completed verification
 
-Node and Bun: 794 passing tests each. Deno: 691 passing tests and eight steps
+Node and Bun: 799 passing tests each. Deno: 696 passing tests and eight steps
 under read-only permissions. Local DinD could not start because this host
 rejected capped cgroup configuration; the archived log records the error and
-CI runs the same integration on a supported runner. The upstream report is
+The same capped DinD integration passed in PR CI run 37975901140. The upstream report is
 [moby/moby#53906](https://github.com/moby/moby/issues/53906).
 
 See [README.md](README.md) for the case-study index, evidence and primary-source

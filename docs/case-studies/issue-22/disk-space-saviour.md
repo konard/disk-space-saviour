@@ -35,7 +35,8 @@ saved-report behavior is pinned by `issue-27-details.test.js`.
 
 The real DinD attempt was bounded but this checkout's host rejected cgroup
 configuration before daemon startup; [the archived integration log](../issue-27/README.md)
-records that infrastructure limit. No uncontrolled host OOM reproduction was
+records that infrastructure limit. The same capped integration passed on the
+CI runner in PR run 37975901140. No uncontrolled host OOM reproduction was
 performed. The source-level upstream report is explicit that client limits do
 not prevent every remote daemon allocation. Risk reduction and unknown sizes
 are conservative fallbacks, not a daemon memory guarantee.

@@ -34,7 +34,7 @@ followed by image-mount findings (#23), then current-main exclusions, non-root
 liveness and image accounting reports (#24–#26). Parent #27 collected them at
 17:43:24 UTC. Exact issue creation timestamps are preserved in the raw JSON.
 
-The second main release, run 37948829224 at 15:03:25 UTC on SHA `1068067`, passed
+The second main release, run 37998829224 at 15:03:25 UTC on SHA `1068067`, passed
 Deno but failed npm publishing. Its log has E404 PUT failures at lines 15351,
 15382 and 15412, followed by failure exit at 15433. Run 37847771589 has the old
 Deno permission error at lines 9149, 10722 and 12305. Complete logs are archived
@@ -42,6 +42,16 @@ compressed in `data/ci-logs/`; readable excerpts retain original line numbers.
 PR 28's fresh checks must be judged against its own head SHA, not these older
 main runs. Release repairs satisfy the requested loud-failure alternative;
 we do not claim that npm has accepted a new version.
+
+The first PR run, [37975901140](https://github.com/link-foundation/disk-space-saviour/actions/runs/37975901140),
+started at 18:49:03 UTC on `12a3fe7`. Linux tests and the capped DinD integration
+passed. Node/Bun on macOS and Windows each failed the same two mount regressions:
+the fixtures inherited the runner platform, so their supplied Linux mountinfo
+was never read. Node's failure summaries appear at lines 15583–15599 (macOS)
+and 14151–14167 (Windows). The fixtures now explicitly simulate Linux and mock
+process inspection. Full logs and run SHA/timestamps are archived. Final review
+also caught shell measurement crossing excluded descendants and zero-depth
+globstars; failing regressions and a finite shell experiment precede those fixes.
 
 The first regression runs failed before implementation. Their logs, passing
 suite logs, registry snapshot, related PR patches and primary source excerpts
@@ -67,7 +77,7 @@ are archived under `data/` with checksums. To inspect a compressed log, use
 
 ## Verification and practical limits
 
-Node and Bun each passed 794 tests; Deno passed 691 tests and eight steps with
+Node and Bun each passed 799 tests; Deno passed 696 tests and eight steps with
 read-only permissions. The runtimes are run separately
 to avoid Deno rewriting its auto-managed dependency symlinks during another
 runtime's tests. Focused cases cover every new application rule, plus cleanup
@@ -76,8 +86,9 @@ documentation checks are part of local/PR verification.
 
 The bounded real DinD integration could not start on this host: Docker rejected
 the memory-capped container with `cannot enter cgroupv2 ... invalid state`.
-It cleaned up its temporary roots and containers. Its log is archived, and CI
-runs the same integration on a supported runner. Local Docker uses fuse-overlayfs,
+It cleaned up its temporary roots and containers. Its log is archived. The same
+capped integration passed in PR run 37975901140 on the supported CI runner.
+Local Docker uses fuse-overlayfs,
 not the incident's Docker 29.6.1 containerd store; no original host OOM was
 reproduced. Memory checks and candidate/output budgets reduce risk but cannot
 hard-bound a remote daemon's entire changes walk. The upstream report states
