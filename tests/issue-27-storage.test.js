@@ -39,6 +39,18 @@ function fixture({ memory = 1024 * 1024, diff = 'A /cache/new\n' } = {}) {
 }
 
 describe('issue 21 bounded storage snapshots', () => {
+  it('omits paths that disappeared during the raw usage walk', async () => {
+    const { executor, calls, env, usages } = fixture();
+    usages.set('/gone', null);
+    const layer = new WritableLayer(executor, 'box');
+    const result = await layer.measure(env, usages);
+    expect(result.has('/gone')).toBe(false);
+    expect(result.get('/cache').bytes).toBe(100);
+    calls.length = 0;
+    expect((await layer.measure(env, new Map([['/gone', null]]))).size).toBe(0);
+    expect(calls).toEqual([]);
+  });
+
   it('honors a tighter cgroup memory limit than host MemAvailable', async () => {
     const { executor, calls, env, usages } = fixture();
     const run = executor.run;

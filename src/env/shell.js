@@ -339,13 +339,17 @@ export class ShellEnv {
 
   async rawUsageMany(targets) {
     const usages = new Map();
-    if (this.scanPolicy?.exclude.length) {
+    const policy = this.scanPolicy;
+    if (policy) {
+      targets = targets.filter((target) => !policy.removalReason(target));
       for (const target of targets) {
-        const expression = this.scanPolicy.exclude.flatMap((pattern, index) => [
-          ...(index ? ['-o'] : []),
-          /[/\\]/.test(pattern) ? '-path' : '-name',
-          pattern.replaceAll('\\', '/'),
-        ]);
+        const expression = this.#boundaryPatterns().flatMap(
+          (pattern, index) => [
+            ...(index ? ['-o'] : []),
+            /[/\\]/.test(pattern) ? '-path' : '-name',
+            pattern.replaceAll('\\', '/'),
+          ]
+        );
         const found = await this.executor.run([
           'find',
           target,
@@ -359,12 +363,15 @@ export class ShellEnv {
           '-quit',
         ]);
         for (const line of found.stdout.split('\n').filter(Boolean)) {
-          this.scanPolicy.excludedPaths.add(line);
+          policy.excludedPaths.add(line);
         }
         if (found.code !== 0) {
-          this.scanPolicy.excludedPaths.add(target);
+          policy.excludedPaths.add(target);
         }
       }
+      // du cannot prune same-device mounts or excluded children. Skip their
+      // ancestors before either recursive measurement command can enter them.
+      targets = targets.filter((target) => !policy.removalReason(target));
     }
     for (const batch of batches(targets)) {
       const result = await this.sh(USAGE_MANY_SCRIPT, batch);
@@ -458,12 +465,12 @@ export class ShellEnv {
       );
   }
 
-  #prunePaths() {
+  #boundaryPatterns() {
     const policy = this.scanPolicy;
     if (!policy) {
       return [];
     }
-    const excluded = [
+    return [
       ...policy.exclude,
       ...policy.pruned,
       '/var/lib/docker',
@@ -471,8 +478,19 @@ export class ShellEnv {
       '/run/containerd',
       '/var/lib/containers',
       '/tmp/containerd-mount*',
-    ];
-    return excluded.flatMap((pattern) => [
+      '/private/tmp/containerd-mount*',
+    ].map((pattern) =>
+      // find's * also matches slashes. Match optional globstar segments
+      // conservatively so its traversal cannot miss a zero-depth exclusion.
+      pattern
+        .replaceAll('\\', '/')
+        .replace(/\/\*\*$/, '')
+        .replaceAll('**/', '*')
+    );
+  }
+
+  #prunePaths() {
+    return this.#boundaryPatterns().flatMap((pattern) => [
       '(',
       /[/\\]/.test(pattern) ? '-path' : '-name',
       pattern,
