@@ -50,9 +50,10 @@ describe('check-package-manager.mjs', () => {
     expect(result.stdout).toContain('Package manager check passed');
     // deno.lock exists for the Deno test leg next to deno.json, so it is
     // listed but not a warning: a release annotation nobody can act on
-    // would fire on every release.
+    // would fire on every release. CI's Bun leg runs `bun install` first and
+    // leaves a bun.lock behind, which is rightly warned about there.
     expect(result.stdout).toContain('deno.lock');
-    expect(result.stderr).not.toContain('::warning::');
+    expect(result.stderr).not.toMatch(/::warning::[^\n]*deno\.lock/);
   });
 
   itUnless(sandboxed)(

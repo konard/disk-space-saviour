@@ -125,7 +125,8 @@ describe('Deno CI leg', () => {
   const workflow = readFileSync('.github/workflows/release.yml', 'utf8');
 
   it('grants the permissions the fixtures need, so nothing is skipped', () => {
-    expect(workflow).toMatch(/"Deno test suite" deno test -A --parallel\n/);
+    // A Windows checkout ends lines with CRLF.
+    expect(workflow).toMatch(/"Deno test suite" deno test -A --parallel\r?\n/);
   });
 });
 
