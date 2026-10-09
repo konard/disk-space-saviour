@@ -35,6 +35,8 @@ for (const name of [
   'run-37847771589.json',
   'run-37948829224.json',
   'run-37975901140.json',
+  'run-37978017997.json',
+  'branch-runs-current.json',
   'moby-image-changes.go',
   'command-stream-result.mjs',
   'upstream-create.log',
@@ -74,7 +76,7 @@ for (const name of [
 ]) {
   archive(join(input, `${name}.log`), `tests/${name}.log.gz`, true);
 }
-for (const id of ['37847771589', '37948829224', '37975901140']) {
+for (const id of ['37847771589', '37948829224', '37975901140', '37978017997']) {
   const name = `checks-release-${id}.log`;
   const source = resolve('ci-logs', name);
   archive(source, `ci-logs/${name}.gz`, true);
@@ -85,10 +87,12 @@ for (const id of ['37847771589', '37948829224', '37975901140']) {
     const excerpt = lines.flatMap((line, index) =>
       pattern.test(line) ? [`${index + 1}: ${line}`] : []
     );
-    writeFileSync(
-      join(output, 'ci-logs', `${id}-errors.txt`),
-      `${excerpt.join('\n')}\n`
-    );
+    if (excerpt.length) {
+      writeFileSync(
+        join(output, 'ci-logs', `${id}-errors.txt`),
+        `${excerpt.join('\n')}\n`
+      );
+    }
   }
 }
 writeFileSync(

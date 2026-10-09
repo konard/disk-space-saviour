@@ -34,7 +34,7 @@ followed by image-mount findings (#23), then current-main exclusions, non-root
 liveness and image accounting reports (#24–#26). Parent #27 collected them at
 17:43:24 UTC. Exact issue creation timestamps are preserved in the raw JSON.
 
-The second main release, run 37998829224 at 15:03:25 UTC on SHA `1068067`, passed
+The second main release, run 37948829224 at 15:03:25 UTC on SHA `1068067`, passed
 Deno but failed npm publishing. Its log has E404 PUT failures at lines 15351,
 15382 and 15412, followed by failure exit at 15433. Run 37847771589 has the old
 Deno permission error at lines 9149, 10722 and 12305. Complete logs are archived
@@ -52,6 +52,14 @@ and 14151–14167 (Windows). The fixtures now explicitly simulate Linux and mock
 process inspection. Full logs and run SHA/timestamps are archived. Final review
 also caught shell measurement crossing excluded descendants and zero-depth
 globstars; failing regressions and a finite shell experiment precede those fixes.
+
+The corrected [run 37978017997](https://github.com/link-foundation/disk-space-saviour/actions/runs/37978017997)
+passed on `e7d6210`, created at 19:07:10 UTC. All Node/Bun platform jobs,
+read-only Deno, Docker integration and repository gates passed. The security,
+link and example-app workflows on that SHA passed too. Run metadata, complete
+compressed checks logs and the successful workflow list are archived; PR 28
+was marked ready after these results. Final documentation verification follows
+any additional evidence-only commit.
 
 The first regression runs failed before implementation. Their logs, passing
 suite logs, registry snapshot, related PR patches and primary source excerpts

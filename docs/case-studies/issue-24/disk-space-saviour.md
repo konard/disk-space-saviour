@@ -22,7 +22,7 @@ filtering occurred after the walk. Full details are archived under `data/`.
 ## Components and verification
 
 [Node's path.matchesGlob](https://nodejs.org/api/path.html#pathmatchesglobpath-pattern)
-does not meet the package's Node 20 runtime floor. [Minimatch](https://github.com/isaacs/minimatch)
+was added in Node 20.17/22.5, beyond the package's Node 20.0 runtime floor. [Minimatch](https://github.com/isaacs/minimatch)
 would provide a wider grammar at the cost of a runtime dependency; the selected
 change keeps the existing wildcard grammar and adds path/ancestor/globstar
 semantics needed here. This does not claim support for all shell extglob or brace
