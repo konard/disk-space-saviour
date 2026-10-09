@@ -25,12 +25,30 @@ import { describe, it, expect } from 'test-anywhere';
 
 import { loadCommandStream, USE_M_URL } from '../scripts/use-module.mjs';
 
-async function hasNetwork() {
+/**
+ * Explain why use.js cannot be fetched, or return null when it can.
+ * Deno without --allow-net denies the fetch before any request is made, so
+ * that case is reported as a permission, not as an unreachable CDN.
+ * @returns {Promise<string|null>} skip reason
+ */
+async function networkSkipReason() {
+  if (typeof globalThis.Deno?.permissions?.query === 'function') {
+    const host = new globalThis.URL(USE_M_URL).host;
+    const { state } = await globalThis.Deno.permissions.query({
+      name: 'net',
+      host,
+    });
+    if (state !== 'granted') {
+      return `Deno net permission for ${host} is ${state}`;
+    }
+  }
+
   try {
     const response = await fetch(USE_M_URL, { method: 'HEAD' });
-    return response.ok;
-  } catch {
-    return false;
+    return response.ok ? null : `${USE_M_URL} answered HTTP ${response.status}`;
+  } catch (error) {
+    const cause = error?.cause?.message;
+    return `${USE_M_URL} is unreachable (${cause ?? error?.message ?? error})`;
   }
 }
 
@@ -48,10 +66,9 @@ async function loadOrSkip() {
     return null;
   }
 
-  if (!(await hasNetwork())) {
-    console.log(
-      `Skipping: ${USE_M_URL} is unreachable, so use-m cannot be evaluated.`
-    );
+  const skipReason = await networkSkipReason();
+  if (skipReason) {
+    console.log(`Skipping: ${skipReason}, so use-m cannot be evaluated.`);
     return null;
   }
 
