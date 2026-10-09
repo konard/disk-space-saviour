@@ -59,6 +59,7 @@ export function runProcess(argv, options = {}) {
     const stdout = [];
     const stderr = [];
     let captured = 0;
+    const captureLimit = options.maxCaptureBytes ?? MAX_CAPTURE_BYTES;
     let settled = false;
     const startedAt = Date.now();
     const finish = (result) => {
@@ -80,7 +81,7 @@ export function runProcess(argv, options = {}) {
     }, timeoutMs);
     const collect = (target) => (chunk) => {
       captured += chunk.length;
-      if (captured <= MAX_CAPTURE_BYTES) {
+      if (captured <= captureLimit) {
         target.push(chunk);
       }
     };
@@ -94,6 +95,7 @@ export function runProcess(argv, options = {}) {
         code: code ?? 1,
         stdout: Buffer.concat(stdout).toString('utf8'),
         stderr: Buffer.concat(stderr).toString('utf8'),
+        truncated: captured > captureLimit,
       });
     });
     child.stdin.on('error', () => {});

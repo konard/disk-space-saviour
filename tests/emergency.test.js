@@ -142,14 +142,14 @@ describe('emergency mode', () => {
     removeRoot(root);
   });
 
-  it('escalates to the moderate tier and leaves recent projects', async () => {
+  it('cleans inactive lockfile-backed projects in the safe tier', async () => {
     if (readOnlyRuntime()) {
       return;
     }
     const { root, run, free, kept } = volume();
     const audit = await run({ free: free() + 1024 * KIB });
     expect(audit.goalMet).toBe(true);
-    expect(audit.reachedTier).toBe('moderate');
+    expect(audit.reachedTier).toBe('safe');
     expect(kept()).toEqual(['recent']);
     expect(audit.diskAfter.free >= audit.diskBefore.free + 1024 * KIB).toBe(
       true
@@ -188,7 +188,7 @@ describe('emergency mode', () => {
     const { root, run, free, kept } = volume();
     const audit = await run({ free: free() + 1024 * KIB, dryRun: true });
     expect(audit.goalMet).toBe(true);
-    expect(audit.reachedTier).toBe('moderate');
+    expect(audit.reachedTier).toBe('safe');
     expect(audit.entries.every((e) => e.status === 'planned')).toBe(true);
     expect(kept()).toEqual(['npm', 'pip', 'old', 'recent']);
     removeRoot(root);

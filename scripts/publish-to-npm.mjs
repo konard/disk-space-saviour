@@ -23,6 +23,7 @@ import { appendFileSync } from 'fs';
 import { getJsRoot, needsCd, parseJsRootConfig } from './js-paths.mjs';
 import { isPackageVersionPublished } from './npm-registry.mjs';
 import { readPackageInfo } from './package-info.mjs';
+import { capturedPublishFailure } from './publish-output.mjs';
 import {
   buildAuthFailureGuidance,
   isNonRetryableFailure,
@@ -154,7 +155,7 @@ async function runChangesetPublish(shell, jsRoot, originalCwd) {
     if (needsCd({ jsRoot })) {
       process.chdir(originalCwd);
     }
-    return { result: null, error };
+    return { result: capturedPublishFailure(error), error };
   }
 }
 

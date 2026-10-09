@@ -130,6 +130,7 @@ export class LivenessProbe {
     this.openPaths = null;
     this.probeError = false;
     this.realPaths = new Map();
+    this.pathOwners = new Map();
   }
 
   async refresh(force = false) {
@@ -158,6 +159,11 @@ export class LivenessProbe {
    * @param {string[]} paths
    */
   async resolve(paths) {
+    if (this.env.unreadableProcesses?.length && this.env.stat) {
+      for (const target of paths) {
+        this.pathOwners.set(target, (await this.env.stat(target))?.uid);
+      }
+    }
     if (typeof this.env.realPath !== 'function') {
       return;
     }
@@ -262,6 +268,39 @@ export class LivenessProbe {
     return null;
   }
 
+  uncertainUsage(paths) {
+    for (const proc of this.env.unreadableProcesses ?? []) {
+      const args = processArgs(proc);
+      const roots = args.flatMap((arg) => {
+        const value = arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : arg;
+        return value.startsWith('/') ? [value] : [];
+      });
+      if (proc.name === 'dockerd') {
+        roots.push('/var/lib/docker', '/run');
+      }
+      if (proc.name === 'containerd') {
+        roots.push('/var/lib/containerd', '/run/containerd');
+      }
+      for (const target of paths) {
+        const intersects = roots.some(
+          (root) =>
+            isWithin(root, target, this.env.path) ||
+            isWithin(target, root, this.env.path)
+        );
+        const owner = this.pathOwners.get(target);
+        if (
+          intersects ||
+          proc.uid === null ||
+          owner === undefined ||
+          owner === proc.uid
+        ) {
+          return `unreadable process ${proc.name || 'unknown'} (pid ${proc.pid}, uid ${proc.uid ?? 'unknown'}) may use ${target}`;
+        }
+      }
+    }
+    return null;
+  }
+
   /**
    * First reason the item is busy, or null when it is idle. Items with
    * `checks.perPath` leave open files to `openPathsOf`: the caller skips
@@ -272,13 +311,27 @@ export class LivenessProbe {
     const checks = item.checks ?? {};
     const paths = checks.perPath ? [] : (item.paths ?? []);
     return (
+      this.installationBlocker(item.paths ?? []) ??
       (this.probeError
         ? `cannot verify process and open-file activity${this.env.probeDiagnostic ? `: ${this.env.probeDiagnostic}` : ''}`
         : null) ??
       (checks.mtime === false ? null : this.recentWrite(item.newestMtimeMs)) ??
       this.runningTool(checks.busy, checks.cwd, item) ??
       this.openInside(paths) ??
-      this.commandUsage(paths)
+      this.commandUsage(paths) ??
+      this.uncertainUsage(item.paths ?? [])
     );
+  }
+
+  installationBlocker(paths) {
+    return paths.some((target) =>
+      (this.env.protectedPaths ?? []).some(
+        (root) =>
+          isWithin(root, target, this.env.path) ||
+          isWithin(target, root, this.env.path)
+      )
+    )
+      ? 'dss current installation is protected'
+      : null;
   }
 }

@@ -25,7 +25,8 @@ export async function listMany(env, dirs) {
  * Busy reason at scan time (recent writes, running tool, open files).
  * @returns {string|null}
  */
-export function scanTimeBusy(context, item) {
+export async function scanTimeBusy(context, item) {
+  await context.liveness?.resolve(item.paths);
   return context.liveness ? context.liveness.busyReason(item) : null;
 }
 

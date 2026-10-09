@@ -13,8 +13,17 @@ export function globToRegExp(glob) {
   let cached = globCache.get(glob);
   if (!cached) {
     let source = '';
-    for (const char of glob) {
-      if (char === '*') {
+    for (let index = 0; index < glob.length; index++) {
+      const char = glob[index];
+      if (char === '*' && glob[index + 1] === '*') {
+        index++;
+        if (glob[index + 1] === '/') {
+          source += '(?:.*/)?';
+          index++;
+        } else {
+          source += '.*';
+        }
+      } else if (char === '*') {
         source += '[^/\\\\]*';
       } else if (char === '?') {
         source += '[^/\\\\]';
@@ -36,6 +45,29 @@ export function globToRegExp(glob) {
  */
 export function matchesGlob(name, glob) {
   return globToRegExp(glob).test(name);
+}
+
+/** Match exclusions against a path and each ancestor, including dotfiles. */
+export function matchesExcluded(target, patterns, pathApi) {
+  const normalize = (value) => {
+    const normalized = value.replaceAll('\\', '/');
+    return pathApi.sep === '\\' ? normalized.toLowerCase() : normalized;
+  };
+  for (const pattern of patterns ?? []) {
+    const full = /[/\\]/.test(pattern);
+    for (let current = pathApi.resolve(target); ; ) {
+      const candidate = full ? current : pathApi.basename(current);
+      if (matchesGlob(normalize(candidate), normalize(pattern))) {
+        return true;
+      }
+      const parent = pathApi.dirname(current);
+      if (parent === current) {
+        break;
+      }
+      current = parent;
+    }
+  }
+  return false;
 }
 
 /**

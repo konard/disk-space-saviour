@@ -6,12 +6,17 @@
 
 import { CACHE_RULES } from '../rules/ecosystems.js';
 import { OTHER_RULES } from '../rules/other.js';
+import { APP_RULES, expandChromiumCaches } from '../rules/apps.js';
 import { compareVersions } from '../rules/versions.js';
 import { block, makeItem } from '../items.js';
 import { expandGlobPaths, expandRulePath } from '../paths.js';
 import { olderThan, scanTimeBusy } from './common.js';
 
-export const GLOBAL_RULES = [...CACHE_RULES, ...OTHER_RULES];
+export const GLOBAL_RULES = [
+  ...CACHE_RULES,
+  ...expandChromiumCaches(OTHER_RULES),
+  ...APP_RULES,
+];
 
 function scopeBases(rule, homes, tmpDirs) {
   const scope = rule.scope ?? 'home';
@@ -123,6 +128,9 @@ async function olderVersions(env, rule, paths) {
 async function buildItem(context, rule, base, group) {
   const { env } = context;
   const paths = group.map((entry) => entry.path);
+  const appRoot = rule.markers
+    ? env.path.dirname(paths[0].replace(/[/\\]Service Worker[/\\].*$/, ''))
+    : null;
   const { action, blocker } = await nativeAction(context, rule, base, paths);
   const scope = rule.scope ?? 'home';
   const item = makeItem(env, {
@@ -138,9 +146,13 @@ async function buildItem(context, rule, base, group) {
     reason: rule.minAge
       ? `untouched for longer than the ${rule.minAge === 'stale' ? 'activity' : 'inactivity'} window`
       : 're-downloaded or re-created on demand',
+    recheck: rule.git === 'ifPresent' ? { type: 'scratch' } : undefined,
     action: action ?? { type: 'none' },
     checks: {
-      busy: rule.busy ?? [],
+      busy: [
+        ...(rule.busy ?? []),
+        ...(appRoot ? [env.path.basename(appRoot)] : []),
+      ],
       cwd: scope === 'tmp' ? paths[0] : null,
       mtime: rule.mtime ?? (scope === 'tmp' || Boolean(rule.minAge)),
     },
@@ -157,12 +169,14 @@ async function addBlockers(context, rule, item) {
   }
   if (rule.git) {
     for (const target of item.paths) {
-      for (const reason of await git.treeBlockers(target)) {
+      for (const reason of await git.treeBlockers(target, {
+        allowNoRepo: rule.git === 'ifPresent',
+      })) {
         block(item, reason);
       }
     }
   }
-  const busy = scanTimeBusy(context, item);
+  const busy = await scanTimeBusy(context, item);
   if (busy) {
     block(item, `busy: ${busy}`);
   }
@@ -193,8 +207,16 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
     const candidates = [
       ...new Set(patterns.flatMap((pattern) => matches.get(pattern) ?? [])),
     ].filter((target) => !seen.has(target));
-    candidates.forEach((target) => seen.add(target));
-    const paths = await olderVersions(env, rule, candidates);
+
+    const accepted = [];
+    for (const target of candidates) {
+      if (!(await acceptedPath(env, rule, target))) {
+        continue;
+      }
+      accepted.push(target);
+      seen.add(target);
+    }
+    const paths = await olderVersions(env, rule, accepted);
     if (paths.length > 0) {
       found.push({ rule, base, paths });
     }
@@ -214,4 +236,34 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
     }
   }
   return items;
+}
+
+async function acceptedPath(env, rule, target) {
+  const name = env.path.basename(target);
+  if (rule.excludeNames?.includes(name)) {
+    return false;
+  }
+  if (rule.directoryOnly && (await env.stat(target))?.type !== 'dir') {
+    return false;
+  }
+  if (rule.fileOnly && (await env.stat(target))?.type !== 'file') {
+    return false;
+  }
+  if (
+    rule.protectProfiles &&
+    /(?:mcp|profile|userdata|user-data)/i.test(name)
+  ) {
+    return false;
+  }
+  if (!rule.markers) {
+    return true;
+  }
+  const parent = env.path.dirname(
+    target.replace(/[/\\]Service Worker[/\\].*$/, '')
+  );
+  return (
+    await Promise.all(
+      rule.markers.map((marker) => env.exists(env.path.join(parent, marker)))
+    )
+  ).some(Boolean);
 }

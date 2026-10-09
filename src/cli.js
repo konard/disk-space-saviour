@@ -366,7 +366,10 @@ class Cli {
     this.print(values, audit, () =>
       formatAudit(audit, { verbose: values.verbose })
     );
-    return audit.entries.some((entry) => entry.status === 'failed') ? 1 : 0;
+    return audit.aborted ||
+      audit.entries.some((entry) => entry.status === 'failed')
+      ? 1
+      : 0;
   }
 
   async emergency(options, values) {
@@ -435,6 +438,9 @@ export async function runCli(argv, deps = {}) {
       setTrace(true);
     }
     const options = dropUndefined(toOptions(values, paths));
+    if (deps.signal) {
+      options.signal = deps.signal;
+    }
     return await dispatch(
       new Cli(io, deps.api ?? API),
       command,

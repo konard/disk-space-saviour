@@ -13,6 +13,12 @@ import path from 'node:path';
 
 export const AUDIT_SCHEMA = 1;
 
+export function throwIfAborted(options) {
+  if (options.signal?.aborted) {
+    throw new Error('cleanup aborted');
+  }
+}
+
 function stateDir(vars) {
   const base =
     vars.XDG_STATE_HOME || path.join(os.homedir(), '.local', 'state');

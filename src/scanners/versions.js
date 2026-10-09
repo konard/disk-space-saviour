@@ -210,7 +210,7 @@ async function ruleItems(context, rule, home, pins) {
           : null,
     });
     await blockPyenvEnvironments(env, rule, dir, item);
-    const busy = scanTimeBusy(context, item);
+    const busy = await scanTimeBusy(context, item);
     if (busy) {
       block(item, `busy: ${busy}`);
     }

@@ -96,7 +96,7 @@ describe('application and agent cache rules', () => {
     expect(items.map((item) => item.path)).toEqual([
       join(home, 'Library/Caches/ms-playwright-go/1.50.1'),
     ]);
-    expect(items[0].tier).toBe('moderate');
+    expect(items[0].tier).toBe('safe');
     removeRoot(root);
   });
 

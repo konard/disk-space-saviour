@@ -34,7 +34,6 @@ export const ECOSYSTEMS = [
         mtime: true,
         description: 'npm download cache',
         paths: ['~/.npm/_cacache', '{LOCALAPPDATA}/npm-cache/_cacache'],
-        native: { tool: 'npm', argv: ['npm', 'cache', 'clean', '--force'] },
         busy: ['npm'],
       },
       {

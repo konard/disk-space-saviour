@@ -56,6 +56,8 @@ export function parseLsofCwds(output) {
 import { promises as fsp } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { URL, fileURLToPath } from 'node:url';
+import { procIdentity, procOpenPaths } from './proc.js';
 
 import { hostExecutor } from '../exec.js';
 import { matchesGlob } from '../paths.js';
@@ -184,6 +186,7 @@ export class LocalEnv {
     this.platform = options.platform ?? process.platform;
     this.executor = options.executor ?? hostExecutor();
     this.options = options;
+    this.protectedPaths = [fileURLToPath(new URL('../../', import.meta.url))];
     this.currentHome = os.homedir();
     this.skipNames = new Set(options.skipNames ?? DEFAULT_SKIP_NAMES);
     this.vars = options.vars ?? {
@@ -191,6 +194,30 @@ export class LocalEnv {
       APPDATA: process.env.APPDATA,
       TMPDIR: process.env.TMPDIR,
     };
+  }
+
+  recordAccessError(target, error) {
+    if (!['EACCES', 'EPERM'].includes(error.code)) {
+      return;
+    }
+    this.accessErrors ??= new Map();
+    const advice =
+      this.platform === 'darwin' && /Safari|WebKit/.test(target)
+        ? '; grant Full Disk Access to the terminal running dss'
+        : '';
+    this.accessErrors.set(
+      target,
+      `cannot inspect ${target}: ${error.code}${advice}`
+    );
+  }
+
+  async #lstat(target) {
+    try {
+      return await (this.options.fileFs ?? fsp).lstat(target);
+    } catch (error) {
+      this.recordAccessError(target, error);
+      return null;
+    }
   }
 
   homeDirs() {
@@ -209,11 +236,11 @@ export class LocalEnv {
   }
 
   async exists(target) {
-    return (await safeLstat(target)) !== null;
+    return (await this.#lstat(target)) !== null;
   }
 
   async stat(target) {
-    const stats = await safeLstat(target);
+    const stats = await this.#lstat(target);
     if (!stats) {
       return null;
     }
@@ -223,6 +250,8 @@ export class LocalEnv {
       bytes: diskBytes(stats),
       mtimeMs: stats.mtimeMs,
       inode: `${stats.dev}:${stats.ino}`,
+      uid: stats.uid,
+      device: stats.dev,
     };
   }
 
@@ -261,14 +290,15 @@ export class LocalEnv {
   async list(dir) {
     let names;
     try {
-      names = await fsp.readdir(dir);
-    } catch {
+      names = await (this.options.fileFs ?? fsp).readdir(dir);
+    } catch (error) {
+      this.recordAccessError(dir, error);
       return [];
     }
     const entries = await Promise.all(
       names.map(async (name) => {
         const full = path.join(dir, name);
-        const stats = await safeLstat(full);
+        const stats = await this.#lstat(full);
         if (!stats) {
           return null;
         }
@@ -302,7 +332,7 @@ export class LocalEnv {
   }
 
   async rawUsage(target) {
-    const root = await safeLstat(target);
+    const root = await this.#lstat(target);
     if (!root) {
       return null;
     }
@@ -331,21 +361,28 @@ export class LocalEnv {
     const visit = async (dir) => {
       let names;
       try {
-        names = await fsp.readdir(dir);
-      } catch {
+        names = await (this.options.fileFs ?? fsp).readdir(dir);
+      } catch (error) {
+        this.recordAccessError(dir, error);
         errors++;
         return [];
       }
       const children = await Promise.all(
         names.map(async (name) => {
           const full = path.join(dir, name);
-          return [full, await safeLstat(full)];
+          return [full, await this.#lstat(full)];
         })
       );
       const subdirs = [];
       for (const [full, stats] of children) {
         if (!stats) {
           errors++;
+          continue;
+        }
+        if (
+          stats.dev !== root.dev ||
+          (this.scanPolicy && !this.scanPolicy.allows(full))
+        ) {
           continue;
         }
         account(stats);
@@ -434,14 +471,24 @@ export class LocalEnv {
   async #walk(roots, maxDepth, skipNames, visit) {
     const skip = skipNames ? new Set(skipNames) : this.skipNames;
     const visited = new Set();
-    const queue = roots.map((root) => [root, 0]);
+    const queue = await Promise.all(
+      roots.map(async (root) => [root, 0, await this.deviceId(root)])
+    );
     while (queue.length > 0) {
-      const [dir, depth] = queue.shift();
+      const [dir, depth, device] = queue.shift();
       if (visited.has(dir)) {
         continue;
       }
       visited.add(dir);
-      const entries = await this.list(dir);
+      const entries = [];
+      for (const entry of await this.list(dir)) {
+        if (
+          entry.type !== 'dir' ||
+          (await this.deviceId(entry.path)) === device
+        ) {
+          entries.push(entry);
+        }
+      }
       const pruned = visit(dir, entries) ?? new Set();
       if (depth + 1 >= maxDepth) {
         continue;
@@ -450,9 +497,10 @@ export class LocalEnv {
         if (
           entry.type === 'dir' &&
           !pruned.has(entry.name) &&
-          !skip.has(entry.name)
+          !skip.has(entry.name) &&
+          (await this.deviceId(entry.path)) === device
         ) {
-          queue.push([entry.path, depth + 1]);
+          queue.push([entry.path, depth + 1, device]);
         }
       }
     }
@@ -533,6 +581,13 @@ export class LocalEnv {
         .filter((proc) => !selfPids.has(proc.pid));
     }
     const result = await this.run(['ps', '-axo', 'pid=,comm=']);
+    const commands = new Map(
+      (await this.run(['ps', '-axo', 'pid=,args='])).stdout
+        .split('\n')
+        .map((line) => /^\s*(\d+)\s+(.+)$/.exec(line))
+        .filter(Boolean)
+        .map((match) => [Number(match[1]), match[2]])
+    );
     const cwds =
       this.platform === 'darwin'
         ? parseLsofCwds(
@@ -551,36 +606,39 @@ export class LocalEnv {
         pid: Number(m[1]),
         name: path.basename(m[2].trim()),
         cwd: cwds.get(Number(m[1])) ?? null,
+        command: commands.get(Number(m[1])) ?? '',
       }))
       .filter((proc) => !selfPids.has(proc.pid));
   }
 
   async #linuxProcesses() {
-    const pids = (await fsp.readdir('/proc')).filter((name) =>
+    const io = this.options.procFs ?? fsp;
+    const pids = (await io.readdir('/proc')).filter((name) =>
       /^\d+$/.test(name)
     );
     const processes = [];
     for (const pid of pids) {
       const base = `/proc/${pid}`;
       const stat = parseProcStat(
-        await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
+        await io.readFile(`${base}/stat`, 'utf8').catch(() => '')
       );
       if (stat.state === 'Z') {
         continue;
       }
       let name;
       try {
-        name = (await fsp.readFile(`${base}/comm`, 'utf8')).trim();
+        name = (await io.readFile(`${base}/comm`, 'utf8')).trim();
       } catch {
         continue;
       }
-      const cwd = await fsp.readlink(`${base}/cwd`).catch(() => null);
-      const exe = await fsp.readlink(`${base}/exe`).catch(() => '');
-      const cmdline = await fsp
+      const cwd = await io.readlink(`${base}/cwd`).catch(() => null);
+      const exe = await io.readlink(`${base}/exe`).catch(() => '');
+      const cmdline = await io
         .readFile(`${base}/cmdline`, 'utf8')
         .catch(() => '');
       processes.push({
         pid: Number(pid),
+        ...(await procIdentity(base, io)),
         name,
         startTime: stat.startTime,
         cwd,
@@ -599,7 +657,33 @@ export class LocalEnv {
    */
   async openPaths({ strict = true } = {}) {
     try {
-      return await this.rawOpenPaths({ strict });
+      let paths = await this.rawOpenPaths({ strict });
+      if (strict && this.unreadableProcesses?.length && this.processInspector) {
+        const privileged = await this.processInspector.openPaths();
+        if (privileged) {
+          this.unreadableProcesses =
+            this.processInspector.unreadableProcesses ?? [];
+          paths = privileged;
+        }
+      }
+      if (strict && this.unreadableProcesses?.length) {
+        const { OPEN_PATHS_SCRIPT } = await import('./shell.js');
+        const elevated = await this.run([
+          'sudo',
+          '-n',
+          'sh',
+          '-c',
+          OPEN_PATHS_SCRIPT,
+        ]);
+        if (elevated.code === 0) {
+          paths = new Set(
+            elevated.stdout.split('\n').filter((line) => line.startsWith('/'))
+          );
+          this.unreadableProcesses = [];
+        }
+      }
+      this.#processHint();
+      return paths;
     } catch (error) {
       if (this.processInspector) {
         const paths = await this.processInspector.openPaths();
@@ -611,62 +695,18 @@ export class LocalEnv {
     }
   }
 
+  #processHint() {
+    this.probeHint = this.unreadableProcesses?.length
+      ? `${this.unreadableProcesses.length} processes are unreadable; uncertainty is scoped to their paths and UID. Re-run as root for complete inspection (docker exec -u 0 -e HOME=<user-home> <container> dss scan).`
+      : null;
+  }
+
   async rawOpenPaths({ strict = true } = {}) {
     if (this.platform === 'linux') {
-      const paths = new Set();
-      let pids = [];
-      try {
-        pids = (await fsp.readdir('/proc')).filter((n) => /^\d+$/.test(n));
-      } catch {
-        return null;
-      }
-      for (const pid of pids) {
-        const base = `/proc/${pid}`;
-        const state = parseProcStat(
-          await fsp.readFile(`${base}/stat`, 'utf8').catch(() => '')
-        );
-        if (state.state === 'Z') {
-          continue;
-        }
-        for (const link of ['cwd', 'exe']) {
-          const target = await fsp
-            .readlink(`${base}/${link}`)
-            .catch((error) => {
-              if (
-                strict &&
-                (error.code === 'EACCES' || error.code === 'EPERM')
-              ) {
-                throw error;
-              }
-              return '';
-            });
-          if (target.startsWith('/')) {
-            paths.add(target.replace(/ \(deleted\)$/, ''));
-          }
-        }
-        const fds = await fsp.readdir(`${base}/fd`).catch((error) => {
-          if (strict && (error.code === 'EACCES' || error.code === 'EPERM')) {
-            throw error;
-          }
-          return [];
-        });
-        for (const fd of fds) {
-          const target = await fsp
-            .readlink(`${base}/fd/${fd}`)
-            .catch((error) => {
-              if (
-                strict &&
-                (error.code === 'EACCES' || error.code === 'EPERM')
-              ) {
-                throw error;
-              }
-              return '';
-            });
-          if (target.startsWith('/')) {
-            paths.add(target.replace(/ \(deleted\)$/, ''));
-          }
-        }
-      }
+      const { paths, unreadable } = await procOpenPaths(
+        this.options.procFs ?? fsp
+      );
+      this.unreadableProcesses = strict ? unreadable : [];
       return paths;
     }
     if (this.platform === 'darwin') {
@@ -698,7 +738,7 @@ export class LocalEnv {
         : [''];
     for (const dir of dirs.filter(Boolean)) {
       for (const extension of extensions) {
-        const stats = await safeLstat(path.join(dir, command + extension));
+        const stats = await this.#lstat(path.join(dir, command + extension));
         if (stats && !stats.isDirectory()) {
           return true;
         }

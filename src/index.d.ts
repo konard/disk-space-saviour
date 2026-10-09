@@ -15,7 +15,7 @@ export interface ScanOptions {
   staleAge?: Duration;
   /** Alias of `staleAge`. */
   olderThan?: Duration;
-  /** Inactivity before whole dependency dirs become `moderate` (`30d`). */
+  /** Inactivity before lockfile-backed node_modules become `safe`, other dependency dirs `moderate` (`30d`). */
   inactive?: Duration;
   /** Items smaller than this are dropped (`1M`). */
   minSize?: Size;
@@ -25,7 +25,7 @@ export interface ScanOptions {
   docker?: boolean | null;
   /** Docker nesting depth (1 = containers of the host daemon). */
   dockerDepth?: number;
-  /** Container ids or names to limit Docker work to. */
+  /** Container ids, names or unique prefixes to limit Docker work to. */
   containers?: string[] | string;
   scanners?: Array<'projects' | 'global' | 'versions' | 'agents' | 'system'>;
   /** Only these ecosystems, rules or kinds. */
@@ -65,6 +65,7 @@ export interface CleanOptions extends ScanOptions {
   confirm?: (item: Item) => boolean | Promise<boolean>;
   /** `false` skips writing the audit log file. */
   audit?: boolean;
+  signal?: AbortSignal;
   onEntry?: (entry: AuditEntry, item: Item) => void;
 }
 
@@ -142,6 +143,7 @@ export interface EnvironmentDescriptor {
   kind: 'host' | 'container';
   depth: number;
   chain: Array<{ containerId: string; name: string }>;
+  hint?: string | null;
   disk?: Disk | null;
 }
 
@@ -208,6 +210,8 @@ export interface AuditLog {
   dryRun: boolean;
   startedAt: string;
   finishedAt: string | null;
+  aborted?: boolean;
+  error?: string;
   entries: AuditEntry[];
   freedBytes: number;
   plannedBytes: number;
