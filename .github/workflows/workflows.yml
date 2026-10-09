@@ -4,14 +4,25 @@ on:
   push:
     branches:
       - main
+    # Every file these jobs read: zizmor also audits the composite actions,
+    # and the status jobs run the scripts below, so editing any of them
+    # without this filter would skip the very checks that cover it.
     paths:
       - '.github/workflows/**'
+      - '.github/actions/**'
       - '.github/zizmor.yml'
+      - 'scripts/check-ci-workflows.mjs'
+      - 'scripts/check-pipeline-status.sh'
+      - 'scripts/check-status-gate-covers-all-jobs.mjs'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - '.github/workflows/**'
+      - '.github/actions/**'
       - '.github/zizmor.yml'
+      - 'scripts/check-ci-workflows.mjs'
+      - 'scripts/check-pipeline-status.sh'
+      - 'scripts/check-status-gate-covers-all-jobs.mjs'
   workflow_dispatch:
 
 # Least-privilege default; these jobs only need to read the checked-out tree.
@@ -104,7 +115,7 @@ jobs:
       # diff rather than a side effect of bumping the action, and documents
       # exactly which analyser reproduces a finding:
       #   pipx run zizmor==1.30.1 --config .github/zizmor.yml \
-      #     --min-confidence low --persona regular .github/workflows
+      #     --min-confidence low --persona regular .github/workflows .github/actions
       - uses: zizmorcore/zizmor-action@v0.6.4
         with:
           advanced-security: false
@@ -127,8 +138,17 @@ jobs:
       # to high severity *and* high confidence keeps that enforcement without
       # importing the noise. Measured: after the digest pins below it reports
       # nothing, and stays silent until someone reintroduces a mutable image.
+      #
+      # The token turns on zizmor's online mode, as the action above does
+      # for its own run. Without it this pass warns "zizmor is running in
+      # offline mode" and silently skips the online audits (known-vulnerable
+      # actions, impostor commits, ref confusion), so a pedantic finding
+      # that needs the API could never surface here. The token only reads
+      # public repository metadata; the job's permissions stay read-only.
       - name: Audit for pedantic-only high-severity findings
         timeout-minutes: 10
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           pipx run zizmor==1.30.1 --config .github/zizmor.yml \
             --persona pedantic --min-severity high --min-confidence high \

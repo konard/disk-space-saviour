@@ -84,6 +84,54 @@ describe('workflow linting job', () => {
     expect(workflowsWorkflow).toContain('--min-confidence high');
   });
 
+  // Without a token zizmor falls back to offline mode: it logs a WARN and
+  // skips every online audit, so the pedantic pass could never report the
+  // findings that need the GitHub API. The action above passes its own.
+  it('runs the pedantic pass in online mode', () => {
+    const pedanticStep = workflowsWorkflow.slice(
+      workflowsWorkflow.indexOf(
+        '- name: Audit for pedantic-only high-severity findings'
+      ),
+      workflowsWorkflow.indexOf('  pipeline-status:')
+    );
+
+    expect(pedanticStep).toContain('GH_TOKEN: ${{ github.token }}');
+  });
+
+  // A paths filter that omits a file a job reads silently skips the very
+  // check that covers that file on the pull request that edits it.
+  it('triggers on changes to every file its jobs audit or run', () => {
+    const scripts = new Set(
+      Array.from(
+        workflowsWorkflow.matchAll(
+          /^\s+(?:run: )?(?:node|bash) (scripts\/\S+)/gm
+        ),
+        (match) => match[1]
+      )
+    );
+    const expected = [
+      '.github/workflows/**',
+      '.github/actions/**',
+      '.github/zizmor.yml',
+      ...scripts,
+    ];
+
+    expect(scripts.size).toBe(3);
+
+    for (const trigger of ['push', 'pull_request']) {
+      const paths = workflowsWorkflow.match(
+        new RegExp(
+          `^  ${trigger}:\\n(?:    .*\\n)*?    paths:\\n((?:      .*\\n)+)`,
+          'm'
+        )
+      )?.[1];
+
+      for (const path of expected) {
+        expect(`${trigger}: ${paths}`).toContain(`- '${path}'`);
+      }
+    }
+  });
+
   it('bounds every job with a timeout backstop', () => {
     const timeouts = workflowsWorkflow.match(/^ {4}timeout-minutes: \d+$/gm);
 
