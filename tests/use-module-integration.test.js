@@ -18,6 +18,7 @@
  * not the npm package the release jobs load on Node, and the esm.sh build of
  * command-stream@2.0.0 calls createRequire('shelljs'), which Deno rejects
  * with ERR_INVALID_ARG_VALUE (experiments/deno-use-m-probe.mjs).
+ * Upstream: https://github.com/link-foundation/command-stream/issues/219
  *
  * On Windows it runs too, and skips only when the ESM loader rejects a bare
  * drive-letter path with ERR_UNSUPPORTED_ESM_URL_SCHEME ("On Windows,

@@ -10,7 +10,8 @@ const DESCRIBE_OPENER = /\bdescribe(?:\.\w+)?\(.*=>\s*\{$/;
 const TEST_OPENER = /\b(?:it|test)(?:\.\w+)?\(.*=>\s*\{$/;
 const RETURN = /^\s*return;?\s*(?:\/\/.*)?$/;
 // `cond ? describe : () => {}` registers nothing when cond is false, and
-// test-anywhere's describe.skip registers nothing at all on Deno.
+// test-anywhere's describe.skip registers nothing at all on Deno
+// (https://github.com/link-foundation/test-anywhere/issues/149).
 const SWAPPED =
   /\?\s*(?:it|test|describe)(?:\.\w+)?\s*:|\?[^:]*:\s*(?:it|test|describe)(?:\.\w+)?\s*;|\bdescribe\.skip\b/;
 // Conditions about the runner, not about the code under test.
