@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.0
+
+### Minor Changes
+
+- 1613aa2: Protect running package tools, expand safe application caches, respect scan boundaries and exclusions, and bound container writable-layer inspection with honest unknown-size reporting.
+
 ## 0.14.1
 
 ### Patch Changes
