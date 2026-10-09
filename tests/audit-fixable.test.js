@@ -9,6 +9,7 @@ import {
   classify,
   fixedVersion,
   installedVersions,
+  nonBlockingSummary,
 } from '../scripts/audit-fixable.mjs';
 
 const advisory = (name, range, severity = 'high') => ({
@@ -129,5 +130,17 @@ describe('audit-fixable', () => {
       ['http-cache-semantics', '4.3.0'],
     ]);
     expect(unfixable.map((entry) => entry.name)).toEqual(['braces']);
+  });
+
+  it('summarizes the advisories below the blocking severities', () => {
+    expect(
+      nonBlockingSummary({
+        metadata: {
+          vulnerabilities: { info: 0, low: 2, moderate: 8, high: 1, total: 11 },
+        },
+      })
+    ).toBe('8 moderate, 2 low');
+    expect(nonBlockingSummary({ metadata: { vulnerabilities: {} } })).toBe('');
+    expect(nonBlockingSummary({})).toBe('');
   });
 });
