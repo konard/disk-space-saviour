@@ -4,15 +4,15 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const scriptPath = fileURLToPath(
   new URL('../scripts/check-package-manager.mjs', import.meta.url)
 );
 const releaseWorkflow = readFileSync('.github/workflows/release.yml', 'utf8');
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
-// The guard fixtures spawn node and write outside the sandbox, which the
-// Deno leg's `--allow-read`-only test run cannot do.
-const canRunGuardFixtures = typeof Deno === 'undefined';
+// The guard fixtures spawn node and write outside the sandbox, so a Deno run
+// without -A reports them as skipped.
 
 function createFixture(pkg, extraFiles = []) {
   const root = path.join(
@@ -43,11 +43,7 @@ describe('package.json declares the package manager', () => {
 });
 
 describe('check-package-manager.mjs', () => {
-  it('passes on this repository', () => {
-    if (!canRunGuardFixtures) {
-      return;
-    }
-
+  itUnless(sandboxed)('passes on this repository', () => {
     const result = runGuard(process.cwd());
 
     expect(result.status).toBe(0);
@@ -56,50 +52,44 @@ describe('check-package-manager.mjs', () => {
     expect(result.stderr).toContain('deno.lock');
   });
 
-  it('fails when neither packageManager nor devEngines is declared', () => {
-    if (!canRunGuardFixtures) {
-      return;
+  itUnless(sandboxed)(
+    'fails when neither packageManager nor devEngines is declared',
+    () => {
+      const root = createFixture({ name: 'fixture' });
+
+      try {
+        const result = runGuard(root);
+
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain(
+          'declares neither "packageManager" nor "devEngines.packageManager"'
+        );
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
+  );
 
-    const root = createFixture({ name: 'fixture' });
+  itUnless(sandboxed)(
+    'fails on a declaration naming a manager the flow cannot use',
+    () => {
+      const root = createFixture({
+        name: 'fixture',
+        devEngines: { packageManager: { name: 'bun' } },
+      });
 
-    try {
-      const result = runGuard(root);
+      try {
+        const result = runGuard(root);
 
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain(
-        'declares neither "packageManager" nor "devEngines.packageManager"'
-      );
-    } finally {
-      rmSync(root, { recursive: true, force: true });
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('requires "npm"');
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
-  });
+  );
 
-  it('fails on a declaration naming a manager the flow cannot use', () => {
-    if (!canRunGuardFixtures) {
-      return;
-    }
-
-    const root = createFixture({
-      name: 'fixture',
-      devEngines: { packageManager: { name: 'bun' } },
-    });
-
-    try {
-      const result = runGuard(root);
-
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain('requires "npm"');
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  it('parses a versioned packageManager field', () => {
-    if (!canRunGuardFixtures) {
-      return;
-    }
-
+  itUnless(sandboxed)('parses a versioned packageManager field', () => {
     const root = createFixture({
       name: 'fixture',
       packageManager: 'npm@10.9.1',
@@ -115,44 +105,42 @@ describe('check-package-manager.mjs', () => {
     }
   });
 
-  it('warns but passes when a foreign lockfile sits under a declaration', () => {
-    if (!canRunGuardFixtures) {
-      return;
+  itUnless(sandboxed)(
+    'warns but passes when a foreign lockfile sits under a declaration',
+    () => {
+      const root = createFixture(
+        { name: 'fixture', devEngines: { packageManager: { name: 'npm' } } },
+        ['bun.lock', 'deno.lock']
+      );
+
+      try {
+        const result = runGuard(root);
+
+        expect(result.status).toBe(0);
+        expect(result.stderr).toContain('::warning::');
+        expect(result.stderr).toContain('bun.lock');
+        expect(result.stderr).toContain('deno.lock');
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
+  );
 
-    const root = createFixture(
-      { name: 'fixture', devEngines: { packageManager: { name: 'npm' } } },
-      ['bun.lock', 'deno.lock']
-    );
+  itUnless(sandboxed)(
+    'fails and names the lockfile when a foreign lockfile has no declaration',
+    () => {
+      const root = createFixture({ name: 'fixture' }, ['deno.lock']);
 
-    try {
-      const result = runGuard(root);
+      try {
+        const result = runGuard(root);
 
-      expect(result.status).toBe(0);
-      expect(result.stderr).toContain('::warning::');
-      expect(result.stderr).toContain('bun.lock');
-      expect(result.stderr).toContain('deno.lock');
-    } finally {
-      rmSync(root, { recursive: true, force: true });
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('deno.lock');
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
-  });
-
-  it('fails and names the lockfile when a foreign lockfile has no declaration', () => {
-    if (!canRunGuardFixtures) {
-      return;
-    }
-
-    const root = createFixture({ name: 'fixture' }, ['deno.lock']);
-
-    try {
-      const result = runGuard(root);
-
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain('deno.lock');
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
+  );
 
   it('runs ahead of the install step in the release workflow', () => {
     // Several jobs in release.yml install dependencies; the guard has to

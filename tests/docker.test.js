@@ -30,6 +30,7 @@ import {
   scanWorld,
 } from './helpers/fake-docker.js';
 import { pushedRepo } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const LIFECYCLE = new Set([
   'stop',
@@ -109,7 +110,6 @@ function world() {
  * Deno CI grants read access only, while scans copy container repositories
  * to a local temp dir and cleaning writes backups.
  */
-const readOnlyRuntime = () => typeof Deno !== 'undefined';
 
 function lifecycleCalls(fake) {
   return fake
@@ -184,54 +184,54 @@ describe('docker diff and owner parsing', () => {
     expect(owner.command).toBe('run');
   });
 
-  it('finds edited files in an image repository with an untouched .git', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'finds edited files in an image repository with an untouched .git',
+    async () => {
+      const root = mkdtempSync(join(tmpdir(), 'dss-docker-untouched-git-'));
+      try {
+        const repo = pushedRepo(join(root, 'repo'));
+        writeFileSync(join(repo, 'README.md'), 'edited in container\n');
+        const docker = {
+          diff: async () => 'C /workspace/repo/README.md\n',
+          pathExists: async (_id, target) =>
+            target === '/workspace/repo/.git/HEAD',
+          copyOut: async (_id, _source, destination) => {
+            await fsp.cp(repo, join(destination, 'repo'), { recursive: true });
+            return { code: 0, stderr: '' };
+          },
+        };
+        const state = await containerGitState(docker, 'container');
+        expect(state.repos.map((entry) => entry.root)).toEqual([
+          '/workspace/repo',
+        ]);
+        expect(state.blockers.join()).toMatch(/uncommitted change/);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
-    const root = mkdtempSync(join(tmpdir(), 'dss-docker-untouched-git-'));
-    try {
-      const repo = pushedRepo(join(root, 'repo'));
-      writeFileSync(join(repo, 'README.md'), 'edited in container\n');
+  );
+
+  itUnless(sandboxed)(
+    'checks a nested repository even when its parent is already known',
+    async () => {
+      const visited = [];
       const docker = {
-        diff: async () => 'C /workspace/repo/README.md\n',
+        diff: async () =>
+          'C /work/parent/.git/index\nC /work/parent/nested/README.md\n',
         pathExists: async (_id, target) =>
-          target === '/workspace/repo/.git/HEAD',
-        copyOut: async (_id, _source, destination) => {
-          await fsp.cp(repo, join(destination, 'repo'), { recursive: true });
-          return { code: 0, stderr: '' };
+          ['/work/parent/.git/HEAD', '/work/parent/nested/.git/HEAD'].includes(
+            target
+          ),
+        copyOut: async (_id, source) => {
+          visited.push(source);
+          return { code: 1, stderr: 'copy unavailable' };
         },
       };
-      const state = await containerGitState(docker, 'container');
-      expect(state.repos.map((entry) => entry.root)).toEqual([
-        '/workspace/repo',
-      ]);
-      expect(state.blockers.join()).toMatch(/uncommitted change/);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
+      await containerGitState(docker, 'container');
+      expect(visited).toContain('/work/parent');
+      expect(visited).toContain('/work/parent/nested');
     }
-  });
-
-  it('checks a nested repository even when its parent is already known', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const visited = [];
-    const docker = {
-      diff: async () =>
-        'C /work/parent/.git/index\nC /work/parent/nested/README.md\n',
-      pathExists: async (_id, target) =>
-        ['/work/parent/.git/HEAD', '/work/parent/nested/.git/HEAD'].includes(
-          target
-        ),
-      copyOut: async (_id, source) => {
-        visited.push(source);
-        return { code: 1, stderr: 'copy unavailable' };
-      },
-    };
-    await containerGitState(docker, 'container');
-    expect(visited).toContain('/work/parent');
-    expect(visited).toContain('/work/parent/nested');
-  });
+  );
 
   it('requires an exact per-container override for verified dirty Git work', () => {
     const state = {
@@ -257,52 +257,49 @@ describe('docker diff and owner parsing', () => {
     ).toEqual(['cannot inspect Git metadata near /other']);
   });
 
-  it('blocks changed work hidden by the Git copy exclusions', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'blocks changed work hidden by the Git copy exclusions',
+    async () => {
+      const docker = {
+        diff: async () =>
+          'A /work/repo/.git/HEAD\nA /work/repo/target/notes.txt\n',
+        pathExists: async () => false,
+        copyOut: async () => ({ code: 1, stderr: 'unavailable' }),
+      };
+      const state = await containerGitState(docker, 'container');
+      expect(state.blockers.join()).toMatch(/excluded folder/);
     }
-    const docker = {
-      diff: async () =>
-        'A /work/repo/.git/HEAD\nA /work/repo/target/notes.txt\n',
-      pathExists: async () => false,
-      copyOut: async () => ({ code: 1, stderr: 'unavailable' }),
-    };
-    const state = await containerGitState(docker, 'container');
-    expect(state.blockers.join()).toMatch(/excluded folder/);
-  });
+  );
 });
 
 describe('recursive docker scan', () => {
-  it('follows Docker-in-Docker to depth 2 and deeper', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const fake = world();
-    const { result, scanned } = await scanWorld(fake, { dockerDepth: 3 });
+  itUnless(sandboxed)(
+    'follows Docker-in-Docker to depth 2 and deeper',
+    async () => {
+      const fake = world();
+      const { result, scanned } = await scanWorld(fake, { dockerDepth: 3 });
 
-    expect(result.daemons.map((d) => [d.id, d.depth])).toEqual([
-      ['HOST', 0],
-      ['INNER', 1],
-      ['DEEPEST', 2],
-    ]);
-    expect(scanned).toEqual([
-      'host/solver-1',
-      'host/solver-1/build-7',
-      'host/solver-1/build-7/leaf',
-    ]);
-    const leaf = result.environments.find((e) => e.id.endsWith('/leaf'));
-    expect(leaf.depth).toBe(3);
-    expect(leaf.chain.map((link) => link.name)).toEqual([
-      'solver-1',
-      'build-7',
-      'leaf',
-    ]);
-  });
-
-  it('stops at the depth limit and says so', async () => {
-    if (readOnlyRuntime()) {
-      return;
+      expect(result.daemons.map((d) => [d.id, d.depth])).toEqual([
+        ['HOST', 0],
+        ['INNER', 1],
+        ['DEEPEST', 2],
+      ]);
+      expect(scanned).toEqual([
+        'host/solver-1',
+        'host/solver-1/build-7',
+        'host/solver-1/build-7/leaf',
+      ]);
+      const leaf = result.environments.find((e) => e.id.endsWith('/leaf'));
+      expect(leaf.depth).toBe(3);
+      expect(leaf.chain.map((link) => link.name)).toEqual([
+        'solver-1',
+        'build-7',
+        'leaf',
+      ]);
     }
+  );
+
+  itUnless(sandboxed)('stops at the depth limit and says so', async () => {
     const fake = world();
     const { result, scanned } = await scanWorld(fake, { dockerDepth: 1 });
 
@@ -330,72 +327,74 @@ describe('recursive docker scan', () => {
     expect(() => assertAllowed(['volume', 'rm', 'workspace-data'])).toThrow();
   });
 
-  it('never sends a lifecycle command while scanning', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'never sends a lifecycle command while scanning',
+    async () => {
+      const fake = world();
+      await scanWorld(fake, { dockerDepth: 3 });
+
+      expect(lifecycleCalls(fake)).toEqual([]);
+      expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
     }
-    const fake = world();
-    await scanWorld(fake, { dockerDepth: 3 });
+  );
 
-    expect(lifecycleCalls(fake)).toEqual([]);
-    expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
-  });
+  itUnless(sandboxed)(
+    'reports stopped containers with size, owner and Git state',
+    async () => {
+      const fake = world();
+      const { result } = await scanWorld(fake, {
+        dockerDepth: 3,
+        removeStoppedContainers: true,
+      });
+      const stopped = result.items.filter(
+        (item) => item.rule === 'docker-stopped-container'
+      );
+      const byName = new Map(
+        stopped.map((item) => [item.container.name, item])
+      );
 
-  it('reports stopped containers with size, owner and Git state', async () => {
-    if (readOnlyRuntime()) {
-      return;
+      expect([...byName.keys()].sort()).toEqual([
+        'inner-old',
+        'old-clean',
+        'old-dirty',
+      ]);
+      const cleanOne = byName.get('old-clean');
+      expect(cleanOne.bytes).toBe(50e6);
+      expect(cleanOne.container.owner.session).toBe('s-2');
+      expect(cleanOne.requiresConfirmation).toBe('removeStoppedContainers');
+      expect(cleanOne.blockers).toEqual([]);
+      expect(byName.get('inner-old').env).toBe('host/solver-1');
+
+      const dirty = byName.get('old-dirty');
+      expect(dirty.container.owner.session).toBe('s-3');
+      expect(dirty.container.repos.map((repo) => repo.root)).toEqual([
+        '/work/repo',
+      ]);
+      expect(dirty.blockers.length).toBe(1);
+      expect(dirty.blockers[0]).toContain('/work/repo (in container)');
     }
-    const fake = world();
-    const { result } = await scanWorld(fake, {
-      dockerDepth: 3,
-      removeStoppedContainers: true,
-    });
-    const stopped = result.items.filter(
-      (item) => item.rule === 'docker-stopped-container'
-    );
-    const byName = new Map(stopped.map((item) => [item.container.name, item]));
+  );
 
-    expect([...byName.keys()].sort()).toEqual([
-      'inner-old',
-      'old-clean',
-      'old-dirty',
-    ]);
-    const cleanOne = byName.get('old-clean');
-    expect(cleanOne.bytes).toBe(50e6);
-    expect(cleanOne.container.owner.session).toBe('s-2');
-    expect(cleanOne.requiresConfirmation).toBe('removeStoppedContainers');
-    expect(cleanOne.blockers).toEqual([]);
-    expect(byName.get('inner-old').env).toBe('host/solver-1');
+  itUnless(sandboxed)(
+    'marks running containers as scanned, never as items',
+    async () => {
+      const fake = world();
+      const { result } = await scanWorld(fake, { dockerDepth: 3 });
 
-    const dirty = byName.get('old-dirty');
-    expect(dirty.container.owner.session).toBe('s-3');
-    expect(dirty.container.repos.map((repo) => repo.root)).toEqual([
-      '/work/repo',
-    ]);
-    expect(dirty.blockers.length).toBe(1);
-    expect(dirty.blockers[0]).toContain('/work/repo (in container)');
-  });
-
-  it('marks running containers as scanned, never as items', async () => {
-    if (readOnlyRuntime()) {
-      return;
+      const running = result.containers.filter((c) => c.state === 'running');
+      expect(running.every((c) => c.scanned)).toBe(true);
+      expect(
+        result.items.some(
+          (item) =>
+            item.kind === 'container' &&
+            running.some((c) => c.id === item.container.id)
+        )
+      ).toBe(false);
+      expect(running.find((c) => c.name === 'solver-1').owner.session).toBe(
+        's-1'
+      );
     }
-    const fake = world();
-    const { result } = await scanWorld(fake, { dockerDepth: 3 });
-
-    const running = result.containers.filter((c) => c.state === 'running');
-    expect(running.every((c) => c.scanned)).toBe(true);
-    expect(
-      result.items.some(
-        (item) =>
-          item.kind === 'container' &&
-          running.some((c) => c.id === item.container.id)
-      )
-    ).toBe(false);
-    expect(running.find((c) => c.name === 'solver-1').owner.session).toBe(
-      's-1'
-    );
-  });
+  );
 });
 
 function tempDirs() {
@@ -404,31 +403,28 @@ function tempDirs() {
 }
 
 describe('cleaning stopped containers', () => {
-  it('keeps stopped containers without explicit consent', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const fake = world();
-    const { env, report } = await scanWorld(fake, { dockerDepth: 3 });
-    const audit = await clean(report, {
-      env,
-      tier: 'moderate',
-      audit: false,
-    });
+  itUnless(sandboxed)(
+    'keeps stopped containers without explicit consent',
+    async () => {
+      const fake = world();
+      const { env, report } = await scanWorld(fake, { dockerDepth: 3 });
+      const audit = await clean(report, {
+        env,
+        tier: 'moderate',
+        audit: false,
+      });
 
-    const entries = audit.entries.filter((e) => e.kind === 'container');
-    expect(entries.length).toBe(2);
-    for (const entry of entries) {
-      expect(entry.status).toBe('skipped');
-      expect(entry.reason).toContain('--remove-stopped-containers');
+      const entries = audit.entries.filter((e) => e.kind === 'container');
+      expect(entries.length).toBe(2);
+      for (const entry of entries) {
+        expect(entry.status).toBe('skipped');
+        expect(entry.reason).toContain('--remove-stopped-containers');
+      }
+      expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
     }
-    expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
-  });
+  );
 
-  it('plans but does not remove in a dry run', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('plans but does not remove in a dry run', async () => {
     const fake = world();
     const { env, report } = await scanWorld(fake, { dockerDepth: 3 });
     const audit = await clean(report, {
@@ -450,115 +446,117 @@ describe('cleaning stopped containers', () => {
     expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
   });
 
-  it('backs up logs, then removes only verified stopped containers', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const fake = world();
-    const { env, report } = await scanWorld(fake, { dockerDepth: 3 });
-    const { root, backupDir } = tempDirs();
-    try {
-      const audit = await clean(report, {
-        env,
-        tier: 'moderate',
-        only: ['docker-stopped-container'],
-        removeStoppedContainers: true,
-        backupDir,
-        audit: false,
-      });
-      const removed = audit.entries.filter((e) => e.status === 'removed');
+  itUnless(sandboxed)(
+    'backs up logs, then removes only verified stopped containers',
+    async () => {
+      const fake = world();
+      const { env, report } = await scanWorld(fake, { dockerDepth: 3 });
+      const { root, backupDir } = tempDirs();
+      try {
+        const audit = await clean(report, {
+          env,
+          tier: 'moderate',
+          only: ['docker-stopped-container'],
+          removeStoppedContainers: true,
+          backupDir,
+          audit: false,
+        });
+        const removed = audit.entries.filter((e) => e.status === 'removed');
 
-      expect(removed.map((e) => e.description).sort()).toEqual([
-        'stopped container inner-old (ubuntu:24.04)',
-        'stopped container old-clean (ubuntu:24.04)',
-      ]);
-      const rmCalls = fake.dockerCalls().filter((args) => args[0] === 'rm');
-      expect(rmCalls).toEqual([
-        ['rm', containerId('b2')],
-        ['rm', containerId('e5')],
-      ]);
-      expect(lifecycleCalls(fake)).toEqual([]);
+        expect(removed.map((e) => e.description).sort()).toEqual([
+          'stopped container inner-old (ubuntu:24.04)',
+          'stopped container old-clean (ubuntu:24.04)',
+        ]);
+        const rmCalls = fake.dockerCalls().filter((args) => args[0] === 'rm');
+        expect(rmCalls).toEqual([
+          ['rm', containerId('b2')],
+          ['rm', containerId('e5')],
+        ]);
+        expect(lifecycleCalls(fake)).toEqual([]);
 
-      const backup = removed.find((e) =>
-        e.description.includes('old-clean')
-      ).backup;
-      expect(existsSync(join(backup, 'inspect.json'))).toBe(true);
-      expect(readFileSync(join(backup, 'stdout.log'), 'utf8')).toBe(
-        '2026-09-20T10:00:00Z done\n'
-      );
-      expect(audit.environments['host/solver-1'].removed).toBe(1);
-      expect(audit.environments.host.removed).toBe(1);
-      expect(fake.daemons.host.containers.map((c) => c.name).sort()).toEqual([
-        'old-dirty',
-        'solver-1',
-      ]);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
+        const backup = removed.find((e) =>
+          e.description.includes('old-clean')
+        ).backup;
+        expect(existsSync(join(backup, 'inspect.json'))).toBe(true);
+        expect(readFileSync(join(backup, 'stdout.log'), 'utf8')).toBe(
+          '2026-09-20T10:00:00Z done\n'
+        );
+        expect(audit.environments['host/solver-1'].removed).toBe(1);
+        expect(audit.environments.host.removed).toBe(1);
+        expect(fake.daemons.host.containers.map((c) => c.name).sort()).toEqual([
+          'old-dirty',
+          'solver-1',
+        ]);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
-  });
+  );
 
-  it('leaves a container alone when it started again after the scan', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const fake = world();
-    const { env, report } = await scanWorld(fake, { dockerDepth: 1 });
-    fake.daemons.host.containers.find((c) => c.name === 'old-clean').state =
-      'running';
-    const { root, backupDir } = tempDirs();
-    try {
-      const audit = await clean(report, {
-        env,
-        tier: 'moderate',
-        only: ['docker-stopped-container'],
-        removeStoppedContainers: true,
-        backupDir,
-        audit: false,
-      });
-      const entry = audit.entries.find((e) =>
-        e.description.includes('old-clean')
-      );
+  itUnless(sandboxed)(
+    'leaves a container alone when it started again after the scan',
+    async () => {
+      const fake = world();
+      const { env, report } = await scanWorld(fake, { dockerDepth: 1 });
+      fake.daemons.host.containers.find((c) => c.name === 'old-clean').state =
+        'running';
+      const { root, backupDir } = tempDirs();
+      try {
+        const audit = await clean(report, {
+          env,
+          tier: 'moderate',
+          only: ['docker-stopped-container'],
+          removeStoppedContainers: true,
+          backupDir,
+          audit: false,
+        });
+        const entry = audit.entries.find((e) =>
+          e.description.includes('old-clean')
+        );
 
-      expect(entry.status).toBe('skipped');
-      expect(entry.reason).toBe('container is running now, left alone');
-      expect(
-        fake
-          .dockerCalls()
-          .some((args) => args.includes(containerId('b2')) && args[0] === 'rm')
-      ).toBe(false);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
+        expect(entry.status).toBe('skipped');
+        expect(entry.reason).toBe('container is running now, left alone');
+        expect(
+          fake
+            .dockerCalls()
+            .some(
+              (args) => args.includes(containerId('b2')) && args[0] === 'rm'
+            )
+        ).toBe(false);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
-  });
+  );
 
-  it('asks the confirm callback when the flag is missing', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const fake = world();
-    const { env, report } = await scanWorld(fake, { dockerDepth: 1 });
-    const { root, backupDir } = tempDirs();
-    const asked = [];
-    try {
-      const audit = await clean(report, {
-        env,
-        tier: 'moderate',
-        only: ['docker-stopped-container'],
-        backupDir,
-        audit: false,
-        confirm: (item) => {
-          asked.push(item.container.owner.session);
-          return false;
-        },
-      });
+  itUnless(sandboxed)(
+    'asks the confirm callback when the flag is missing',
+    async () => {
+      const fake = world();
+      const { env, report } = await scanWorld(fake, { dockerDepth: 1 });
+      const { root, backupDir } = tempDirs();
+      const asked = [];
+      try {
+        const audit = await clean(report, {
+          env,
+          tier: 'moderate',
+          only: ['docker-stopped-container'],
+          backupDir,
+          audit: false,
+          confirm: (item) => {
+            asked.push(item.container.owner.session);
+            return false;
+          },
+        });
 
-      expect(asked).toEqual(['s-2']);
-      expect(audit.entries.every((e) => e.status === 'skipped')).toBe(true);
-      expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
+        expect(asked).toEqual(['s-2']);
+        expect(audit.entries.every((e) => e.status === 'skipped')).toBe(true);
+        expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
-  });
+  );
 });
 
 describe('owner sessions and layer hints', () => {

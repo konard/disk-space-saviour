@@ -21,10 +21,10 @@ import {
   age,
   DAY_MS,
   scanInput,
-  readOnlyRuntime,
   pushedRepo,
   git,
 } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const ok = (stdout) => ({ code: 0, stdout, stderr: '' });
 describe('aggregate cleanup details', () => {
@@ -119,24 +119,24 @@ describe('aggregate cleanup details', () => {
 });
 
 describe('aggregate cleanup safety and publishing', () => {
-  it('reports Full Disk Access when Safari inspection is denied', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const denied = Object.assign(new Error('denied'), { code: 'EPERM' });
-    const env = new LocalEnv({
-      platform: 'darwin',
-      fileFs: {
-        lstat: async () => {
-          throw denied;
+  itUnless(sandboxed)(
+    'reports Full Disk Access when Safari inspection is denied',
+    async () => {
+      const denied = Object.assign(new Error('denied'), { code: 'EPERM' });
+      const env = new LocalEnv({
+        platform: 'darwin',
+        fileFs: {
+          lstat: async () => {
+            throw denied;
+          },
         },
-      },
-    });
-    expect(await env.stat('/Users/me/Library/Caches/com.apple.Safari')).toBe(
-      null
-    );
-    expect([...env.accessErrors.values()].join()).toMatch(/Full Disk Access/);
-  });
+      });
+      expect(await env.stat('/Users/me/Library/Caches/com.apple.Safari')).toBe(
+        null
+      );
+      expect([...env.accessErrors.values()].join()).toMatch(/Full Disk Access/);
+    }
+  );
   it('explains a repository transfer in npm publishing diagnostics', () => {
     expect(buildAuthFailureGuidance('disk-space-saviour')).toMatch(
       /repository transfer/
@@ -154,34 +154,36 @@ describe('aggregate cleanup safety and publishing', () => {
     expect(isNonRetryableFailure(result.stderr)).toBe(true);
     expect(result.code).toBe(1);
   });
-  it('blocks nonignored artifact files while allowing ignored artifacts with dirty source', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'blocks nonignored artifact files while allowing ignored artifacts with dirty source',
+    async () => {
+      const root = tempRoot('dss-artifacts-');
+      const repo = pushedRepo(join(root, 'app'));
+      writeFileSync(join(repo, 'package.json'), '{}');
+      writeFileSync(join(repo, 'package-lock.json'), '{}');
+      git(repo, 'add', 'package.json', 'package-lock.json');
+      git(repo, 'commit', '-qm', 'package');
+      const modules = join(repo, 'node_modules');
+      writeBlob(join(modules, 'keep.js'));
+      writeFileSync(join(repo, '.gitignore'), '');
+      age(root, 40 * DAY_MS);
+      const env = fixtureEnv(root);
+      const options = scanInput(env, [repo], { scanners: ['projects'] });
+      const report = await scan(options);
+      expect(
+        report.items
+          .find((item) => item.rule === 'node-modules')
+          .blockers.join()
+      ).toMatch(/not ignored/);
+      const audit = await clean(report, {
+        ...options,
+        tier: 'moderate',
+        audit: false,
+      });
+      expect(audit.entries.some((entry) => entry.status === 'removed')).toBe(
+        false
+      );
+      expect(existsSync(modules)).toBe(true);
     }
-    const root = tempRoot('dss-artifacts-');
-    const repo = pushedRepo(join(root, 'app'));
-    writeFileSync(join(repo, 'package.json'), '{}');
-    writeFileSync(join(repo, 'package-lock.json'), '{}');
-    git(repo, 'add', 'package.json', 'package-lock.json');
-    git(repo, 'commit', '-qm', 'package');
-    const modules = join(repo, 'node_modules');
-    writeBlob(join(modules, 'keep.js'));
-    writeFileSync(join(repo, '.gitignore'), '');
-    age(root, 40 * DAY_MS);
-    const env = fixtureEnv(root);
-    const options = scanInput(env, [repo], { scanners: ['projects'] });
-    const report = await scan(options);
-    expect(
-      report.items.find((item) => item.rule === 'node-modules').blockers.join()
-    ).toMatch(/not ignored/);
-    const audit = await clean(report, {
-      ...options,
-      tier: 'moderate',
-      audit: false,
-    });
-    expect(audit.entries.some((entry) => entry.status === 'removed')).toBe(
-      false
-    );
-    expect(existsSync(modules)).toBe(true);
-  });
+  );
 });

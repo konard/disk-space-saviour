@@ -14,11 +14,11 @@ import {
   DAY_MS,
   age,
   fixtureEnv,
-  readOnlyRuntime,
   removeRoot,
   tempRoot,
   writeBlob,
 } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 /**
  * Terminal double: records output and answers questions from `answers`.
@@ -222,24 +222,88 @@ describe('exit codes', () => {
 });
 
 describe('dss on real files', () => {
-  it('rescans a saved report before executing edited paths', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'rescans a saved report before executing edited paths',
+    async () => {
+      const root = tempRoot('dss-report-');
+      try {
+        const project = join(root, 'app');
+        const vendor = writeBlob(join(project, 'vendor', 'autoload.php'));
+        const protectedFile = writeBlob(join(root, 'keep', 'notes.txt'));
+        writeFileSync(join(project, 'composer.json'), '{}');
+        writeFileSync(join(project, 'composer.lock'), '{}');
+        age(root, 40 * DAY_MS);
+        const env = fixtureEnv(root);
+        const api = {
+          scan: (options) => scan({ ...options, env }),
+          clean: (report, options) => clean(report, { ...options, env }),
+        };
+        const args = [
+          root,
+          '--no-docker',
+          '--no-native',
+          '--scanner',
+          'projects',
+          '--min-size',
+          '0',
+          '--audit-dir',
+          join(root, 'audit'),
+        ];
+        const saved = await api.scan({
+          roots: [root],
+          docker: false,
+          noNative: true,
+          scanners: ['projects'],
+          minSize: 0,
+        });
+        const item = saved.items.find(
+          (entry) => entry.rule === 'composer-vendor'
+        );
+        expect(Boolean(item)).toBe(true);
+        item.paths = [join(root, 'keep')];
+        item.action.paths = item.paths;
+        item.blockers = [];
+        const reportFile = join(root, 'report.json');
+        writeFileSync(reportFile, JSON.stringify(saved));
+        const io = fakeIo();
+        expect(
+          await runCli(
+            [
+              'clean',
+              ...args,
+              '--report',
+              reportFile,
+              '--tier',
+              'moderate',
+              '--yes',
+              '--json',
+            ],
+            { io, api }
+          )
+        ).toBe(0);
+        expect(existsSync(protectedFile)).toBe(true);
+        expect(existsSync(vendor)).toBe(false);
+      } finally {
+        removeRoot(root);
+      }
     }
-    const root = tempRoot('dss-report-');
-    try {
+  );
+
+  itUnless(sandboxed)(
+    'scans, plans and cleans with an audit log for every run',
+    async () => {
+      // A PHP project: no composer or php runs on CI runners, where other
+      // test workers are node processes whose working directory is unknown
+      // on Windows and would keep a Node.js project busy.
+      const root = tempRoot('dss-cli-');
       const project = join(root, 'app');
-      const vendor = writeBlob(join(project, 'vendor', 'autoload.php'));
-      const protectedFile = writeBlob(join(root, 'keep', 'notes.txt'));
+      const vendor = join(project, 'vendor');
+      writeBlob(join(vendor, 'autoload.php'), 256 * 1024);
       writeFileSync(join(project, 'composer.json'), '{}');
       writeFileSync(join(project, 'composer.lock'), '{}');
       age(root, 40 * DAY_MS);
-      const env = fixtureEnv(root);
-      const api = {
-        scan: (options) => scan({ ...options, env }),
-        clean: (report, options) => clean(report, { ...options, env }),
-      };
-      const args = [
+      const auditDir = join(root, 'audit');
+      const common = [
         root,
         '--no-docker',
         '--no-native',
@@ -248,100 +312,36 @@ describe('dss on real files', () => {
         '--min-size',
         '0',
         '--audit-dir',
-        join(root, 'audit'),
+        auditDir,
       ];
-      const saved = await api.scan({
-        roots: [root],
-        docker: false,
-        noNative: true,
-        scanners: ['projects'],
-        minSize: 0,
-      });
-      const item = saved.items.find(
-        (entry) => entry.rule === 'composer-vendor'
-      );
-      expect(Boolean(item)).toBe(true);
-      item.paths = [join(root, 'keep')];
-      item.action.paths = item.paths;
-      item.blockers = [];
-      const reportFile = join(root, 'report.json');
-      writeFileSync(reportFile, JSON.stringify(saved));
-      const io = fakeIo();
+      const env = fixtureEnv(root);
+      const api = {
+        scan: (options) => scan({ ...options, env }),
+        clean: (report, options) => clean(report, { ...options, env }),
+      };
+
+      const scanned = fakeIo();
+      expect(await runCli(['scan', ...common], { io: scanned, api })).toBe(0);
+      expect(scanned.out[0]).toMatch(/nothing was deleted/);
+      expect(scanned.out[0]).toMatch(/MODERATE {2}1 item/);
+      expect(scanned.out[0]).toContain(vendor);
+
+      const planned = fakeIo();
+      const cleanArgs = ['clean', ...common, '--tier', 'moderate'];
+      expect(await runCli(cleanArgs, { io: planned, api })).toBe(0);
+      expect(existsSync(vendor)).toBe(true);
+
+      const cleaned = fakeIo();
       expect(
-        await runCli(
-          [
-            'clean',
-            ...args,
-            '--report',
-            reportFile,
-            '--tier',
-            'moderate',
-            '--yes',
-            '--json',
-          ],
-          { io, api }
-        )
+        await runCli([...cleanArgs, '--yes', '--json'], { io: cleaned, api })
       ).toBe(0);
-      expect(existsSync(protectedFile)).toBe(true);
+      const audit = JSON.parse(cleaned.out[0]);
+      expect(audit.entries.map((e) => e.status)).toEqual(['removed']);
       expect(existsSync(vendor)).toBe(false);
-    } finally {
+
+      const logs = readdirSync(auditDir).map((name) => name.split('-')[1]);
+      expect(logs.sort()).toEqual(['clean', 'clean', 'scan']);
       removeRoot(root);
     }
-  });
-
-  it('scans, plans and cleans with an audit log for every run', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    // A PHP project: no composer or php runs on CI runners, where other
-    // test workers are node processes whose working directory is unknown
-    // on Windows and would keep a Node.js project busy.
-    const root = tempRoot('dss-cli-');
-    const project = join(root, 'app');
-    const vendor = join(project, 'vendor');
-    writeBlob(join(vendor, 'autoload.php'), 256 * 1024);
-    writeFileSync(join(project, 'composer.json'), '{}');
-    writeFileSync(join(project, 'composer.lock'), '{}');
-    age(root, 40 * DAY_MS);
-    const auditDir = join(root, 'audit');
-    const common = [
-      root,
-      '--no-docker',
-      '--no-native',
-      '--scanner',
-      'projects',
-      '--min-size',
-      '0',
-      '--audit-dir',
-      auditDir,
-    ];
-    const env = fixtureEnv(root);
-    const api = {
-      scan: (options) => scan({ ...options, env }),
-      clean: (report, options) => clean(report, { ...options, env }),
-    };
-
-    const scanned = fakeIo();
-    expect(await runCli(['scan', ...common], { io: scanned, api })).toBe(0);
-    expect(scanned.out[0]).toMatch(/nothing was deleted/);
-    expect(scanned.out[0]).toMatch(/MODERATE {2}1 item/);
-    expect(scanned.out[0]).toContain(vendor);
-
-    const planned = fakeIo();
-    const cleanArgs = ['clean', ...common, '--tier', 'moderate'];
-    expect(await runCli(cleanArgs, { io: planned, api })).toBe(0);
-    expect(existsSync(vendor)).toBe(true);
-
-    const cleaned = fakeIo();
-    expect(
-      await runCli([...cleanArgs, '--yes', '--json'], { io: cleaned, api })
-    ).toBe(0);
-    const audit = JSON.parse(cleaned.out[0]);
-    expect(audit.entries.map((e) => e.status)).toEqual(['removed']);
-    expect(existsSync(vendor)).toBe(false);
-
-    const logs = readdirSync(auditDir).map((name) => name.split('-')[1]);
-    expect(logs.sort()).toEqual(['clean', 'clean', 'scan']);
-    removeRoot(root);
-  });
+  );
 });

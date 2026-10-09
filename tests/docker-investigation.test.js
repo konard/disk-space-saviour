@@ -23,6 +23,7 @@ import {
   daemonInfo,
   scanWorld,
 } from './helpers/fake-docker.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const SESSION = '6f1c2a3b-0d4e-4f5a-8b6c-7d8e9f0a1b2c';
 const TASK = 'https://github.com/o/r/issues/1';
@@ -62,8 +63,6 @@ function world() {
     },
   });
 }
-
-const readOnlyRuntime = () => typeof Deno !== 'undefined';
 
 const inspected = (state, env = []) => ({
   State: { Status: 'exited', FinishedAt: '2026-09-20T10:00:00Z', ...state },
@@ -143,114 +142,114 @@ describe('containers kept for investigation', () => {
     expect(containerNamed(undefined, id, 'oom-task')).toBe(false);
   });
 
-  it('reports the owner and the hold in the scan', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const { result, report } = await scanWorld(world());
-    const byName = new Map(
-      result.items.map((item) => [item.container.name, item])
-    );
-    const oom = byName.get('oom-task');
-    expect(oom.blockers.length).toBe(1);
-    expect(oom.blockers[0]).toContain('kept for investigation');
-    expect(byName.get('done-task').blockers).toEqual([]);
-
-    const text = formatReport(report);
-    expect(text).toContain(`session ${SESSION}`);
-    expect(text).toContain(
-      'exit 137 (killed: out of memory), OOM killed, ended 2026-09-20T10:00:00Z'
-    );
-    expect(text).toContain(`task ${TASK}`);
-    expect(text).toContain('--remove-container a10000000000');
-  });
-
-  it('keeps it even with --remove-stopped-containers', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const fake = world();
-    const { env, report } = await scanWorld(fake);
-    const dir = mkdtempSync(join(tmpdir(), 'dss-investigation-'));
-    try {
-      const audit = await clean(report, {
-        env,
-        tier: 'moderate',
-        only: ['docker-stopped-container'],
-        removeStoppedContainers: true,
-        backupDir: join(dir, 'backups'),
-        audit: false,
-      });
-      expect(
-        audit.entries.map((entry) => [entry.description, entry.status])
-      ).toEqual([['stopped container done-task (ubuntu:24.04)', 'removed']]);
-      expect(
-        fake.daemons.host.containers.map((container) => container.name)
-      ).toEqual(['oom-task']);
-      expect(fake.dockerCalls().filter((args) => args[0] === 'rm')).toEqual([
-        ['rm', containerId('b2')],
-      ]);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
-  });
-
-  it('removes only the container named with --remove-container', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const fake = world();
-    const { env, report } = await scanWorld(fake);
-    const dir = mkdtempSync(join(tmpdir(), 'dss-investigation-'));
-    try {
-      const audit = await clean(report, {
-        env,
-        tier: 'moderate',
-        only: ['docker-stopped-container'],
-        removeContainers: [containerId('a1').slice(0, 12)],
-        backupDir: join(dir, 'backups'),
-        audit: false,
-      });
-      const removed = audit.entries.filter(
-        (entry) => entry.status === 'removed'
+  itUnless(sandboxed)(
+    'reports the owner and the hold in the scan',
+    async () => {
+      const { result, report } = await scanWorld(world());
+      const byName = new Map(
+        result.items.map((item) => [item.container.name, item])
       );
-      expect(removed.map((entry) => entry.description)).toEqual([
-        'stopped container oom-task (ubuntu:24.04)',
-      ]);
-      expect(fake.dockerCalls().filter((args) => args[0] === 'rm')).toEqual([
-        ['rm', containerId('a1')],
-      ]);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
-  });
+      const oom = byName.get('oom-task');
+      expect(oom.blockers.length).toBe(1);
+      expect(oom.blockers[0]).toContain('kept for investigation');
+      expect(byName.get('done-task').blockers).toEqual([]);
 
-  it('re-checks the hold when the container changed since the scan', async () => {
-    if (readOnlyRuntime()) {
-      return;
+      const text = formatReport(report);
+      expect(text).toContain(`session ${SESSION}`);
+      expect(text).toContain(
+        'exit 137 (killed: out of memory), OOM killed, ended 2026-09-20T10:00:00Z'
+      );
+      expect(text).toContain(`task ${TASK}`);
+      expect(text).toContain('--remove-container a10000000000');
     }
-    const fake = world();
-    const { env, report } = await scanWorld(fake);
-    const done = fake.daemons.host.containers.find(
-      (container) => container.name === 'done-task'
-    );
-    done.exitCode = 1;
-    const dir = mkdtempSync(join(tmpdir(), 'dss-investigation-'));
-    try {
-      const audit = await clean(report, {
-        env,
-        tier: 'moderate',
-        only: ['docker-stopped-container'],
-        removeStoppedContainers: true,
-        backupDir: join(dir, 'backups'),
-        audit: false,
-      });
-      const entry = audit.entries.find((e) => e.description.includes('done'));
-      expect(entry.status).toBe('skipped');
-      expect(entry.reason).toContain('kept for investigation (exit 1)');
-      expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
+  );
+
+  itUnless(sandboxed)(
+    'keeps it even with --remove-stopped-containers',
+    async () => {
+      const fake = world();
+      const { env, report } = await scanWorld(fake);
+      const dir = mkdtempSync(join(tmpdir(), 'dss-investigation-'));
+      try {
+        const audit = await clean(report, {
+          env,
+          tier: 'moderate',
+          only: ['docker-stopped-container'],
+          removeStoppedContainers: true,
+          backupDir: join(dir, 'backups'),
+          audit: false,
+        });
+        expect(
+          audit.entries.map((entry) => [entry.description, entry.status])
+        ).toEqual([['stopped container done-task (ubuntu:24.04)', 'removed']]);
+        expect(
+          fake.daemons.host.containers.map((container) => container.name)
+        ).toEqual(['oom-task']);
+        expect(fake.dockerCalls().filter((args) => args[0] === 'rm')).toEqual([
+          ['rm', containerId('b2')],
+        ]);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
     }
-  });
+  );
+
+  itUnless(sandboxed)(
+    'removes only the container named with --remove-container',
+    async () => {
+      const fake = world();
+      const { env, report } = await scanWorld(fake);
+      const dir = mkdtempSync(join(tmpdir(), 'dss-investigation-'));
+      try {
+        const audit = await clean(report, {
+          env,
+          tier: 'moderate',
+          only: ['docker-stopped-container'],
+          removeContainers: [containerId('a1').slice(0, 12)],
+          backupDir: join(dir, 'backups'),
+          audit: false,
+        });
+        const removed = audit.entries.filter(
+          (entry) => entry.status === 'removed'
+        );
+        expect(removed.map((entry) => entry.description)).toEqual([
+          'stopped container oom-task (ubuntu:24.04)',
+        ]);
+        expect(fake.dockerCalls().filter((args) => args[0] === 'rm')).toEqual([
+          ['rm', containerId('a1')],
+        ]);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    }
+  );
+
+  itUnless(sandboxed)(
+    're-checks the hold when the container changed since the scan',
+    async () => {
+      const fake = world();
+      const { env, report } = await scanWorld(fake);
+      const done = fake.daemons.host.containers.find(
+        (container) => container.name === 'done-task'
+      );
+      done.exitCode = 1;
+      const dir = mkdtempSync(join(tmpdir(), 'dss-investigation-'));
+      try {
+        const audit = await clean(report, {
+          env,
+          tier: 'moderate',
+          only: ['docker-stopped-container'],
+          removeStoppedContainers: true,
+          backupDir: join(dir, 'backups'),
+          audit: false,
+        });
+        const entry = audit.entries.find((e) => e.description.includes('done'));
+        expect(entry.status).toBe('skipped');
+        expect(entry.reason).toContain('kept for investigation (exit 1)');
+        expect(fake.dockerCalls().some((args) => args[0] === 'rm')).toBe(false);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    }
+  );
 });

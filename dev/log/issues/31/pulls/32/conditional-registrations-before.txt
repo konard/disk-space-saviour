@@ -1,0 +1,163 @@
+tests/agents.test.js:19	silent-pass	if (readOnlyRuntime()) {
+tests/bind-mount.test.js:28	silent-pass	if (readOnlyRuntime()) {
+tests/changeset-config.test.js:43	early-return	if (typeof Deno !== 'undefined') {
+tests/check-changesets.test.js:59	wrapped	if (canRunCliFixtures) {
+tests/check-file-line-limits.test.js:73	wrapped	if (canRunBashFixtures) {
+tests/check-file-line-limits.test.js:221	wrapped	if (canRunBashFixtures) {
+tests/check-release-needed.test.js:82	early-return	if (typeof Deno !== 'undefined') {
+tests/check-staged-formatting.test.js:24	silent-pass	if (typeof globalThis.Deno !== 'undefined') {
+tests/check-web-archive.test.js:125	early-return	if (!canRunCliFixtures) {
+tests/cli.test.js:226	silent-pass	if (readOnlyRuntime()) {
+tests/cli.test.js:293	silent-pass	if (readOnlyRuntime()) {
+tests/commit-message.test.js:12	early-return	if (typeof Deno !== 'undefined') {
+tests/create-github-release.test.js:388	wrapped	if (canRunCliFixtures) {
+tests/detect-code-changes.test.js:121	wrapped	if (canRunCliFixtures) {
+tests/detect-code-changes.test.js:375	wrapped	if (canRunCliFixtures) {
+tests/docker-images.test.js:115	silent-pass	if (readOnlyRuntime()) {
+tests/docker-images.test.js:134	silent-pass	if (readOnlyRuntime()) {
+tests/docker-images.test.js:162	silent-pass	if (readOnlyRuntime()) {
+tests/docker-images.test.js:185	silent-pass	if (readOnlyRuntime()) {
+tests/docker-images.test.js:208	silent-pass	if (readOnlyRuntime()) {
+tests/docker-images.test.js:232	silent-pass	if (readOnlyRuntime()) {
+tests/docker-investigation.test.js:147	silent-pass	if (readOnlyRuntime()) {
+tests/docker-investigation.test.js:169	silent-pass	if (readOnlyRuntime()) {
+tests/docker-investigation.test.js:199	silent-pass	if (readOnlyRuntime()) {
+tests/docker-investigation.test.js:229	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:188	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:215	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:261	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:277	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:303	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:334	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:345	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:380	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:408	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:429	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:454	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:501	silent-pass	if (readOnlyRuntime()) {
+tests/docker.test.js:535	silent-pass	if (readOnlyRuntime()) {
+tests/emergency.test.js:112	silent-pass	if (readOnlyRuntime()) {
+tests/emergency.test.js:131	silent-pass	if (readOnlyRuntime()) {
+tests/emergency.test.js:146	silent-pass	if (readOnlyRuntime()) {
+tests/emergency.test.js:161	silent-pass	if (readOnlyRuntime()) {
+tests/emergency.test.js:173	silent-pass	if (readOnlyRuntime()) {
+tests/emergency.test.js:185	silent-pass	if (readOnlyRuntime()) {
+tests/emergency.test.js:198	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:79	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:103	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:119	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:137	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:155	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:197	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:210	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:224	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:238	silent-pass	if (readOnlyRuntime()) {
+tests/git-safety.test.js:280	silent-pass	if (readOnlyRuntime() || !liveness) {
+tests/git-safety.test.js:289	silent-pass	if (readOnlyRuntime() || !liveness) {
+tests/git-safety.test.js:302	silent-pass	if (readOnlyRuntime() || process.platform !== 'linux') {
+tests/health.test.js:70	silent-pass	if (process.platform !== 'linux' || readOnlyRuntime()) {
+tests/health.test.js:203	silent-pass	if (unsupported()) {
+tests/health.test.js:217	silent-pass	if (unsupported()) {
+tests/install-git-hooks.test.js:96	early-return	if (!canRunShellFixtures) {
+tests/issue-14-caches.test.js:130	silent-pass	if (readOnlyRuntime()) {
+tests/issue-14-caches.test.js:144	silent-pass	if (readOnlyRuntime()) {
+tests/issue-14-git.test.js:31	silent-pass	if (readOnlyRuntime()) {
+tests/issue-14-git.test.js:59	silent-pass	if (readOnlyRuntime()) {
+tests/issue-14-git.test.js:97	silent-pass	if (readOnlyRuntime()) {
+tests/issue-14-liveness.test.js:134	silent-pass	if (readOnlyRuntime()) {
+tests/issue-14-liveness.test.js:185	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-boundaries.test.js:40	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-boundaries.test.js:71	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-boundaries.test.js:93	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-boundaries.test.js:119	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-boundaries.test.js:151	silent-pass	if (readOnlyRuntime() || process.platform !== 'linux') {
+tests/issue-27-caches.test.js:30	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-caches.test.js:50	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-caches.test.js:79	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-caches.test.js:108	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-caches.test.js:128	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-caches.test.js:143	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-details.test.js:123	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-details.test.js:158	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-processes.test.js:50	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-rule-families.test.js:21	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-rule-families.test.js:64	silent-pass	if (readOnlyRuntime()) {
+tests/issue-27-rule-families.test.js:85	silent-pass	if (readOnlyRuntime()) {
+tests/merge-changesets.test.js:55	wrapped	if (canRunCliFixtures) {
+tests/no-changelog-comments.test.js:58	wrapped	if (isDenoRuntime) {
+tests/package-manager.test.js:47	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:60	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:79	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:99	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:119	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:141	silent-pass	if (!canRunGuardFixtures) {
+tests/package-metadata.test.js:67	silent-pass	if (typeof Deno !== 'undefined') {
+tests/pipeline-status.test.js:127	wrapped	if (canRunBash) {
+tests/pipeline-status.test.js:239	wrapped	if (canRunBash) {
+tests/pipeline-status.test.js:319	wrapped	if (canRunBash) {
+tests/pr-guards.test.js:65	early-return	if (!canSpawn) {
+tests/pr-guards.test.js:148	early-return	if (!canSpawn) {
+tests/pr-guards.test.js:290	early-return	if (!canSpawn) {
+tests/pr-guards.test.js:363	early-return	if (!canSpawn) {
+tests/push-main-with-rebase-retry.test.js:164	wrapped	if (canRunGitFixtures) {
+tests/recheck-broken-links.test.js:270	early-return	if (typeof Deno !== 'undefined') {
+tests/release-metadata.test.js:20	silent-pass	if (typeof globalThis.Deno !== 'undefined') {
+tests/release-preflight.test.js:164	early-return	if (typeof Deno !== 'undefined') {
+tests/release-preflight.test.js:316	early-return	if (typeof Deno !== 'undefined') {
+tests/required-docs.test.js:55	silent-pass	if (!canRunBash) {
+tests/required-docs.test.js:81	silent-pass	if (!canRunBash) {
+tests/required-docs.test.js:94	wrapped	if (canRunBash) {
+tests/run-with-budget-warning.test.js:39	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:57	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:68	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:84	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:99	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:126	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:159	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:194	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:214	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:257	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:285	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:299	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:316	silent-pass	if (!canRunShellFixtures) {
+tests/rust-leaf.test.js:118	silent-pass	if (unsupported()) {
+tests/rust-leaf.test.js:141	silent-pass	if (unsupported()) {
+tests/rust.test.js:99	silent-pass	if (readOnlyRuntime()) {
+tests/rust.test.js:118	silent-pass	if (readOnlyRuntime()) {
+tests/rust.test.js:135	silent-pass	if (readOnlyRuntime()) {
+tests/rust.test.js:156	silent-pass	if (readOnlyRuntime()) {
+tests/rust.test.js:172	silent-pass	if (readOnlyRuntime()) {
+tests/rust.test.js:200	silent-pass	if (readOnlyRuntime()) {
+tests/scan-app-caches.test.js:50	silent-pass	if (readOnlyRuntime()) {
+tests/scan-app-caches.test.js:73	silent-pass	if (readOnlyRuntime()) {
+tests/scan-app-caches.test.js:85	silent-pass	if (readOnlyRuntime()) {
+tests/scan-app-caches.test.js:104	silent-pass	if (readOnlyRuntime()) {
+tests/scan-app-caches.test.js:126	silent-pass	if (readOnlyRuntime()) {
+tests/scan-app-caches.test.js:140	silent-pass	if (readOnlyRuntime()) {
+tests/scan-app-caches.test.js:186	silent-pass	if (readOnlyRuntime()) {
+tests/scan-caches.test.js:53	silent-pass	if (readOnlyRuntime()) {
+tests/scan-caches.test.js:109	silent-pass	if (readOnlyRuntime()) {
+tests/scan-caches.test.js:122	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:65	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:84	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:100	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:121	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:140	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:159	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:176	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:194	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:217	silent-pass	if (readOnlyRuntime()) {
+tests/scan-projects.test.js:248	silent-pass	if (readOnlyRuntime() || process.platform === 'win32') {
+tests/security-workflow.test.js:196	wrapped	if (!canRunBash) {
+tests/setup-buildx-resilient.test.js:123	swapped	const describeSubprocess = CAN_RUN_SUBPROCESS ? describe : () => {};
+tests/simulate-fresh-merge.test.js:93	early-return	if (!canRunShellFixtures) {
+tests/status-gate-coverage.test.js:34	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:46	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:69	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:99	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:133	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:187	silent-pass	if (!canRunCheckerFixtures) {
+tests/use-module.test.js:389	silent-pass	if (!(await canListen())) {
+tests/use-module.test.js:419	silent-pass	if (!(await canListen())) {
+tests/versions.test.js:23	silent-pass	if (readOnlyRuntime()) {
+162 conditional registration(s)

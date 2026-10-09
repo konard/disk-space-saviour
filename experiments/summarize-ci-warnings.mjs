@@ -16,9 +16,12 @@ for (const file of process.argv.slice(2)) {
     const [job, , rest = ''] = raw.split('\t');
     const msg = rest
       .replace(/^\S+Z /, '')
-      .replace(/\x1b\[[0-9;]*m|\^\[\[[0-9;]*m/g, '')
+      .replace(new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g'), '')
+      .replace(/\^\[\[[0-9;]*m/g, '')
       .trim();
-    if (!msg || !INTERESTING.test(msg) || NOISE.test(msg)) continue;
+    if (!msg || !INTERESTING.test(msg) || NOISE.test(msg)) {
+      continue;
+    }
     const key = `${job}\t${msg.slice(0, 240)}`;
     counts.set(key, (counts.get(key) || 0) + 1);
   }

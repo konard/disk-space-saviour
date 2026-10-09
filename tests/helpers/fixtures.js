@@ -18,6 +18,7 @@ import { dirname, join } from 'node:path';
 
 import { LocalEnv } from '../../src/env/local.js';
 import { afterAll } from 'test-anywhere';
+import { missingDenoPermissions } from './skip.js';
 
 const temporaryRoots = new Set();
 afterAll(() => {
@@ -29,10 +30,12 @@ afterAll(() => {
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Deno CI grants read access only; tests that write files or start
- * processes return early there.
+ * Whether this is Deno without the permissions the fixtures need (they write
+ * files, start processes and read /proc). CI runs `deno test -A`; a local
+ * `deno test --allow-read` reports the fixture tests as skipped through
+ * tests/helpers/skip.js.
  */
-export const readOnlyRuntime = () => typeof Deno !== 'undefined';
+export const readOnlyRuntime = () => missingDenoPermissions().length > 0;
 
 export function tempRoot(prefix = 'dss-fixture-') {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -176,8 +179,8 @@ export function scanInput(env, roots, overrides = {}) {
 
 /**
  * Fixture commits are dated 40 days back so projects count as inactive.
- * Built on first use: reading `process.env` needs a permission Deno CI
- * does not grant.
+ * Built on first use: reading `process.env` needs a permission that a
+ * `deno test --allow-read` run does not grant.
  */
 function gitEnv() {
   const date = new Date(Date.now() - 40 * DAY_MS).toISOString();

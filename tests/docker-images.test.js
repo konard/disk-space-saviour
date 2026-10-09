@@ -21,6 +21,7 @@ import {
   fakeHostEnv,
   scanWorld,
 } from './helpers/fake-docker.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const BIG = 'ab12cd34ef56ab12cd34ef56';
 const SMALL = 'ff00ee11dd22cc33bb44aa55';
@@ -28,8 +29,6 @@ const SESSION = '6f1c2a3b-0d4e-4f5a-8b6c-7d8e9f0a1b2c';
 
 // eslint-disable-next-line local/no-changelog-comments -- `docker system df` time format
 const CREATED = '2026-08-01 09:00:00 +0000 UTC';
-
-const readOnlyRuntime = () => typeof Deno !== 'undefined';
 
 function image(id, repository, tag, size) {
   return {
@@ -111,29 +110,26 @@ describe('naming unused images', () => {
     );
   });
 
-  it('finds the last container that used an image in the backups', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'finds the last container that used an image in the backups',
+    async () => {
+      await withDirs(async ({ backupDir }) => {
+        writeBackup(backupDir);
+        const users = await lastUsers(backupDir);
+        const user = lastUserOf(users, big);
+        expect(user.container).toBe('solve-1');
+        expect(user.session).toBe(SESSION);
+        expect(user.finishedAt).toBe('2026-09-20T10:00:00Z');
+        expect(lastUserOf(users, { ref: big.ref, id: 'other' })).toEqual(user);
+        expect(lastUserOf(users, { ref: 'alpine:3.20', id: SMALL })).toBe(null);
+        expect((await lastUsers(join(backupDir, 'missing'))).size).toBe(0);
+      });
     }
-    await withDirs(async ({ backupDir }) => {
-      writeBackup(backupDir);
-      const users = await lastUsers(backupDir);
-      const user = lastUserOf(users, big);
-      expect(user.container).toBe('solve-1');
-      expect(user.session).toBe(SESSION);
-      expect(user.finishedAt).toBe('2026-09-20T10:00:00Z');
-      expect(lastUserOf(users, { ref: big.ref, id: 'other' })).toEqual(user);
-      expect(lastUserOf(users, { ref: 'alpine:3.20', id: SMALL })).toBe(null);
-      expect((await lastUsers(join(backupDir, 'missing'))).size).toBe(0);
-    });
-  });
+  );
 });
 
 describe('unused images in a scan and a clean', () => {
-  it('reports size, creation date and last user', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('reports size, creation date and last user', async () => {
     await withDirs(async ({ backupDir }) => {
       writeBackup(backupDir);
       const { result, report } = await scanWorld(world(), { backupDir });
@@ -158,10 +154,7 @@ describe('unused images in a scan and a clean', () => {
     });
   });
 
-  it('never removes an image by tier alone', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('never removes an image by tier alone', async () => {
     const fake = world();
     const { env, report } = await scanWorld(fake);
     const audit = await clean(report, {
@@ -181,10 +174,7 @@ describe('unused images in a scan and a clean', () => {
     expect(imageRms(fake)).toEqual([]);
   });
 
-  it('removes only the named image', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('removes only the named image', async () => {
     const fake = world();
     const { env, report } = await scanWorld(fake);
     const audit = await clean(report, {
@@ -204,34 +194,31 @@ describe('unused images in a scan and a clean', () => {
     expect(imageRms(fake)).toEqual([['image', 'rm', SMALL]]);
   });
 
-  it('asks about each image when no image is named', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'asks about each image when no image is named',
+    async () => {
+      const fake = world();
+      const { env, report } = await scanWorld(fake);
+      const asked = [];
+      await clean(report, {
+        env,
+        tier: 'moderate',
+        only: ['docker-unused-image'],
+        confirm: (item) => {
+          asked.push(item.image.ref);
+          return item.image.ref === 'alpine:3.20';
+        },
+        audit: false,
+      });
+      expect(asked.sort()).toEqual([
+        'alpine:3.20',
+        'ghcr.io/link-assistant/formal-ai:latest',
+      ]);
+      expect(imageRms(fake)).toEqual([['image', 'rm', SMALL]]);
     }
-    const fake = world();
-    const { env, report } = await scanWorld(fake);
-    const asked = [];
-    await clean(report, {
-      env,
-      tier: 'moderate',
-      only: ['docker-unused-image'],
-      confirm: (item) => {
-        asked.push(item.image.ref);
-        return item.image.ref === 'alpine:3.20';
-      },
-      audit: false,
-    });
-    expect(asked.sort()).toEqual([
-      'alpine:3.20',
-      'ghcr.io/link-assistant/formal-ai:latest',
-    ]);
-    expect(imageRms(fake)).toEqual([['image', 'rm', SMALL]]);
-  });
+  );
 
-  it('keeps unnamed images in emergency mode', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('keeps unnamed images in emergency mode', async () => {
     const fake = world();
     const { report } = await scanWorld(fake);
     const env = {

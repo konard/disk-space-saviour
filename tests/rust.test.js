@@ -19,12 +19,12 @@ import {
   DAY_MS,
   age,
   fixtureEnv,
-  readOnlyRuntime,
   removeRoot,
   scanInput,
   tempRoot,
   writeBlob,
 } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const HOUR_MS = 60 * 60 * 1000;
 const OLD = '0123456789abcdef';
@@ -95,126 +95,126 @@ describe('Rust artifact names', () => {
 });
 
 describe('Rust pruning', () => {
-  it('keeps the newest hash and reports the superseded one', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'keeps the newest hash and reports the superseded one',
+    async () => {
+      const root = tempRoot('dss-rust-');
+      const { profile } = cargoProject(root);
+      const old = unit(profile, OLD, 3 * DAY_MS);
+      const kept = unit(profile, NEW, 2 * HOUR_MS);
+      const result = await analyzeRustProfile(fixtureEnv(root), profile, {
+        staleAgeMs: HOUR_MS,
+        now: Date.now(),
+      });
+      expect(result.entries.map((e) => e.path).sort()).toEqual(old.sort());
+      expect(result.kept).toBe(1);
+      expect(result.removed).toBe(1);
+      expect(kept.every((path) => existsSync(path))).toBe(true);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-rust-');
-    const { profile } = cargoProject(root);
-    const old = unit(profile, OLD, 3 * DAY_MS);
-    const kept = unit(profile, NEW, 2 * HOUR_MS);
-    const result = await analyzeRustProfile(fixtureEnv(root), profile, {
-      staleAgeMs: HOUR_MS,
-      now: Date.now(),
-    });
-    expect(result.entries.map((e) => e.path).sort()).toEqual(old.sort());
-    expect(result.kept).toBe(1);
-    expect(result.removed).toBe(1);
-    expect(kept.every((path) => existsSync(path))).toBe(true);
-    removeRoot(root);
-  });
+  );
 
-  it('keeps an older hash that was written inside the activity window', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'keeps an older hash that was written inside the activity window',
+    async () => {
+      const root = tempRoot('dss-rust-window-');
+      const { profile } = cargoProject(root);
+      unit(profile, OLD, 30 * 60 * 1000);
+      unit(profile, NEW, 60 * 1000);
+      const result = await analyzeRustProfile(fixtureEnv(root), profile, {
+        staleAgeMs: HOUR_MS,
+        now: Date.now(),
+      });
+      expect(result.entries).toEqual([]);
+      expect(result.kept).toBe(2);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-rust-window-');
-    const { profile } = cargoProject(root);
-    unit(profile, OLD, 30 * 60 * 1000);
-    unit(profile, NEW, 60 * 1000);
-    const result = await analyzeRustProfile(fixtureEnv(root), profile, {
-      staleAgeMs: HOUR_MS,
-      now: Date.now(),
-    });
-    expect(result.entries).toEqual([]);
-    expect(result.kept).toBe(2);
-    removeRoot(root);
-  });
+  );
 
-  it('keeps every hash of the newest build generation', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'keeps every hash of the newest build generation',
+    async () => {
+      const root = tempRoot('dss-rust-generation-');
+      const { profile } = cargoProject(root);
+      unit(profile, OLD, 5 * DAY_MS);
+      unit(profile, SAME_BUILD, 2 * DAY_MS + 5 * 60 * 1000);
+      unit(profile, NEW, 2 * DAY_MS);
+      const result = await analyzeRustProfile(fixtureEnv(root), profile, {
+        staleAgeMs: HOUR_MS,
+        now: Date.now(),
+      });
+      const hashes = result.entries.map(
+        (e) => parseArtifactName(e.path.split('/').pop())?.hash
+      );
+      expect([...new Set(hashes)]).toEqual([OLD]);
+      expect(result.kept).toBe(2);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-rust-generation-');
-    const { profile } = cargoProject(root);
-    unit(profile, OLD, 5 * DAY_MS);
-    unit(profile, SAME_BUILD, 2 * DAY_MS + 5 * 60 * 1000);
-    unit(profile, NEW, 2 * DAY_MS);
-    const result = await analyzeRustProfile(fixtureEnv(root), profile, {
-      staleAgeMs: HOUR_MS,
-      now: Date.now(),
-    });
-    const hashes = result.entries.map(
-      (e) => parseArtifactName(e.path.split('/').pop())?.hash
-    );
-    expect([...new Set(hashes)]).toEqual([OLD]);
-    expect(result.kept).toBe(2);
-    removeRoot(root);
-  });
+  );
 
-  it('treats different crates as different units', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'treats different crates as different units',
+    async () => {
+      const root = tempRoot('dss-rust-crates-');
+      const { profile } = cargoProject(root);
+      unit(profile, OLD, 3 * DAY_MS, 'foo');
+      unit(profile, NEW, 2 * HOUR_MS, 'barbaz');
+      const result = await analyzeRustProfile(fixtureEnv(root), profile, {
+        staleAgeMs: HOUR_MS,
+        now: Date.now(),
+      });
+      expect(result.entries).toEqual([]);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-rust-crates-');
-    const { profile } = cargoProject(root);
-    unit(profile, OLD, 3 * DAY_MS, 'foo');
-    unit(profile, NEW, 2 * HOUR_MS, 'barbaz');
-    const result = await analyzeRustProfile(fixtureEnv(root), profile, {
-      staleAgeMs: HOUR_MS,
-      now: Date.now(),
-    });
-    expect(result.entries).toEqual([]);
-    removeRoot(root);
-  });
+  );
 
-  it('scans and cleans only superseded artifacts in the safe tier', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'scans and cleans only superseded artifacts in the safe tier',
+    async () => {
+      const root = tempRoot('dss-rust-clean-');
+      const { profile } = cargoProject(root);
+      const old = unit(profile, OLD, 3 * DAY_MS);
+      const kept = unit(profile, NEW, 2 * HOUR_MS);
+      const env = fixtureEnv(root);
+      const report = await scan(
+        scanInput(env, [root], { scanners: ['projects'], inactive: '30d' })
+      );
+      const item = report.items.find((i) => i.rule === 'cargo-superseded');
+      expect(item.tier).toBe('safe');
+      expect([...item.paths].sort()).toEqual(old.sort());
+      const target = report.items.find((i) => i.rule === 'cargo-target');
+      expect(target.tier).toBe('aggressive');
+
+      const audit = await clean(report, { env, tier: 'safe', audit: false });
+      expect(audit.entries.map((e) => [e.rule, e.status])).toEqual([
+        ['cargo-superseded', 'removed'],
+      ]);
+      expect(old.some((path) => existsSync(path))).toBe(false);
+      expect(kept.every((path) => existsSync(path))).toBe(true);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-rust-clean-');
-    const { profile } = cargoProject(root);
-    const old = unit(profile, OLD, 3 * DAY_MS);
-    const kept = unit(profile, NEW, 2 * HOUR_MS);
-    const env = fixtureEnv(root);
-    const report = await scan(
-      scanInput(env, [root], { scanners: ['projects'], inactive: '30d' })
-    );
-    const item = report.items.find((i) => i.rule === 'cargo-superseded');
-    expect(item.tier).toBe('safe');
-    expect([...item.paths].sort()).toEqual(old.sort());
-    const target = report.items.find((i) => i.rule === 'cargo-target');
-    expect(target.tier).toBe('aggressive');
-
-    const audit = await clean(report, { env, tier: 'safe', audit: false });
-    expect(audit.entries.map((e) => [e.rule, e.status])).toEqual([
-      ['cargo-superseded', 'removed'],
-    ]);
-    expect(old.some((path) => existsSync(path))).toBe(false);
-    expect(kept.every((path) => existsSync(path))).toBe(true);
-    removeRoot(root);
-  });
+  );
 
   // Fails if the rule is ever disconnected from the projects scanner.
-  it('reports superseded builds of an inactive project from a scan', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'reports superseded builds of an inactive project from a scan',
+    async () => {
+      const root = tempRoot('dss-rust-regression-');
+      const { project, profile } = cargoProject(root);
+      const old = unit(profile, '1111111111111111', 3 * DAY_MS, 'serde');
+      unit(profile, '2222222222222222', 2 * DAY_MS, 'serde');
+      writeBlob(old[1], 5 * 1000 * 1000);
+      touch(old[1], 3 * DAY_MS);
+      age(join(project, 'Cargo.toml'), 40 * DAY_MS);
+      const report = await scan(
+        scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
+      );
+      const item = report.items.find((i) => i.rule === 'cargo-superseded');
+      expect(item?.tier).toBe('safe');
+      expect(item.path).toBe(profile);
+      expect([...item.paths].sort()).toEqual(old.sort());
+      expect(item.bytes >= 5 * 1000 * 1000).toBe(true);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-rust-regression-');
-    const { project, profile } = cargoProject(root);
-    const old = unit(profile, '1111111111111111', 3 * DAY_MS, 'serde');
-    unit(profile, '2222222222222222', 2 * DAY_MS, 'serde');
-    writeBlob(old[1], 5 * 1000 * 1000);
-    touch(old[1], 3 * DAY_MS);
-    age(join(project, 'Cargo.toml'), 40 * DAY_MS);
-    const report = await scan(
-      scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
-    );
-    const item = report.items.find((i) => i.rule === 'cargo-superseded');
-    expect(item?.tier).toBe('safe');
-    expect(item.path).toBe(profile);
-    expect([...item.paths].sort()).toEqual(old.sort());
-    expect(item.bytes >= 5 * 1000 * 1000).toBe(true);
-    removeRoot(root);
-  });
+  );
 });

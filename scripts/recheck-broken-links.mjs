@@ -41,9 +41,9 @@ import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-// Environment-derived settings are read inside main(), not here: the Deno
-// test leg imports this module under `--allow-read` only, and any
-// module-scope process.env access would throw NotCapable at import time.
+// Environment-derived settings are read inside main(), not here: a Deno run
+// without --allow-env (such as `deno test --allow-read`) imports this module
+// too, and any module-scope process.env access would throw NotCapable there.
 const BUDGET_SECONDS_DEFAULT = 240;
 const INITIAL_WAIT_MS_DEFAULT = 5000;
 const REQUEST_TIMEOUT_MS = 30_000;

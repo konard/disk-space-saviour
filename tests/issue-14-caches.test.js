@@ -15,6 +15,7 @@ import {
   readOnlyRuntime,
   scanInput,
 } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 async function fixture(callback) {
   if (readOnlyRuntime()) {
@@ -126,55 +127,58 @@ describe('issue 14 missing caches and logs', () => {
 });
 
 describe('issue 14 reporting and consent', () => {
-  it('embeds the scan items and blockers in the audit report', () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'embeds the scan items and blockers in the audit report',
+    () => {
+      const item = {
+        id: 'x',
+        env: 'host',
+        rule: 'npm-cache',
+        blockers: ['busy'],
+      };
+      const audit = scanAudit({
+        environments: [{ id: 'host' }],
+        items: [item],
+      });
+      expect(audit.report.items).toEqual([item]);
     }
-    const item = {
-      id: 'x',
-      env: 'host',
-      rule: 'npm-cache',
-      blockers: ['busy'],
-    };
-    const audit = scanAudit({ environments: [{ id: 'host' }], items: [item] });
-    expect(audit.report.items).toEqual([item]);
-  });
+  );
 
-  it('returns a failure exit code for an incomplete JSON scan', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const root = tempRoot();
-    let output = '';
-    let errors = '';
-    try {
-      const code = await runCli(
-        ['docker', 'scan', '--json', '--audit-dir', root],
-        {
-          io: {
-            stdout: (text) => {
-              output += text;
+  itUnless(sandboxed)(
+    'returns a failure exit code for an incomplete JSON scan',
+    async () => {
+      const root = tempRoot();
+      let output = '';
+      let errors = '';
+      try {
+        const code = await runCli(
+          ['docker', 'scan', '--json', '--audit-dir', root],
+          {
+            io: {
+              stdout: (text) => {
+                output += text;
+              },
+              stderr: (text) => {
+                errors += text;
+              },
             },
-            stderr: (text) => {
-              errors += text;
+            api: {
+              scan: async () => ({
+                items: [],
+                environments: [],
+                errors: [{ message: 'snapshot missing' }],
+              }),
             },
-          },
-          api: {
-            scan: async () => ({
-              items: [],
-              environments: [],
-              errors: [{ message: 'snapshot missing' }],
-            }),
-          },
-        }
-      );
-      expect(code).toBe(1);
-      expect(JSON.parse(output).errors[0].message).toBe('snapshot missing');
-      expect(errors).toBe('');
-    } finally {
-      removeRoot(root);
+          }
+        );
+        expect(code).toBe(1);
+        expect(JSON.parse(output).errors[0].message).toBe('snapshot missing');
+        expect(errors).toBe('');
+      } finally {
+        removeRoot(root);
+      }
     }
-  });
+  );
 
   it('lifts investigation holds only past the explicit age and a known end time', () => {
     const now = () => Date.parse('2026-10-08T12:00:00Z');

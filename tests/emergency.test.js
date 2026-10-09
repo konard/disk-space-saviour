@@ -18,12 +18,12 @@ import {
   DAY_MS,
   age,
   fixtureEnv,
-  readOnlyRuntime,
   removeRoot,
   scanInput,
   tempRoot,
   writeBlob,
 } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const KIB = 1024;
 const CAPACITY = 100 * KIB * KIB;
@@ -108,10 +108,7 @@ describe('emergency goals', () => {
 });
 
 describe('emergency mode', () => {
-  it('only cleans items on the watched volume', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('only cleans items on the watched volume', async () => {
     const { root, run, free, kept, env } = volume();
     try {
       env.deviceId = async (target) =>
@@ -127,52 +124,49 @@ describe('emergency mode', () => {
     }
   });
 
-  it('stops after the caches when they free enough', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'stops after the caches when they free enough',
+    async () => {
+      const { root, run, free, kept } = volume();
+      const audit = await run({ free: free() + 100 * KIB });
+      expect(audit.goalMet).toBe(true);
+      expect(audit.reachedTier).toBe('safe');
+      expect(audit.entries.map((e) => [e.rule, e.status])).toEqual([
+        ['npm-cache', 'removed'],
+      ]);
+      expect(kept()).toEqual(['pip', 'old', 'recent']);
+      removeRoot(root);
     }
-    const { root, run, free, kept } = volume();
-    const audit = await run({ free: free() + 100 * KIB });
-    expect(audit.goalMet).toBe(true);
-    expect(audit.reachedTier).toBe('safe');
-    expect(audit.entries.map((e) => [e.rule, e.status])).toEqual([
-      ['npm-cache', 'removed'],
-    ]);
-    expect(kept()).toEqual(['pip', 'old', 'recent']);
-    removeRoot(root);
-  });
+  );
 
-  it('cleans inactive lockfile-backed projects in the safe tier', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'cleans inactive lockfile-backed projects in the safe tier',
+    async () => {
+      const { root, run, free, kept } = volume();
+      const audit = await run({ free: free() + 1024 * KIB });
+      expect(audit.goalMet).toBe(true);
+      expect(audit.reachedTier).toBe('safe');
+      expect(kept()).toEqual(['recent']);
+      expect(audit.diskAfter.free >= audit.diskBefore.free + 1024 * KIB).toBe(
+        true
+      );
+      removeRoot(root);
     }
-    const { root, run, free, kept } = volume();
-    const audit = await run({ free: free() + 1024 * KIB });
-    expect(audit.goalMet).toBe(true);
-    expect(audit.reachedTier).toBe('safe');
-    expect(kept()).toEqual(['recent']);
-    expect(audit.diskAfter.free >= audit.diskBefore.free + 1024 * KIB).toBe(
-      true
-    );
-    removeRoot(root);
-  });
+  );
 
-  it('reports an unreachable goal after the aggressive tier', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'reports an unreachable goal after the aggressive tier',
+    async () => {
+      const { root, run, free, kept } = volume();
+      const audit = await run({ free: free() + 50 * 1024 * KIB });
+      expect(audit.goalMet).toBe(false);
+      expect(audit.reachedTier).toBe('aggressive');
+      expect(kept()).toEqual([]);
+      removeRoot(root);
     }
-    const { root, run, free, kept } = volume();
-    const audit = await run({ free: free() + 50 * 1024 * KIB });
-    expect(audit.goalMet).toBe(false);
-    expect(audit.reachedTier).toBe('aggressive');
-    expect(kept()).toEqual([]);
-    removeRoot(root);
-  });
+  );
 
-  it('does nothing when the goal is already met', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('does nothing when the goal is already met', async () => {
     const { root, run, kept } = volume();
     const audit = await run({ until: '99%' });
     expect(audit.goalMet).toBe(true);
@@ -181,23 +175,20 @@ describe('emergency mode', () => {
     removeRoot(root);
   });
 
-  it('plans against a simulated disk in a dry run', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'plans against a simulated disk in a dry run',
+    async () => {
+      const { root, run, free, kept } = volume();
+      const audit = await run({ free: free() + 1024 * KIB, dryRun: true });
+      expect(audit.goalMet).toBe(true);
+      expect(audit.reachedTier).toBe('safe');
+      expect(audit.entries.every((e) => e.status === 'planned')).toBe(true);
+      expect(kept()).toEqual(['npm', 'pip', 'old', 'recent']);
+      removeRoot(root);
     }
-    const { root, run, free, kept } = volume();
-    const audit = await run({ free: free() + 1024 * KIB, dryRun: true });
-    expect(audit.goalMet).toBe(true);
-    expect(audit.reachedTier).toBe('safe');
-    expect(audit.entries.every((e) => e.status === 'planned')).toBe(true);
-    expect(kept()).toEqual(['npm', 'pip', 'old', 'recent']);
-    removeRoot(root);
-  });
+  );
 
-  it('writes an audit log on every run', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('writes an audit log on every run', async () => {
     const { root, run } = volume();
     const audit = await run({ until: '99%', dryRun: true });
     expect(audit.file.startsWith(join(root, 'audit'))).toBe(true);

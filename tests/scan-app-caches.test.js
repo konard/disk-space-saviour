@@ -14,12 +14,12 @@ import {
   fixtureEnv,
   age,
   DAY_MS,
-  readOnlyRuntime,
   removeRoot,
   scanInput,
   tempRoot,
   writeBlob,
 } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -46,45 +46,42 @@ const byRule = (report, rule) =>
   report.items.filter((item) => item.rule === rule);
 
 describe('application and agent cache rules', () => {
-  it('reports staged Sparkle and ShipIt updates but keeps ShipIt state', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'reports staged Sparkle and ShipIt updates but keeps ShipIt state',
+    async () => {
+      const caches = 'Library/Caches';
+      const { root, home, report } = await scanHome([
+        `${caches}/com.example.app/org.sparkle-project.Sparkle/Installation/x/App.tar.xz`,
+        `${caches}/com.example.editor.ShipIt/update.abc/Editor.app/binary`,
+        `${caches}/com.example.editor.ShipIt/ShipItState.plist`,
+      ]);
+      const paths = [
+        ...byRule(report, 'sparkle-update-downloads'),
+        ...byRule(report, 'shipit-update-downloads'),
+      ]
+        .flatMap((item) => item.paths)
+        .sort();
+      expect(paths).toEqual([
+        join(home, caches, 'com.example.app', 'org.sparkle-project.Sparkle'),
+        join(home, caches, 'com.example.editor.ShipIt', 'update.abc'),
+      ]);
+      removeRoot(root);
     }
-    const caches = 'Library/Caches';
-    const { root, home, report } = await scanHome([
-      `${caches}/com.example.app/org.sparkle-project.Sparkle/Installation/x/App.tar.xz`,
-      `${caches}/com.example.editor.ShipIt/update.abc/Editor.app/binary`,
-      `${caches}/com.example.editor.ShipIt/ShipItState.plist`,
-    ]);
-    const paths = [
-      ...byRule(report, 'sparkle-update-downloads'),
-      ...byRule(report, 'shipit-update-downloads'),
-    ]
-      .flatMap((item) => item.paths)
-      .sort();
-    expect(paths).toEqual([
-      join(home, caches, 'com.example.app', 'org.sparkle-project.Sparkle'),
-      join(home, caches, 'com.example.editor.ShipIt', 'update.abc'),
-    ]);
-    removeRoot(root);
-  });
+  );
 
-  it('leaves app updates staged within the activity window alone', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'leaves app updates staged within the activity window alone',
+    async () => {
+      const { root, report } = await scanHome(
+        ['Library/Caches/com.example.app/org.sparkle-project.Sparkle/u.zip'],
+        { ageMs: 0 }
+      );
+      expect(byRule(report, 'sparkle-update-downloads')).toEqual([]);
+      removeRoot(root);
     }
-    const { root, report } = await scanHome(
-      ['Library/Caches/com.example.app/org.sparkle-project.Sparkle/u.zip'],
-      { ageMs: 0 }
-    );
-    expect(byRule(report, 'sparkle-update-downloads')).toEqual([]);
-    removeRoot(root);
-  });
+  );
 
-  it('keeps the newest playwright-go driver', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('keeps the newest playwright-go driver', async () => {
     const { root, home, report } = await scanHome(
       [
         'Library/Caches/ms-playwright-go/1.50.1/node',
@@ -100,58 +97,58 @@ describe('application and agent cache rules', () => {
     removeRoot(root);
   });
 
-  it('reports browser HTTP caches but not browser profiles', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'reports browser HTTP caches but not browser profiles',
+    async () => {
+      const { root, home, report } = await scanHome([
+        'Library/Caches/Google/Chrome/Default/Cache/Cache_Data/data_0',
+        'Library/Caches/Google/Chrome/Default/Storage/ext/state',
+        'Library/Caches/Firefox/Profiles/abc.default/cache2/entries/x',
+      ]);
+      const paths = [
+        ...byRule(report, 'chrome-http-caches'),
+        ...byRule(report, 'firefox-http-caches'),
+      ]
+        .map((item) => item.path)
+        .sort();
+      expect(paths).toEqual([
+        join(home, 'Library/Caches/Firefox/Profiles/abc.default/cache2'),
+        join(home, 'Library/Caches/Google/Chrome/Default/Cache'),
+      ]);
+      removeRoot(root);
     }
-    const { root, home, report } = await scanHome([
-      'Library/Caches/Google/Chrome/Default/Cache/Cache_Data/data_0',
-      'Library/Caches/Google/Chrome/Default/Storage/ext/state',
-      'Library/Caches/Firefox/Profiles/abc.default/cache2/entries/x',
-    ]);
-    const paths = [
-      ...byRule(report, 'chrome-http-caches'),
-      ...byRule(report, 'firefox-http-caches'),
-    ]
-      .map((item) => item.path)
-      .sort();
-    expect(paths).toEqual([
-      join(home, 'Library/Caches/Firefox/Profiles/abc.default/cache2'),
-      join(home, 'Library/Caches/Google/Chrome/Default/Cache'),
-    ]);
-    removeRoot(root);
-  });
+  );
 
-  it('aggregates Claude Code MCP logs of every project', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'aggregates Claude Code MCP logs of every project',
+    async () => {
+      const { root, report } = await scanHome([
+        'Library/Caches/claude-cli-nodejs/-work-a/mcp-logs-ide/1.jsonl',
+        'Library/Caches/claude-cli-nodejs/-work-b/mcp-logs-ide/1.jsonl',
+      ]);
+      const items = byRule(report, 'claude-cli-mcp-logs');
+      expect(items.length).toBe(1);
+      expect(items[0].paths.length).toBe(2);
+      removeRoot(root);
     }
-    const { root, report } = await scanHome([
-      'Library/Caches/claude-cli-nodejs/-work-a/mcp-logs-ide/1.jsonl',
-      'Library/Caches/claude-cli-nodejs/-work-b/mcp-logs-ide/1.jsonl',
-    ]);
-    const items = byRule(report, 'claude-cli-mcp-logs');
-    expect(items.length).toBe(1);
-    expect(items[0].paths.length).toBe(2);
-    removeRoot(root);
-  });
+  );
 
-  it('never treats IDE extension dependencies as projects', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'never treats IDE extension dependencies as projects',
+    async () => {
+      const files = ['.qoder', '.windsurf', '.vscode'].flatMap((ide) => [
+        `${ide}/extensions/pub.ext-1.0.0/package.json`,
+        `${ide}/extensions/pub.ext-1.0.0/package-lock.json`,
+        `${ide}/extensions/pub.ext-1.0.0/node_modules/dep/index.js`,
+      ]);
+      const { root, report } = await scanHome(files, {
+        ageMs: 40 * DAY_MS,
+        roots: ['.'],
+      });
+      expect(byRule(report, 'node-modules')).toEqual([]);
+      removeRoot(root);
     }
-    const files = ['.qoder', '.windsurf', '.vscode'].flatMap((ide) => [
-      `${ide}/extensions/pub.ext-1.0.0/package.json`,
-      `${ide}/extensions/pub.ext-1.0.0/package-lock.json`,
-      `${ide}/extensions/pub.ext-1.0.0/node_modules/dep/index.js`,
-    ]);
-    const { root, report } = await scanHome(files, {
-      ageMs: 40 * DAY_MS,
-      roots: ['.'],
-    });
-    expect(byRule(report, 'node-modules')).toEqual([]);
-    removeRoot(root);
-  });
+  );
 
   it('expands every rule path on Linux, macOS and Windows', () => {
     const platforms = [
@@ -182,39 +179,39 @@ describe('application and agent cache rules', () => {
 });
 
 describe('browser cache rules', () => {
-  it('reports caches of other browsers, including single-profile Opera', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const caches = 'Library/Caches';
-    const { root, home, report } = await scanHome([
-      `${caches}/Microsoft Edge/Profile 1/Cache/Cache_Data/data_0`,
-      `${caches}/com.operasoftware.Opera/Cache/Cache_Data/data_0`,
-      `${caches}/com.operasoftware.Opera/Code Cache/js/index`,
-      `${caches}/com.operasoftware.Opera/Session Storage/state`,
-      `${caches}/Vivaldi/Default/Cache/Cache_Data/data_0`,
-      `${caches}/librewolf/Profiles/abc.default/cache2/entries/x`,
-    ]);
-    const paths = [
-      'edge-http-caches',
-      'opera-http-caches',
-      'vivaldi-http-caches',
-      'firefox-fork-http-caches',
-    ]
-      .flatMap((rule) => byRule(report, rule))
-      .map((item) => item.path)
-      .sort();
-    expect(paths).toEqual(
-      [
-        `${caches}/Microsoft Edge/Profile 1/Cache`,
-        `${caches}/Vivaldi/Default/Cache`,
-        `${caches}/com.operasoftware.Opera/Cache`,
-        `${caches}/com.operasoftware.Opera/Code Cache`,
-        `${caches}/librewolf/Profiles/abc.default/cache2`,
+  itUnless(sandboxed)(
+    'reports caches of other browsers, including single-profile Opera',
+    async () => {
+      const caches = 'Library/Caches';
+      const { root, home, report } = await scanHome([
+        `${caches}/Microsoft Edge/Profile 1/Cache/Cache_Data/data_0`,
+        `${caches}/com.operasoftware.Opera/Cache/Cache_Data/data_0`,
+        `${caches}/com.operasoftware.Opera/Code Cache/js/index`,
+        `${caches}/com.operasoftware.Opera/Session Storage/state`,
+        `${caches}/Vivaldi/Default/Cache/Cache_Data/data_0`,
+        `${caches}/librewolf/Profiles/abc.default/cache2/entries/x`,
+      ]);
+      const paths = [
+        'edge-http-caches',
+        'opera-http-caches',
+        'vivaldi-http-caches',
+        'firefox-fork-http-caches',
       ]
-        .map((path) => join(home, path))
-        .sort()
-    );
-    removeRoot(root);
-  });
+        .flatMap((rule) => byRule(report, rule))
+        .map((item) => item.path)
+        .sort();
+      expect(paths).toEqual(
+        [
+          `${caches}/Microsoft Edge/Profile 1/Cache`,
+          `${caches}/Vivaldi/Default/Cache`,
+          `${caches}/com.operasoftware.Opera/Cache`,
+          `${caches}/com.operasoftware.Opera/Code Cache`,
+          `${caches}/librewolf/Profiles/abc.default/cache2`,
+        ]
+          .map((path) => join(home, path))
+          .sort()
+      );
+      removeRoot(root);
+    }
+  );
 });

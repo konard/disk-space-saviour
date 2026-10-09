@@ -118,7 +118,7 @@ neither of which was involved in the original failure.
 
 | Job                     | Backstop | Step budgets                                     |
 | ----------------------- | -------- | ------------------------------------------------ |
-| `test`                  | 15 min   | Node.js 300s, Bun 200s, Deno 100s                |
+| `test`                  | 15 min   | Node.js 300s, Bun 200s, Deno 200s                |
 | `docker-build`          | 30 min   | image build 20 min                               |
 | `docker-publish-config` | 30 min   | npm availability wait 1100s                      |
 | `docker-publish-build`  | 30 min   | image build and push 20 min                      |

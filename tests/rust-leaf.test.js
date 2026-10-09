@@ -8,7 +8,7 @@
  * only: the in-use check reads `/proc/*`.
  */
 
-import { describe, it, expect } from 'test-anywhere';
+import { describe, expect } from 'test-anywhere';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import {
@@ -27,21 +27,19 @@ import {
   DAY_MS,
   age,
   fixtureEnv,
-  readOnlyRuntime,
   removeRoot,
   scanInput,
   tempRoot,
   writeBlob,
 } from './helpers/fixtures.js';
+import { itUnless, notLinux, sandboxed } from './helpers/skip.js';
 
 const HOUR_MS = 60 * 60 * 1000;
 const OLD = '0123456789abcdef';
 const NEW = 'fedcba9876543210';
 const SLEEP = ['/bin/sleep', '/usr/bin/sleep'].find((file) => existsSync(file));
 
-function unsupported() {
-  return readOnlyRuntime() || process.platform !== 'linux' || !SLEEP;
-}
+const noSleep = SLEEP ? null : 'no sleep binary to stand in for a process';
 
 /** Library artifacts of one build of `foo`, dated `ageMs` ago. */
 function libraryUnit(profile, hash, ageMs) {
@@ -114,10 +112,11 @@ function fixture(root) {
 }
 
 describe('Rust leaf pruning', () => {
-  it('splits a profile into library and leaf parts', async () => {
-    if (unsupported()) {
-      return;
-    }
+  itUnless(
+    sandboxed,
+    notLinux,
+    noSleep
+  )('splits a profile into library and leaf parts', async () => {
     const root = tempRoot('dss-rust-parts-');
     const { profile, library, leaves } = fixture(root);
     const result = await analyzeRustProfile(fixtureEnv(root), profile, {
@@ -137,10 +136,11 @@ describe('Rust leaf pruning', () => {
     removeRoot(root);
   });
 
-  it('prunes only unused leaf artifacts while cargo runs', async () => {
-    if (unsupported()) {
-      return;
-    }
+  itUnless(
+    sandboxed,
+    notLinux,
+    noSleep
+  )('prunes only unused leaf artifacts while cargo runs', async () => {
     const root = tempRoot('dss-rust-leaf-');
     const { project, library, kept, leaves, cargo } = fixture(root);
     const children = [
