@@ -14,6 +14,7 @@ Pull request: https://github.com/link-foundation/disk-space-saviour/pull/32
 | `ci-logs/run-38000089*.log`                                | The two failures on this branch at `6560ed6` (missing changeset, lychee on the copied best-practices document)                                                               |
 | `conditional-registrations-before.txt`                     | Every test in this repository whose coverage depended on the runner before the fix (detector output, 162 findings)                                                           |
 | `upstream/*.md`                                            | The upstream reports as filed, each with reproduction, workaround and suggested fix                                                                                          |
+| `ci-logs/run-38003106785-failures.log`                     | The failing lines of the seven red test jobs on this branch at `6028f98`, once Deno ran the fixtures (E4–E7)                                                                 |
 | `upstream/template-*.txt`                                  | The same defects measured in the template: per-runtime test counts of its release run 37637246715, its 58 conditional registrations at `4973fc4`                             |
 | `upstream/zizmor-pedantic-offline-vs-online.txt`           | zizmor 1.30.1 pedantic pass with and without a token, on the template and on this repository                                                                                 |
 | `upstream/hive-mind-CI-CD-BEST-PRACTICES.txt`              | Snapshot of the hive-mind best-practices document the issue asks to follow (stored as `.txt` because its relative links only resolve upstream and lychee checks `.md` files) |
@@ -32,20 +33,22 @@ Pull request: https://github.com/link-foundation/disk-space-saviour/pull/32
 | 2026-10-09 22:50 | `7619bd3` (jscpd `mode: weak`) and `628a14f` (snapshot as text); `main` merged in.                                                                                                                                                                                                                                               |
 | 2026-10-09 22:53 | `9691cfb` and `3f3f3d5`: the two release-log defects that only attempt 2 could show (W2, W3).                                                                                                                                                                                                                                    |
 | 2026-10-09 22:54 | `841a999`: the changeset, and the PR placeholder removed.                                                                                                                                                                                                                                                                        |
+| 2026-10-09 23:14 | "Checks and release" [38003106785](https://github.com/link-foundation/disk-space-saviour/actions/runs/38003106785) on `6028f98` fails in seven test jobs. Every run of it since `6560ed6` had failed the same way, because only now does Deno run the fixtures (E4–E7).                                                          |
+| 2026-10-09 23:40 | `9490eec`, `c7fd55b` and `bbc8988` fix E4–E7 (CI green on `bbc8988`); E8's pull gets a retry and mirror; denoland/deno#36996 and #36997 filed; template #222 gets a follow-up comment.                                                                                                                                           |
 
 ## Requirements
 
 | #   | Requirement (from the issue and the solver task)                                                                                 | Where it is addressed                                                                                        |
 | --- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | R1  | Fix the failing "Checks and release" run 37987850798                                                                             | E1: a manual npm setting, made by a maintainer at 22:00; attempt 2 is green                                  |
-| R2  | Find every false positive, false negative, warning and error, not only the red run                                               | F1–F5 and W1–W14 below                                                                                       |
+| R2  | Find every false positive, false negative, warning and error, not only the red run                                               | E2–E8, F1–F5 and W1–W14 below                                                                                |
 | R3  | Compare the whole workflow and script tree with the JS template and adopt its practices                                          | "Template comparison" below                                                                                  |
 | R4  | Report defects that the template shares upstream                                                                                 | template #222–#227 (and a comment on #218)                                                                   |
 | R5  | Follow hive-mind's [CI-CD-BEST-PRACTICES.md](https://github.com/link-assistant/hive-mind/blob/main/docs/CI-CD-BEST-PRACTICES.md) | "Best-practice checklist" below                                                                              |
 | R6  | Everything in one pull request                                                                                                   | PR 32                                                                                                        |
 | R7  | Collect logs and data here and write a deep analysis                                                                             | This directory                                                                                               |
 | R8  | Add debug output / a verbose mode, off by default, where data was insufficient                                                   | Skip reasons name the missing Deno permissions; `tests/visible-skips.test.js` prints the detector's findings |
-| R9  | Report issues in other projects, with reproduction, workaround and suggested fix                                                 | test-anywhere #149, command-stream #219, use-m #81                                                           |
+| R9  | Report issues in other projects, with reproduction, workaround and suggested fix                                                 | test-anywhere #149, command-stream #219, use-m #81, denoland/deno #36996 and #36997                          |
 | R10 | Apply each fix everywhere the problem occurs                                                                                     | Each fix below names its scope; guard tests (detector, workflow and config tests) keep it applied            |
 
 ## Root causes and solutions
@@ -57,6 +60,21 @@ This is the preflight added in PR 30 doing its job: it calls npm's OIDC package 
 
 **E2. "Check for Changesets" and "Dry-run release versioning (PR only)" fail on this branch with `No unreleased changesets found` (run 38000089291).**
 The release of `0.15.1` consumed the previous changeset, so this branch had none. Fixed by `.changeset/ci-issue-31.md`. Both checks are working as intended.
+
+**E4. Deno, all three OSes: `install-git-hooks` "fails when husky leaves core.hooksPath unset" and "reports it when husky says nothing" (`Expected 0 to be 1`), and `pr-guards` "requires an explicit opt-in to directory scanning locally" (`Expected 1 to be 0`).**
+The fixtures delete `CI` from a copy of `process.env` and run the script with `spawnSync`. Node gives the child exactly that `env`. Deno's `spawnSync` and `execFileSync` pass `clearEnv: false` and merge it into the parent's environment, so on a runner the child still saw `CI=true` and took its CI branch. The fix for denoland/deno#27343 cleared the env only for async `spawn`. Locally the tests passed because `CI` was unset. `CI=true GITHUB_ACTIONS=true deno test -A` reproduces all three failures; `experiments/deno-spawn-env-deleted-var.mjs` shows the leak directly. `9490eec` blanks the variables instead of deleting them (`tests/helpers/env.js`); the scripts treat blank as unset. The same change applies to the two `detect-code-changes` push-range tests, which deleted keys from an override object and so could never unset a variable that the runner set. `prependPath` now filters instead of deleting. `tests/env.test.js` fails on any env deletion in a test file (4 files before the fix). Reported as [denoland/deno#36996](https://github.com/denoland/deno/issues/36996).
+
+**E5. Deno on Windows: seven `git-safety` and `issue-27-details` tests fail with `PermissionDenied: Access is denied. (os error 5): utime '...\.git\objects\61\03f3...'`.**
+`age()` in `tests/helpers/fixtures.js` dates a fixture repository, including Git's read-only objects. Deno sets file times through `filetime::set_file_times`, which on Windows opens the file with `GENERIC_WRITE`, and Windows refuses that on a read-only file. libuv opens the file with only `FILE_WRITE_ATTRIBUTES` (`src/win/fs.c`, `fs__utime_impl_from_path`), so Node and Bun succeed. `c7fd55b` retries a failed call on a file without the write bit after granting it, then restores the mode. Reported as [denoland/deno#36997](https://github.com/denoland/deno/issues/36997).
+
+**E6. Bun, all three OSes: `check-package-manager.mjs` "passes on this repository" fails on `::warning::lockfile(s) for another package manager at the repository root: bun.lock`.**
+The test asserted that no warning was printed at all. CI's Bun leg runs `bun install` first, which writes `bun.lock`, and that warning is correct. `bbc8988` asserts only what W2 changed: no warning names `deno.lock`.
+
+**E7. Windows, Node, Bun and Deno: "Deno CI leg grants the permissions the fixtures need" fails.**
+The regex required `parallel\n`, but Windows checkouts end lines with `\r\n`. `bbc8988` accepts `\r?\n`.
+
+**E8. Docker-in-Docker Integration on `8f41657` (run [37995633245](https://github.com/link-foundation/disk-space-saviour/actions/runs/37995633245)): `docker pull -q docker:28-dind@sha256:2a23… failed (1): … auth.docker.io/token …: context deadline exceeded`.**
+A Docker Hub outage, not a code defect: the next run passed. `tests/integration/dind.mjs` pulled each pinned image once, though `.github/actions/setup-buildx-resilient` already handles this kind of outage for the buildx image (issue 75). `tests/integration/pull-pinned.mjs` brings the same policy here: three attempts with a 5s, then 10s delay, then the same digest from `mirror.gcr.io`. Both digests are on the mirror (checked with `docker manifest inspect`). `experiments/dind-pull-mirror-fallback.mjs` runs the fallback against a real daemon with Docker Hub failing; `tests/pull-pinned.test.js` covers the retry order and requires a digest.
 
 **E3. Broken Link Checker fails on this branch (run 38000089234): 5 errors in `upstream/hive-mind-CI-CD-BEST-PRACTICES.md`.**
 The copied document links to its siblings (`CI-CD-BEST-PRACTICES.zh.md`, `CONTRIBUTING.md`, …), which exist only upstream. lychee checks `md,html`, so the snapshot is now stored as `.txt`, the same way issue 29 stored its template snapshots.
@@ -100,7 +118,7 @@ The copied document links to its siblings (`CI-CD-BEST-PRACTICES.zh.md`, `CONTRI
 
 ## Template comparison
 
-Every workflow and every script under `scripts/` was diffed against the template's `main` (`4973fc4`). The two had already been aligned in issue 29, and the template's `main` has not moved since (checked again on 2026-10-09). Every hunk found only in the template is a deliberate divergence: the `NPM_TOKEN` bootstrap fallback in `release.yml`, `preflight-credentials.sh` and `publish-failure-classifier.mjs` (this repo publishes only through trusted publishing, `b369d8a`), `npm audit --package-lock-only` (replaced by `scripts/audit-fixable.mjs`, `17eb3e9`), a single-URL `use` cache (this repo caches per URL), `deno test --allow-read` (F1), and app-specific preview-image and comment text. Nothing needed porting. All the defects above except E1–E3 also exist in the template and are reported there:
+Every workflow and every script under `scripts/` was diffed against the template's `main` (`4973fc4`). The two had already been aligned in issue 29, and the template's `main` has not moved since (checked again on 2026-10-09). Every hunk found only in the template is a deliberate divergence: the `NPM_TOKEN` bootstrap fallback in `release.yml`, `preflight-credentials.sh` and `publish-failure-classifier.mjs` (this repo publishes only through trusted publishing, `b369d8a`), `npm audit --package-lock-only` (replaced by `scripts/audit-fixable.mjs`, `17eb3e9`), a single-URL `use` cache (this repo caches per URL), `deno test --allow-read` (F1), and app-specific preview-image and comment text. Nothing needed porting. All the defects above except E1–E8 also exist in the template and are reported there:
 
 - [#222](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/222): tests vanish or pass vacuously per runner: Node 569 (Windows 528), Bun 532 on Windows, Deno 417, all reporting 0 skipped; 58 gates (`upstream/template-*.txt`) (F1)
 - [#223](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/223): `allowScripts` warning (W1)
@@ -108,12 +126,15 @@ Every workflow and every script under `scripts/` was diffed against the template
 - [#225](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/225): jscpd `skipComments` (F4)
 - [#226](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/226): `deno.lock` warning (W2)
 - [#227](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/227): changeset publish output twice (W3)
+- [#222 comment](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/222#issuecomment-6091095231): the template's `install-git-hooks`, `pr-guards` and `detect-code-changes` fixtures delete env keys the same way. They pass there only because Deno skips them, and they will fail once Deno runs with `-A` (E4, E5, E7)
 
 Other projects:
 
 - [test-anywhere#149](https://github.com/link-foundation/test-anywhere/issues/149): `describe.skip` registers nothing on Deno; no way to give a skip reason. Reproduced on 0.8.48 and 0.9.1 (`experiments/test-anywhere-describe-skip.repro.mjs`)
 - [command-stream#219](https://github.com/link-foundation/command-stream/issues/219): esm.sh import fails on Deno (F5)
 - [use-m#81](https://github.com/link-foundation/use-m/issues/81): `loadWithFallback` drops the underlying error (F5)
+- [denoland/deno#36996](https://github.com/denoland/deno/issues/36996): `spawnSync`/`execFileSync` pass the parent environment to the child (E4)
+- [denoland/deno#36997](https://github.com/denoland/deno/issues/36997): `utimeSync` fails on read-only files on Windows (E5)
 
 ## Best-practice checklist (hive-mind CI-CD-BEST-PRACTICES)
 
@@ -136,7 +157,8 @@ Other projects:
 ## Verification
 
 - Every fix has a test that fails without it: `tests/visible-skips.test.js` (detector over all tests), `tests/workflows-lint.test.js` (GH_TOKEN and paths), `tests/install-scripts-policy.test.js`, `tests/jscpd-config.test.js` (fails 2/2 on the old config), `tests/package-manager.test.js` (fails on the old warning), and `tests/npm-registry.test.js` (fails on the re-print).
-- Local, at `ccb94cc`: `npm run lint`, `npm run format:check` and `npm run check:duplication` (318 clones, 6.89%) pass. `npm test`: 1109 tests, 1109 passed, 0 skipped. `bun test --timeout 30000`: 1109 pass, 0 fail, 0 skipped. `deno test -A --parallel`: 1106 passed, 0 failed, 3 ignored, 1m8s. The 3 ignored tests are the ones listed under remaining limits, and 1106 + 3 = 1109 matches Node and Bun.
+- Local, with E8's fix: `npm run lint`, `npm run format:check` and `npm run check:duplication` pass. `npm test`: 1215 tests, 1215 passed, 0 skipped. `bun test --timeout 30000`: 1215 pass, 0 fail. `deno test -A --parallel`: 1212 passed, 0 failed, 3 ignored, 58s. The 3 ignored tests are the ones listed under remaining limits, and 1212 + 3 = 1215 matches Node and Bun. The new tests are `tests/env.test.js` (97) and `tests/pull-pinned.test.js` (6).
+- E4 reproduced locally with `CI=true GITHUB_ACTIONS=true deno test -A` on the affected files: 7 failed before the fix (the 3 CI failures plus 4 guard failures), 0 after.
 - CI on this branch: VERIFY_CI
 
 ## Remaining limits
@@ -144,3 +166,4 @@ Other projects:
 - test-anywhere's `describe.skip` still drops the suite on Deno (test-anywhere#149), so the detector forbids it. Skip reasons live in the test name until test-anywhere supports a reason.
 - Under Deno, the two use-m integration tests stay skipped with their reason until command-stream#219 is fixed. Deno's other skip is the npm-style bin symlink test (Deno resolves a symlinked main module's imports from the link), so a Deno run with `-A` lists 3 ignored tests.
 - The template defects are reported, not fixed: #222–#227 are open.
+- The E4 and E5 workarounds stay until denoland/deno#36996 and #36997 are fixed. E5's retry runs only on Windows Deno and could not be run locally. CI is its test.
