@@ -7,6 +7,7 @@
  * child: on GitHub Actions a fixture that deleted CI ran with CI=true. A blank
  * value reaches the child on every runtime, and the scripts read these
  * variables as truthy strings, so blank means unset to them.
+ * https://github.com/denoland/deno/issues/36996
  */
 
 /**

@@ -24,7 +24,7 @@ describe('fixture environments', () => {
   );
 
   for (const file of files) {
-    it(`${file} blanks variables instead of deleting them`, () => {
+    it(`${file} hands fixtures blank variables, never deleted ones`, () => {
       const lines = readFileSync(`tests/${file}`, 'utf8')
         .split('\n')
         .filter((line) => DELETES_FROM_ENV.test(line));

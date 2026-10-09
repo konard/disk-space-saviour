@@ -84,7 +84,7 @@ export function age(target, ageMs) {
  * Deno on Windows opens a file for writing to set its times, which fails on
  * a read-only file such as a Git object; Node sets them on a read-only file.
  * Granting write access for the call and restoring the mode afterwards
- * leaves the times as set.
+ * leaves the times as set. https://github.com/denoland/deno/issues/36997
  */
 function setTimes(file, when) {
   try {
