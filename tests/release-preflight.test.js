@@ -30,12 +30,27 @@ function getJobBlock(workflow, jobName) {
 
 const OIDC_URL = 'https://token.actions.githubusercontent.com';
 
-function makeFixtures({ whoamiStatus = 200, postStatus = 202 } = {}) {
+function makeFixtures({
+  whoamiStatus = 200,
+  postStatus = 202,
+  oidcStatus = 200,
+  exchangeStatus = 201,
+} = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'preflight-fixtures-'));
   writeFileSync(join(dir, 'whoami_status'), String(whoamiStatus));
   writeFileSync(join(dir, 'whoami.json'), '{"username":"stub-user"}');
   writeFileSync(join(dir, 'token.json'), '{"token":"stub-registry-token"}');
   writeFileSync(join(dir, 'post_status'), String(postStatus));
+  writeFileSync(join(dir, 'oidc_status'), String(oidcStatus));
+  writeFileSync(
+    join(dir, 'oidc.json'),
+    JSON.stringify({ value: 'private-fixture-jwt' })
+  );
+  writeFileSync(join(dir, 'exchange_status'), String(exchangeStatus));
+  writeFileSync(
+    join(dir, 'exchange.json'),
+    JSON.stringify({ token: 'private-fixture-npm-token' })
+  );
   return dir;
 }
 
@@ -48,6 +63,14 @@ function runPreflight(env, fixtureDir) {
         // (notably node, which the script uses for JSON parsing) stays real.
         PATH: `${STUB_DIR}:${process.env.PATH}`,
         PREFLIGHT_FIXTURE_DIR: fixtureDir,
+        // Start from a runner-free environment so a developer's own
+        // credentials never leak into the probe.
+        ACTIONS_ID_TOKEN_REQUEST_URL: '',
+        ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'private-request-token',
+        NPM_TOKEN: '',
+        DOCKERHUB_IMAGE: '',
+        DOCKERHUB_USERNAME: '',
+        DOCKERHUB_TOKEN: '',
         ...env,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -150,7 +173,11 @@ describe('release-preflight probe behaviour (offline, curl stub)', () => {
     );
 
     expect(code).toBe(0);
-    expect(stdout).toContain('npm OIDC trusted publishing is available');
+    expect(stdout).toContain('npm OIDC package exchange verified');
+    const requests = readFileSync(join(fixtures, 'requests'), 'utf8');
+    expect(requests).toContain('audience=npm%3Aregistry.npmjs.org');
+    expect(requests).toContain('/exchange/package/disk-space-saviour');
+    expect(stdout).not.toContain('private-fixture');
   });
 
   it('fails in release mode when there is nothing to publish with', async () => {
@@ -230,7 +257,7 @@ describe('release-preflight probe behaviour (offline, curl stub)', () => {
     expect(stdout).toContain('refused the write for acme/widget (403)');
   });
 
-  it('treats a rate-limited probe as unknown, not as failure', async () => {
+  it('records a rate-limited probe as unknown and holds the release', async () => {
     const fixtures = makeFixtures({ postStatus: 429 });
     const { code, stdout } = await runPreflight(
       {
@@ -243,8 +270,13 @@ describe('release-preflight probe behaviour (offline, curl stub)', () => {
       fixtures
     );
 
-    expect(code).toBe(0);
-    expect(stdout).toContain('rate-limited the write probe (429)');
+    // A 429 has not said the credential is broken, so it is UNKNOWN, not
+    // FAIL -- but a release must not run on an unproven credential either.
+    expect(code).toBe(1);
+    expect(stdout).toContain(
+      'UNKNOWN: Docker Hub rate-limited the write probe (429)'
+    );
+    expect(stdout).not.toContain('FAIL: Docker Hub');
   });
 
   it('fails in release mode when an npm token secret is present', async () => {
@@ -277,5 +309,113 @@ describe('release-preflight probe behaviour (offline, curl stub)', () => {
     expect(code).toBe(1);
     expect(stdout).toContain('::error::');
     expect(stdout).toContain('npm has no publish path');
+  });
+});
+
+describe('npm OIDC package exchange', () => {
+  if (typeof Deno !== 'undefined') {
+    return;
+  }
+
+  it('fails in release mode when npm rejects the trusted publisher (404)', async () => {
+    // A trusted publisher naming another repository (for example the owner
+    // before a repository transfer) makes every publish end in
+    // `404 Not Found - PUT`; the preflight must report it before the build.
+    const fixtures = makeFixtures({ exchangeStatus: 404 });
+    const { code, stdout } = await runPreflight(
+      { PREFLIGHT_MODE: 'release', ACTIONS_ID_TOKEN_REQUEST_URL: OIDC_URL },
+      fixtures
+    );
+
+    expect(code).toBe(1);
+    expect(stdout).toContain('::error::');
+    expect(stdout).toContain('npm refused the OIDC package exchange (404)');
+    expect(stdout).not.toContain('PASS: npm');
+  });
+
+  it('only warns on a pull request when npm rejects the trusted publisher', async () => {
+    const fixtures = makeFixtures({ exchangeStatus: 404 });
+    const { code, stdout } = await runPreflight(
+      { PREFLIGHT_MODE: 'report', ACTIONS_ID_TOKEN_REQUEST_URL: OIDC_URL },
+      fixtures
+    );
+
+    expect(code).toBe(0);
+    expect(stdout).toContain('::warning::');
+    expect(stdout).toContain('npm refused the OIDC package exchange (404)');
+  });
+
+  for (const exchangeStatus of [401, 403, 404, 429, 500, 0]) {
+    it(`does not let a Docker Hub pass hide npm exchange status ${exchangeStatus}`, async () => {
+      const fixtures = makeFixtures({ exchangeStatus });
+      const { code, stdout } = await runPreflight(
+        {
+          PREFLIGHT_MODE: 'release',
+          ACTIONS_ID_TOKEN_REQUEST_URL: OIDC_URL,
+          DOCKERHUB_IMAGE: 'acme/widget',
+          DOCKERHUB_USERNAME: 'acme',
+          DOCKERHUB_TOKEN: 'stub',
+        },
+        fixtures
+      );
+
+      expect(code).toBe(1);
+      expect(stdout).not.toContain('npm OIDC package exchange verified');
+      expect(stdout).not.toContain('private-fixture');
+    });
+  }
+
+  for (const body of ['invalid JSON', '{}', '{"token":42}', '{"token":""}']) {
+    it(`rejects a malformed npm exchange body ${body}`, async () => {
+      const fixtures = makeFixtures();
+      writeFileSync(join(fixtures, 'exchange.json'), body);
+      const { code, stdout } = await runPreflight(
+        { PREFLIGHT_MODE: 'release', ACTIONS_ID_TOKEN_REQUEST_URL: OIDC_URL },
+        fixtures
+      );
+
+      expect(code).toBe(1);
+      expect(stdout).not.toContain('npm OIDC package exchange verified');
+    });
+  }
+
+  it('never sends a malformed GitHub OIDC answer to npm', async () => {
+    const fixtures = makeFixtures();
+    writeFileSync(join(fixtures, 'oidc.json'), '{}');
+    const { code } = await runPreflight(
+      { PREFLIGHT_MODE: 'release', ACTIONS_ID_TOKEN_REQUEST_URL: OIDC_URL },
+      fixtures
+    );
+
+    expect(code).toBe(1);
+    expect(readFileSync(join(fixtures, 'requests'), 'utf8')).not.toContain(
+      '/exchange/'
+    );
+  });
+
+  it('treats an unanswered GitHub OIDC request as unknown and blocks a release', async () => {
+    const fixtures = makeFixtures({ oidcStatus: 503 });
+    const { code, stdout } = await runPreflight(
+      { PREFLIGHT_MODE: 'release', ACTIONS_ID_TOKEN_REQUEST_URL: OIDC_URL },
+      fixtures
+    );
+
+    expect(code).toBe(1);
+    expect(stdout).toContain('UNKNOWN: GitHub OIDC token request answered 503');
+  });
+
+  it('rejects a missing GitHub request token', async () => {
+    const fixtures = makeFixtures();
+    const { code, stdout } = await runPreflight(
+      {
+        PREFLIGHT_MODE: 'release',
+        ACTIONS_ID_TOKEN_REQUEST_URL: OIDC_URL,
+        ACTIONS_ID_TOKEN_REQUEST_TOKEN: '',
+      },
+      fixtures
+    );
+
+    expect(code).toBe(1);
+    expect(stdout).toContain('ACTIONS_ID_TOKEN_REQUEST_TOKEN is not set');
   });
 });

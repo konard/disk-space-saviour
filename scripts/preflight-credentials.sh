@@ -20,8 +20,8 @@
 # Rules each caller depends on (each is a defect if dropped):
 #   1. Report every failure, not the first -- no probe aborts the script.
 #   2. Report `unknown`, never a guess: a timeout or a 429 has not said the
-#      credential is broken. But a release-mode run that verified nothing is
-#      not a pass.
+#      credential is broken. Every configured target must verify in release
+#      mode; an unknown answer blocks publication until a later probe passes.
 #   3. Probe with a write, not a login.
 #
 # No set -e on purpose: rule 1 means one failed probe must not hide the rest.
@@ -29,6 +29,7 @@
 set -u
 
 MODE="${PREFLIGHT_MODE:-report}"
+NPM_REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
 DOCKER_REGISTRY="${DOCKER_REGISTRY:-https://registry-1.docker.io}"
 DOCKER_AUTH="${DOCKER_AUTH:-https://auth.docker.io}"
 CURL_TIMEOUT="${PREFLIGHT_CURL_TIMEOUT:-15}"
@@ -72,6 +73,64 @@ node_read() {
   node -e "$1" 2>/dev/null
 }
 
+# Parse only a nonempty string field; never print response bodies to CI logs.
+json_string() {
+  node -e 'let d="";process.stdin.on("data",c=>d+=c);process.stdin.on("end",()=>{try{const v=JSON.parse(d)[process.argv[1]];if(typeof v!=="string"||!v.trim())process.exit(1);process.stdout.write(v)}catch{process.exit(1)}})' "$1" 2>/dev/null
+}
+
+# The presence of ACTIONS_ID_TOKEN_REQUEST_URL proves only that the job may
+# mint a GitHub OIDC token, not that npm trusts it: a trusted publisher that
+# names another repository (for example the owner before a transfer) refuses
+# every publish with `404 Not Found - PUT`. npm's package-specific exchange
+# endpoint is the one npm publish calls itself, so it answers the actual
+# question; the short-lived token it returns is discarded unprinted.
+check_npm_oidc() {
+  local oidc_url="$1" request_token="${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}"
+  local package response status payload jwt separator='?'
+  if [ -z "$request_token" ]; then
+    bad 'npm OIDC request token is missing (ACTIONS_ID_TOKEN_REQUEST_TOKEN is not set)'
+    return 0
+  fi
+  package=$(node_read 'import("./scripts/js-paths.mjs").then(async (p) => { const i = await import("./scripts/package-info.mjs"); process.stdout.write(encodeURIComponent(i.readPackageInfo({ jsRoot: p.parseJsRootConfig() }).name)); }).catch(() => process.exit(1))')
+  if [ -z "$package" ]; then
+    bad 'npm OIDC package name could not be read from package.json'
+    return 0
+  fi
+  [[ "$oidc_url" == *'?'* ]] && separator='&'
+  response=$(http -H "Authorization: Bearer $request_token" "${oidc_url}${separator}audience=npm%3Aregistry.npmjs.org")
+  status="${response##*"$NEWLINE"}"
+  payload="${response%"${NEWLINE}"*}"
+  if [ "$status" != '200' ]; then
+    unknown "GitHub OIDC token request answered ${status:-no status}; npm publishing remains unverified"
+    return 0
+  fi
+  jwt=$(printf '%s' "$payload" | json_string value)
+  if [ -z "$jwt" ]; then
+    bad 'GitHub OIDC token response is malformed'
+    return 0
+  fi
+  response=$(http -X POST -H "Authorization: Bearer $jwt" \
+    "$NPM_REGISTRY/-/npm/v1/oidc/token/exchange/package/$package")
+  status="${response##*"$NEWLINE"}"
+  payload="${response%"${NEWLINE}"*}"
+  case "$status" in
+    200 | 201)
+      if printf '%s' "$payload" | json_string token >/dev/null; then
+        ok 'npm OIDC package exchange verified (returned token discarded)'
+      else
+        bad 'npm OIDC package exchange response is malformed'
+      fi
+      ;;
+    401 | 403 | 404)
+      bad "npm refused the OIDC package exchange (${status}) -- the trusted publisher on npmjs.com does not match this repository and workflow (see dev/log/issues/29/pulls/30)"
+      ;;
+    *)
+      unknown "npm OIDC package exchange answered ${status:-no status}; publishing remains unverified"
+      ;;
+  esac
+  return 0
+}
+
 check_npm() {
   printf 'npm:\n'
 
@@ -82,7 +141,7 @@ check_npm() {
   fi
 
   if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
-    ok 'npm OIDC trusted publishing is available (ACTIONS_ID_TOKEN_REQUEST_URL is set)'
+    check_npm_oidc "$ACTIONS_ID_TOKEN_REQUEST_URL"
   else
     bad 'npm has no publish path: ACTIONS_ID_TOKEN_REQUEST_URL is not set (the job needs id-token: write)'
   fi
@@ -206,19 +265,19 @@ if [ "$n_fail" -gt 0 ]; then
   exit 0
 fi
 
-if [ "$verified" -eq 0 ]; then
-  # Rule 2, second half: every probe came back unknown (or there was nothing
-  # to probe). That is not a pass in release mode -- a release would run on
-  # pure hope.
+if [ "$verified" -eq 0 ] || [ "$n_unknown" -gt 0 ]; then
+  # Rule 2, second half: every configured target must verify. A Docker Hub
+  # pass must not hide an npm probe that never answered -- a release would
+  # run on pure hope for that registry.
   if [ "$MODE" = 'release' ]; then
     emit_annotations warning "$unknowns"
     append_summary unverified
-    printf '::error::release-preflight: verified nothing (%d unknown) -- refusing to release on an unproven credential set\n' "$n_unknown"
+    printf '::error::release-preflight: not all configured targets verified (%d verified, %d unknown) -- refusing to release on an unproven credential set\n' "$verified" "$n_unknown"
     exit 1
   fi
   emit_annotations warning "$unknowns"
   append_summary unverified
-  printf 'Report mode: nothing was verified -- advisory only.\n'
+  printf 'Report mode: some credentials remain unverified -- advisory only.\n'
   exit 0
 fi
 
