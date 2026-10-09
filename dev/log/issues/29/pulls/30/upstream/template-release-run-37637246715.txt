@@ -1,0 +1,9 @@
+Release Preflight	UNKNOWN STEP	2026-10-07T14:30:28.4518131Z ##[error]release-preflight: npm OIDC package exchange rejected (404); configure a trusted publisher or bootstrap token
+Release Preflight	UNKNOWN STEP	2026-10-07T14:30:28.4527655Z ##[error]release-preflight: refusing to release with 1 refused credential(s)
+Release Preflight	UNKNOWN STEP	2026-10-07T14:30:28.4533610Z ##[error]Process completed with exit code 1.
+Test (deno on ubuntu-24.04)	UNKNOWN STEP	2026-10-07T14:31:04.8539583Z Skipping: https://unpkg.com/use-m/use.js is unreachable, so use-m cannot be evaluated.
+Test (deno on ubuntu-24.04)	UNKNOWN STEP	2026-10-07T14:31:04.8540755Z Skipping: https://unpkg.com/use-m/use.js is unreachable, so use-m cannot be evaluated.
+Test (deno on macos-15)	UNKNOWN STEP	2026-10-07T14:31:19.4745300Z Skipping: https://unpkg.com/use-m/use.js is unreachable, so use-m cannot be evaluated.
+Test (deno on macos-15)	UNKNOWN STEP	2026-10-07T14:31:19.4752760Z Skipping: https://unpkg.com/use-m/use.js is unreachable, so use-m cannot be evaluated.
+Pipeline Status	UNKNOWN STEP	2026-10-07T14:32:35.8414881Z ##[error]Failing jobs: release-preflight
+Pipeline Status	UNKNOWN STEP	2026-10-07T14:32:35.8427868Z ##[error]Process completed with exit code 1.
