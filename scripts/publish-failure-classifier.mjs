@@ -61,6 +61,7 @@ export function buildAuthFailureGuidance(packageName) {
     'After a repository transfer, update the npm trusted publisher before retrying.',
     'For disk-space-saviour: owner link-foundation, repository disk-space-saviour,',
     'workflow release.yml. The published latest version may still be older.',
+    'Also verify that the trusted publisher permits direct npm publish.',
     '',
     'For a new package, the FIRST publish of a brand-new package via npm OIDC',
     'trusted publishing returns "E404 Not Found - PUT". npm cannot bootstrap a',

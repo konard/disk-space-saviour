@@ -28,6 +28,21 @@ import {
 
 const ok = (stdout) => ({ code: 0, stdout, stderr: '' });
 describe('aggregate cleanup details', () => {
+  it('keeps local cache items when the directly supplied host adapter is a container', () => {
+    const host = { id: 'host', label: 'fixture' };
+    const item = makeItem(host, { kind: 'cache', bytes: 100 });
+    expect(
+      wantedItems(
+        {
+          items: [item],
+          environments: [
+            { id: 'host', kind: 'container', depth: 0, chain: [] },
+          ],
+        },
+        resolveOptions({ docker: false, minSize: 0 })
+      )
+    ).toEqual([item]);
+  });
   it('applies no-docker to Docker actions from a previously scanned report', () => {
     const host = { id: 'host', label: 'fixture' };
     const item = makeItem(host, {
@@ -101,6 +116,9 @@ describe('aggregate cleanup details', () => {
     expect(env.unreadableProcesses[0].uid).toBe(0);
     expect(env.unreadableProcesses[0].command).toMatch(/custom/);
   });
+});
+
+describe('aggregate cleanup safety and publishing', () => {
   it('reports Full Disk Access when Safari inspection is denied', async () => {
     if (readOnlyRuntime()) {
       return;

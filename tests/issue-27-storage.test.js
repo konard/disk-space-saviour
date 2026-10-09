@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'test-anywhere';
 import path from 'node:path';
 import * as storage from '../src/docker/writable.js';
+import { DockerCli } from '../src/docker/cli.js';
+import { containerGitState } from '../src/docker/containers.js';
 const { WritableLayer, sharedWritableLayer } = storage;
 
 const ok = (stdout = '') => ({ code: 0, stdout, stderr: '' });
@@ -37,6 +39,44 @@ function fixture({ memory = 1024 * 1024, diff = 'A /cache/new\n' } = {}) {
 }
 
 describe('issue 21 bounded storage snapshots', () => {
+  it('honors a tighter cgroup memory limit than host MemAvailable', async () => {
+    const { executor, calls, env, usages } = fixture();
+    const run = executor.run;
+    executor.run = (argv) =>
+      argv[1] === '/sys/fs/cgroup/memory.max'
+        ? Promise.resolve(ok(`${1024 ** 3}\n${950 * 1024 ** 2}\n`))
+        : run(argv);
+    const result = await new WritableLayer(executor, 'box').measure(
+      env,
+      usages
+    );
+    expect(calls.some((argv) => argv[1] === 'diff')).toBe(false);
+    expect(result.get('/cache').sizeUnknown).toBe(true);
+  });
+
+  it('uses metadata already inspected during discovery', async () => {
+    const { executor, calls, env, usages } = fixture();
+    const layer = new WritableLayer(executor, 'box');
+    layer.inspected = { Id: 'box', Mounts: [] };
+    await layer.measure(env, usages);
+    expect(calls.some((argv) => argv[1] === 'inspect')).toBe(false);
+  });
+
+  it('refreshes Git discovery before removal if a new repository was copied into a stopped container', async () => {
+    const { executor } = fixture({ diff: '' });
+    const docker = new DockerCli(executor);
+    await containerGitState(docker, 'box');
+    const run = executor.run;
+    executor.run = (argv) =>
+      argv[1] === 'diff'
+        ? Promise.resolve(ok('A /work/.git/HEAD\n'))
+        : run(argv);
+    docker.pathExists = async () => true;
+    docker.copyOut = async () => ({ code: 1, stderr: 'copy denied' });
+    const current = await containerGitState(docker, 'box', { fresh: true });
+    expect(current.blockers.length > 0).toBe(true);
+  });
+
   it('diffs and inspects only once across repeated and concurrent measurements', async () => {
     const { executor, calls, env, usages } = fixture();
     const layer = new WritableLayer(executor, 'box');

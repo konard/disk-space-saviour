@@ -592,10 +592,10 @@ class DockerScan {
       entry.note = `state ${ps.State}, left alone`;
       return;
     }
-    await this.running(record, depth, ps, entry);
+    await this.running(record, depth, ps, entry, inspected);
   }
 
-  async running(record, depth, ps, entry) {
+  async running(record, depth, ps, entry, inspected) {
     const label = `${record.env.label}/${entry.name}`;
     const executor = containerExecutor(record.executor, ps.ID, { label });
     const env = new ShellEnv(executor, {
@@ -603,6 +603,7 @@ class DockerScan {
       label,
       kind: 'container',
     });
+    env.writableLayer.inspected = inspected;
     const probe = await executor.run(['sh', '-c', 'true'], {
       timeoutMs: 30000,
     });

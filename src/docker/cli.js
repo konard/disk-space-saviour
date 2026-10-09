@@ -269,8 +269,8 @@ export class DockerCli {
     }
   }
 
-  diff(id) {
-    return diffSnapshot(this, id);
+  diff(id, options) {
+    return diffSnapshot(this, id, options);
   }
 
   /** Check a small file in a stopped container without starting it. */

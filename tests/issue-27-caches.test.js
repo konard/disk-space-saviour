@@ -26,6 +26,26 @@ async function caches(files, input = {}) {
 }
 
 describe('issue 18 cache coverage', () => {
+  it('rechecks exclusions discovered during the final usage walk before removing its ancestor', async () => {
+    if (readOnlyRuntime()) {
+      return;
+    }
+    const { home, env, options, report } = await caches(
+      ['.cache/uv/drop/data'],
+      { exclude: ['keep'] }
+    );
+    const usage = env.usage.bind(env);
+    env.usage = async (target) => {
+      const result = await usage(target);
+      env.scanPolicy.allows(join(target, 'keep'));
+      return result;
+    };
+    const audit = await clean(report, { ...options, audit: false });
+    expect(existsSync(join(home, '.cache/uv/drop/data'))).toBe(true);
+    expect(audit.entries.every((entry) => entry.status !== 'removed')).toBe(
+      true
+    );
+  });
   it('finds Telegram cache partitions and preserves its database and media', async () => {
     if (readOnlyRuntime()) {
       return;

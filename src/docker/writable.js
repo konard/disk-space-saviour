@@ -61,9 +61,9 @@ export class WritableLayer {
           this.id,
           '(one storage snapshot; concurrency 1)'
         );
-        const [container] = await this.docker
-          .inspect([this.id])
-          .catch(() => []);
+        const container =
+          this.inspected ??
+          (await this.docker.inspect([this.id]).catch(() => []))[0];
         if (!container) {
           return { diff: null, container };
         }
@@ -278,6 +278,7 @@ export async function configureContainerHost(env, ids, options = {}) {
   const own = containers.find((container) => ids.includes(container.Id));
   if (own) {
     env.writableLayer = sharedWritableLayer(env.executor, own.Id);
+    env.writableLayer.inspected = own;
     const { ShellEnv } = await import('../env/shell.js');
     const { containerExecutor } = await import('../exec.js');
     env.processInspector = new ShellEnv(

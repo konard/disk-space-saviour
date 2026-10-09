@@ -255,7 +255,8 @@ export class Cleaner {
     if (type === 'docker-rm') {
       const git = await containerGitState(
         new DockerCli(ctx.executor),
-        item.action.containerId
+        item.action.containerId,
+        { fresh: true }
       );
       const blockers = gitBlockersForRemoval(
         git,
@@ -483,6 +484,12 @@ export class Cleaner {
         entry.skippedPaths.push({ path: target, reason: inUse });
         continue;
       }
+      // The usage walk may discover an excluded child that was added since scan.
+      const boundary = ctx.env.scanPolicy.removalReason(target);
+      if (boundary) {
+        entry.reason = boundary;
+        return;
+      }
       await ctx.env.remove([target]);
       ctx.env.writableLayer?.forget?.(target, ctx.env.path);
       entry.status = 'removed';
@@ -585,7 +592,7 @@ export class Cleaner {
       entry.reason = kept;
       return;
     }
-    const git = await containerGitState(docker, containerId);
+    const git = await containerGitState(docker, containerId, { fresh: true });
     const blockers = gitBlockersForRemoval(git, containerId, this.options);
     if (blockers.length > 0) {
       entry.reason = blockers.join('; ');
@@ -701,7 +708,10 @@ function dockerItem(item, report) {
     ['docker', 'container'].includes(item.kind) ||
     item.action?.argv?.[0] === 'docker' ||
     (report.environments ?? []).some(
-      (env) => env.id === item.env && env.kind === 'container'
+      (env) =>
+        env.id === item.env &&
+        env.kind === 'container' &&
+        (env.depth > 0 || env.chain?.length > 0)
     )
   );
 }
