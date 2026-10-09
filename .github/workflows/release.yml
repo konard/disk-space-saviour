@@ -158,6 +158,9 @@ jobs:
         env:
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RELEASE_PR_ACTOR: ${{ vars.RELEASE_PR_ACTOR }}
         run: node scripts/check-version.mjs
 
   # === CHANGESET CHECK - only runs on PRs with code changes ===
@@ -193,13 +196,8 @@ jobs:
           GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RELEASE_PR_ACTOR: ${{ vars.RELEASE_PR_ACTOR }}
         run: |
-          # Skip changeset check for automated version PRs
-          if [[ "$GITHUB_HEAD_REF" == "changeset-release/"* ]]; then
-            echo "Skipping changeset check for automated release PR"
-            exit 0
-          fi
-
           # Run changeset validation script
           # This validates that exactly ONE changeset was ADDED by this PR
           # Pre-existing changesets from other merged PRs are ignored
