@@ -5,11 +5,13 @@
 
 import { execFileSync } from 'node:child_process';
 import {
+  chmodSync,
   mkdirSync,
   mkdtempSync,
   realpathSync,
   readdirSync,
   rmSync,
+  statSync,
   utimesSync,
   writeFileSync,
 } from 'node:fs';
@@ -73,9 +75,32 @@ export function age(target, ageMs) {
     for (const entry of entries) {
       visit(join(current, entry.name));
     }
-    utimesSync(current, when, when);
+    setTimes(current, when);
   };
   visit(target);
+}
+
+/**
+ * Deno on Windows opens a file for writing to set its times, which fails on
+ * a read-only file such as a Git object; Node sets them on a read-only file.
+ * Granting write access for the call and restoring the mode afterwards
+ * leaves the times as set.
+ */
+function setTimes(file, when) {
+  try {
+    utimesSync(file, when, when);
+  } catch (error) {
+    const { mode } = statSync(file);
+    if (mode & 0o200) {
+      throw error;
+    }
+    chmodSync(file, mode | 0o200);
+    try {
+      utimesSync(file, when, when);
+    } finally {
+      chmodSync(file, mode);
+    }
+  }
 }
 
 const concrete = (name) => name.replaceAll('*', 'app');
