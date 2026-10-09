@@ -95,16 +95,21 @@ describe('Changesets release formatter', () => {
           'ENOENT'
         );
         const run = (file, args) => {
+          const started = Date.now();
           const result = spawnSync('node', [resolve(file), ...args], {
             cwd,
             env,
             encoding: 'utf8',
             timeout: 20000,
           });
+          const took = `${file} took ${Date.now() - started}ms`;
+          if (process.env.DSS_DEBUG) {
+            console.error(took);
+          }
           assert.equal(
             result.status,
             0,
-            `${result.error || ''}\n${result.stdout}\n${result.stderr}`
+            `${took}: ${result.error || ''}\n${result.stdout}\n${result.stderr}`
           );
         };
         run('node_modules/@changesets/cli/bin.js', ['version']);
