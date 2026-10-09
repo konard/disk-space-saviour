@@ -50,17 +50,11 @@ const windowsNodeCmd =
   isWindowsNodeRuntime && 'Node on Windows does not spawn the .cmd gh fixture';
 
 function prependPath(env, binPath) {
-  const nextEnv = { ...env };
-  const currentPath =
-    Object.entries(nextEnv).find(
-      ([key]) => key.toLowerCase() === 'path'
-    )?.[1] ?? '';
-
-  for (const key of Object.keys(nextEnv)) {
-    if (key.toLowerCase() === 'path') {
-      delete nextEnv[key];
-    }
-  }
+  const isPath = ([key]) => key.toLowerCase() === 'path';
+  const currentPath = Object.entries(env).find(isPath)?.[1] ?? '';
+  const nextEnv = Object.fromEntries(
+    Object.entries(env).filter((entry) => !isPath(entry))
+  );
 
   return {
     ...nextEnv,

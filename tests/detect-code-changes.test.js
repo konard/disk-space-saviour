@@ -469,7 +469,7 @@ describe('detect-code-changes push ranges', () => {
         res.end('{"message": "Forbidden"}');
       });
       const env = pushRangeEnv('', fixture.codeSha, fixture.headSha, port);
-      delete env.GITHUB_BASE_SHA;
+      env.GITHUB_BASE_SHA = '';
 
       try {
         const { status, stdout, outputs } = await runDetector(
@@ -503,8 +503,8 @@ describe('detect-code-changes push ranges', () => {
         fixture.headSha,
         port
       );
-      delete env.GITHUB_BEFORE_SHA;
-      delete env.GITHUB_AFTER_SHA;
+      env.GITHUB_BEFORE_SHA = '';
+      env.GITHUB_AFTER_SHA = '';
 
       try {
         const { status, stdout, outputs } = await runDetector(

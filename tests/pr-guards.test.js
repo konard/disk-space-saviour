@@ -3,6 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
+import { blankEnv } from './helpers/env.js';
 import { itUnless, sandboxed } from './helpers/skip.js';
 
 // Spawns processes and writes temporary trees; see tests/helpers/skip.js.
@@ -42,16 +43,11 @@ function fixture(run, { root = '.', existing = false } = {}) {
     git('update-ref', 'refs/remotes/origin/main', 'HEAD');
     const base = git('rev-parse', 'HEAD');
     const invoke = (script, env = {}, args = []) => {
-      const cleanEnv = { ...process.env };
-      for (const key of Object.keys(cleanEnv)) {
-        if (
-          /^(GITHUB_|BASE_SHA$|HEAD_SHA$|CI$|JS_ROOT$|ALLOW_LOCAL_CHANGESET_SCAN$)/.test(
-            key
-          )
-        ) {
-          delete cleanEnv[key];
-        }
-      }
+      const cleanEnv = blankEnv(process.env, (key) =>
+        /^(GITHUB_|BASE_SHA$|HEAD_SHA$|CI$|JS_ROOT$|ALLOW_LOCAL_CHANGESET_SCAN$)/.test(
+          key
+        )
+      );
       return spawnSync(process.execPath, [join(scripts, script), ...args], {
         cwd,
         encoding: 'utf8',

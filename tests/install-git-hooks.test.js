@@ -10,6 +10,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { blankEnv } from './helpers/env.js';
 import { itUnless, noPosixShell, sandboxed } from './helpers/skip.js';
 
 const scriptPath = path.resolve('scripts/install-git-hooks.mjs');
@@ -68,9 +69,7 @@ function makeWorkspace({ withGit }) {
 }
 
 function runPrepare(cwd, extraEnv = {}) {
-  const env = { ...process.env };
-  delete env.CI;
-  delete env.HUSKY;
+  const env = blankEnv(process.env, (name) => ['CI', 'HUSKY'].includes(name));
   return spawnSync('node', [scriptPath], {
     encoding: 'utf8',
     cwd,
