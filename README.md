@@ -70,7 +70,9 @@ Run `dss --help` for every option. The most useful ones:
 
 - `--only NAME` limits a run to an ecosystem, rule or kind (`--only rust`,
   `--only npm-cache`, `--only docker-stopped-container`).
-- `--exclude PATH|GLOB` makes paths untouchable.
+- `--exclude PATH|GLOB` prunes matching paths and descendants before reading
+  them. Patterns containing separators match full paths and their ancestors;
+  other patterns also match ancestor basenames.
 - `--scanner NAME` restricts scanning to `projects`, `global`, `versions`,
   `agents` or `system`.
 - `--report FILE` limits cleaning to items in a saved `dss scan --json`
@@ -81,11 +83,11 @@ Run `dss --help` for every option. The most useful ones:
 Tiers are cumulative: `moderate` includes `safe`, and `aggressive` includes
 both.
 
-| Tier         | What it removes                                                                                                                                                                                                                                                                                                         |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `safe`       | Download caches (npm, pnpm, yarn, pip, uv, Cargo registry, Gradle, Go, NuGet, and many more), dangling Docker images and build cache. Includes these caches inside running containers.                                                                                                                                  |
-| `moderate`   | Whole `node_modules`, `target/`, `.venv`, `build/` and similar folders of projects inactive for `--inactive` (30 days); toolchain versions nothing uses; unused tagged images, each one only with `--remove-image REF` or an interactive yes; stopped containers (`--remove-stopped-containers` or an interactive yes). |
-| `aggressive` | For emergencies: everything regenerable, including build outputs of projects in active use. Only `dss emergency` reaches it.                                                                                                                                                                                            |
+| Tier         | What it removes                                                                                                                                                                                                                                                                                       |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `safe`       | Download and application caches, idle package-runner entries, old browser revisions, inactive lockfile-backed `node_modules`, dangling Docker images and build cache. Includes writable caches inside running containers.                                                                             |
+| `moderate`   | Whole `target/`, `.venv`, `build/` and similar folders of inactive projects; old agent scratch and Telegram downloaded media (secret-chat media may be irreplaceable); unused toolchain versions and tagged images; stopped containers. Container and tagged-image removal requires explicit consent. |
+| `aggressive` | For emergencies: everything regenerable, including build outputs of projects in active use. Only `dss emergency` reaches it.                                                                                                                                                                          |
 
 Covered ecosystems: JavaScript/TypeScript (npm, yarn, pnpm, bun, deno,
 framework build caches), Python, Rust, JVM (Gradle, Maven, Kotlin, Android),
@@ -98,7 +100,11 @@ Opera GX, Vivaldi, Arc, Yandex Browser, Naver Whale, 360, QQ Browser, Firefox,
 LibreWolf, Waterfox, Zen and Floorp, IDE caches (JetBrains, VS Code, Cursor,
 Windsurf, Qoder), AI agent caches and logs, the Discord cache, macOS app
 updates staged by Sparkle and Squirrel, package manager archives, trash, crash
-reports, core dumps and journald logs.
+reports, core dumps and journald logs. Telegram pure caches, Safari/WebKit,
+Chromium code/GPU/Dawn/service-worker caches and marker-validated Electron
+caches are included. Telegram databases, browser profiles and Playwright MCP
+profiles are preserved. macOS access failures explain when Full Disk Access
+is needed. Agent scratch cleanup requires inactivity and Git safety checks.
 
 ## Safety
 
@@ -129,8 +135,10 @@ reports, core dumps and journald logs.
   environment stops at once, and the audit log and summary say which
   process was lost. A build that simply finishes during the cleanup also
   stops it: an exit cannot be told apart from a crash.
-- **Git awareness.** A project or container is not touched while it has
-  unsaved changes, unpushed commits or stashes. Stopped-container scans show
+- **Git awareness.** Whole projects and containers are protected while they
+  have unsaved changes, unpushed commits or stashes. Ignored dependency and
+  build outputs can be cleaned despite unrelated source changes; tracked or
+  non-ignored files inside an artifact remain protected. Stopped-container scans show
   Git state before cleanup. Unstaged and untracked files can be recognized
   as preserved when their bytes and modes all match one cached remote ref,
   such as `origin/recovery/<branch>`. No remote fetch is performed; missing
@@ -149,7 +157,11 @@ Long-lived `npm exec`/`npx` servers allow idle npm download and node-gyp
 header caches to be cleaned. Active npx hashes remain protected through
 their child command paths, working directories and open files; other
 hashes are separate candidates subject to the age window. Install commands
-still block relevant caches. Old isolation logs and sanitized upload staging
+still block relevant caches. Bunx, pnpm dlx and Yarn dlx entries use the same
+path protection, and dss always protects its own installation. Interrupts
+finish the partial audit and report the abort. Unreadable processes retain
+their readable identity; uncertain activity blocks relevant paths and owners
+and produces one environment hint. Old isolation logs and sanitized upload staging
 are moderate-tier candidates. Opam download cleanup removes its cache
 directory directly and does not invoke `opam clean` or migrate the root.
 
@@ -201,6 +213,16 @@ rebuild the image to remove that data. These estimates exclude directory
 metadata overhead. A small stopped container pinning a large image is shown
 even below `--min-size`; its potential image bytes require a separate image
 removal after the container is removed.
+
+`--no-docker` makes no Docker calls, including for storage accounting and
+saved-report cleanup. An overlay root without authoritative upperdir evidence
+has unknown freeable bytes and contributes zero to reclaimable totals.
+Measurements prefer accessible upperdirs; the diff fallback shares one
+serialized snapshot and cached stats per container/run, checks host and cgroup
+memory headroom, and skips excessive candidate counts. Fresh Git checks before
+stopped-container removal still inspect new work. Verbose mode reports storage
+measurement progress. Host scans prune runtime, nested overlay, read-only and
+unselected mount points; explicitly selected ordinary mount roots are allowed.
 
 Docker discovery uses a size-free container listing and measures each
 container independently. Failed size queries are retried once; objects

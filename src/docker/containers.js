@@ -336,7 +336,7 @@ export async function containerGitState(docker, id, options = {}) {
 }
 
 async function inspectContainerGitState(docker, id, options) {
-  const diff = await docker.diff(id);
+  const diff = await docker.diff(id, { fresh: options.fresh });
   if (diff === null) {
     return {
       repos: [],

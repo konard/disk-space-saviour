@@ -67,7 +67,7 @@ describe('global cache rules find their fixture cache', () => {
       (item) => item.rule === 'playwright-browsers'
     );
     expect(browsers.map((item) => item.path)).toEqual([old]);
-    expect(browsers[0].tier).toBe('moderate');
+    expect(browsers[0].tier).toBe('safe');
     expect(existsSync(join(newest, 'chrome'))).toBe(true);
     rmSync(newest, { recursive: true });
     const audit = await clean(report, {

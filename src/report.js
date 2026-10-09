@@ -52,9 +52,9 @@ function itemLine(item, showEnv) {
     ? `  (needs ${consentFlag(item)})`
     : '';
   const storage = item.sizeUnknown
-    ? '  (reclaimable size unknown)'
+    ? '  (may be in an image layer; freeable bytes unknown, excluded from totals)'
     : item.imageBytes
-      ? `  (${formatBytes(item.imageBytes)} in image; rebuild the image to reclaim)`
+      ? `  (${formatBytes(item.imageBytes)} in image${item.imageRef ? ` ${item.imageRef}` : ''}; 0 B of that data freeable now; remove the stopped container and unused image after the task completes)`
       : '';
   return `  ${pad(formatBytes(item.bytes), 10)}  ${env}${item.rule}  ${itemLocation(item)}${confirm}${storage}`;
 }
@@ -321,6 +321,11 @@ export function formatReport(report, options = {}) {
   for (const tier of TIERS) {
     lines.push(...tierSection(report, tier, { limit }));
   }
+  for (const env of report.environments) {
+    if (env.hint) {
+      lines.push(`  ${env.label}: ${env.hint}`);
+    }
+  }
   lines.push(...blockedSection(report, { limit }));
   lines.push(...dockerSection(report));
   lines.push(...errorsSection(report.errors));
@@ -410,6 +415,9 @@ export function formatAudit(audit, options = {}) {
     '',
     ...limited(shown.map(entryLine), limit),
   ];
+  if (audit.aborted) {
+    lines.push(`  cleanup aborted: ${audit.error ?? 'interrupted'}`);
+  }
   if (hidden > 0) {
     lines.push(`  ${hidden} skipped (use --verbose to list them)`);
   }

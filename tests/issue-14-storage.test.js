@@ -11,6 +11,9 @@ function storageEnv({ diff = '', mounts = [], fail = false } = {}) {
   const parent = {
     label: 'host',
     run: async (argv) => {
+      if (argv[0] === 'cat') {
+        return ok('MemAvailable: 1048576 kB\n');
+      }
       if (argv[1] === 'diff') {
         return fail ? { code: 1, stdout: '', stderr: 'failed' } : ok(diff);
       }

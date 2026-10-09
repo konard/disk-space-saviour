@@ -30,6 +30,7 @@ import {
 } from './docker/containers.js';
 import { imageNamed } from './docker/images.js';
 import { resolveEnvironment } from './env/resolve.js';
+import { configureScanPolicy } from './env/policy.js';
 import { GitInspector } from './git.js';
 import { HealthWatch } from './health.js';
 import { consentFlag, dropNested, selectByTier, tierRank } from './items.js';
@@ -40,7 +41,12 @@ import { OTHER_RULES } from './rules/other.js';
 import { compareVersions, VERSION_RULES } from './rules/versions.js';
 import { scanVersions } from './scanners/versions.js';
 import { analyzeRustProfile } from './scanners/rust.js';
-import { filterItems, revalidateReport, selfContainerIds } from './scan.js';
+import {
+  filterItems,
+  revalidateReport,
+  selfContainerIds,
+  scannedEnvironment,
+} from './scan.js';
 
 const STOPPED = new Set(['exited', 'created', 'dead']);
 const COMMAND_TIMEOUT_MS = 30 * 60 * 1000;
@@ -126,9 +132,14 @@ async function browserRevisionBlocker(env, item) {
   return null;
 }
 
-async function configureStorage(env) {
+async function configureStorage(env, options) {
+  await configureScanPolicy(env, options);
   if (env.kind === 'host' && !env.writableLayer) {
-    await configureContainerHost(env, await selfContainerIds(env));
+    await configureContainerHost(
+      env,
+      options.docker === false ? [] : await selfContainerIds(env),
+      options
+    );
   }
 }
 
@@ -244,7 +255,8 @@ export class Cleaner {
     if (type === 'docker-rm') {
       const git = await containerGitState(
         new DockerCli(ctx.executor),
-        item.action.containerId
+        item.action.containerId,
+        { fresh: true }
       );
       const blockers = gitBlockersForRemoval(
         git,
@@ -256,7 +268,17 @@ export class Cleaner {
     if (type === 'none' || item.paths.length === 0) {
       return { item };
     }
-    await configureStorage(ctx.env);
+    await configureStorage(ctx.env, this.options);
+    for (const target of item.paths) {
+      const boundary = ctx.env.scanPolicy.removalReason(target);
+      if (boundary) {
+        return { reason: boundary };
+      }
+    }
+    return this.#remeasure(ctx, item, type);
+  }
+
+  async #remeasure(ctx, item, type) {
     let paths = item.paths;
     if (item.recheck?.type === 'rust') {
       const current = await analyzeRustProfile(ctx.env, item.recheck.profile, {
@@ -287,6 +309,12 @@ export class Cleaner {
       return {
         reason:
           'all bytes are in the image layer; rebuild the image to reclaim them',
+      };
+    }
+    if ([...usages.values()].some((usage) => usage.sizeUnknown)) {
+      return {
+        reason:
+          'writable-layer size unknown; inspect container/image storage before cleanup',
       };
     }
     const staticBlocker = await this.#staticBlocker(ctx, fresh);
@@ -401,13 +429,20 @@ export class Cleaner {
   }
 
   async #gitBlocker(ctx, item) {
-    if (item.project || item.rule === 'gh-issue-solver-workdirs') {
+    if (
+      item.project ||
+      item.rule === 'gh-issue-solver-workdirs' ||
+      item.recheck?.type === 'scratch'
+    ) {
       ctx.git.invalidate();
       const blockers =
-        item.rule === 'gh-issue-solver-workdirs'
-          ? await ctx.git.treeBlockers(item.path)
+        item.rule === 'gh-issue-solver-workdirs' ||
+        item.recheck?.type === 'scratch'
+          ? await ctx.git.treeBlockers(item.path, {
+              allowNoRepo: item.recheck?.type === 'scratch',
+            })
           : await ctx.git.pathBlockers(item.path, {
-              requireClean: item.tier !== 'safe',
+              requireClean: false,
             });
       if (blockers.length > 0) {
         return blockers.join('; ');
@@ -435,28 +470,28 @@ export class Cleaner {
    */
   async #removePaths(ctx, item, entry) {
     for (const target of item.action.paths) {
-      await ctx.liveness.refresh(true);
-      const stopped = this.health.verify(item, ctx.liveness.processList());
-      if (stopped) {
-        entry.reason = `stopped before ${target}: ${stopped}`;
-        return;
+      if (this.options.signal?.aborted) {
+        throw new Error('cleanup aborted');
       }
-      await ctx.liveness.resolve([target]);
-      const busy = ctx.liveness.busyReason({ ...item, paths: [target] });
-      if (busy) {
-        entry.reason = `stopped before ${target}: busy: ${busy}`;
+      const blocker = await this.#removalBlocker(ctx, item, target);
+      if (blocker) {
+        entry.reason = blocker;
         return;
       }
       const usage = await ctx.env.usage(target);
-      const inUse =
-        item.checks?.perPath &&
-        (ctx.liveness.openInside([target]) ??
-          ctx.liveness.recentWrite(usage?.newestMtimeMs));
+      const inUse = this.#pathActivity(ctx, item, target, usage);
       if (inUse) {
         entry.skippedPaths.push({ path: target, reason: inUse });
         continue;
       }
+      // The usage walk may discover an excluded child that was added since scan.
+      const boundary = ctx.env.scanPolicy.removalReason(target);
+      if (boundary) {
+        entry.reason = boundary;
+        return;
+      }
       await ctx.env.remove([target]);
+      ctx.env.writableLayer?.forget?.(target, ctx.env.path);
       entry.status = 'removed';
       entry.deletedPaths.push(target);
       entry.freedBytes += usage?.bytes ?? 0;
@@ -465,6 +500,30 @@ export class Cleaner {
     if (entry.deletedPaths.length === 0 && entry.skippedPaths.length > 0) {
       entry.reason = 'every path was in use or recently written';
     }
+  }
+
+  #pathActivity(ctx, item, target, usage) {
+    return (
+      item.checks?.perPath &&
+      (ctx.liveness.openInside([target]) ??
+        ctx.liveness.recentWrite(usage?.newestMtimeMs))
+    );
+  }
+
+  async #removalBlocker(ctx, item, target) {
+    await configureScanPolicy(ctx.env, this.options);
+    const boundary = ctx.env.scanPolicy.removalReason(target);
+    if (boundary) {
+      return boundary;
+    }
+    await ctx.liveness.refresh(true);
+    const stopped = this.health.verify(item, ctx.liveness.processList());
+    if (stopped) {
+      return `stopped before ${target}: ${stopped}`;
+    }
+    await ctx.liveness.resolve([target]);
+    const busy = ctx.liveness.busyReason({ ...item, paths: [target] });
+    return busy ? `stopped before ${target}: busy: ${busy}` : null;
   }
 
   async #command(ctx, item, entry) {
@@ -533,7 +592,7 @@ export class Cleaner {
       entry.reason = kept;
       return;
     }
-    const git = await containerGitState(docker, containerId);
+    const git = await containerGitState(docker, containerId, { fresh: true });
     const blockers = gitBlockersForRemoval(git, containerId, this.options);
     if (blockers.length > 0) {
       entry.reason = blockers.join('; ');
@@ -632,6 +691,7 @@ export function environmentTotals(report, entries) {
 export function wantedItems(report, options) {
   const approved = options.approvedIds ? new Set(options.approvedIds) : null;
   return filterItems(report.items, { ...options, minSizeBytes: 0 }, [], path)
+    .filter((item) => options.docker !== false || !dockerItem(item, report))
     .filter((item) => !approved || approved.has(item.id))
     .map((item) => {
       if (item.action?.type === 'docker-rm') {
@@ -641,6 +701,19 @@ export function wantedItems(report, options) {
         ? { ...item, requiresConfirmation: null }
         : item;
     });
+}
+
+function dockerItem(item, report) {
+  return (
+    ['docker', 'container'].includes(item.kind) ||
+    item.action?.argv?.[0] === 'docker' ||
+    (report.environments ?? []).some(
+      (env) =>
+        env.id === item.env &&
+        env.kind === 'container' &&
+        (env.depth > 0 || env.chain?.length > 0)
+    )
+  );
 }
 
 /**
@@ -728,21 +801,30 @@ export async function clean(report, input = {}) {
   };
   const cleaner = new Cleaner(report, {
     ...options,
+    env: options.env ?? scannedEnvironment(report),
     onProgress: persistProgress,
   });
   audit.health = cleaner.health.records;
   if (options.audit !== false) {
     await writeAudit(audit, { ...options, inProgress: true });
   }
-  for (const item of planItems(report, options)) {
-    const entry = await cleaner.process(item);
-    if (!audit.entries.includes(entry)) {
-      audit.entries.push(entry);
+  try {
+    for (const item of planItems(report, options)) {
+      if (options.signal?.aborted) {
+        throw new Error('cleanup aborted');
+      }
+      const entry = await cleaner.process(item);
+      if (!audit.entries.includes(entry)) {
+        audit.entries.push(entry);
+      }
+      options.onEntry?.(entry, item);
+      if (options.audit !== false) {
+        await writeAudit(audit, { ...options, inProgress: true });
+      }
     }
-    options.onEntry?.(entry, item);
-    if (options.audit !== false) {
-      await writeAudit(audit, { ...options, inProgress: true });
-    }
+  } catch (error) {
+    audit.aborted = true;
+    audit.error = error.message;
   }
   return finishAudit(audit, report, options);
 }
@@ -751,6 +833,10 @@ export async function clean(report, input = {}) {
  * Adds totals and writes the audit log (unless `audit: false`).
  */
 export async function finishAudit(audit, report, options) {
+  if (options.signal?.aborted) {
+    audit.aborted = true;
+    audit.error ??= 'cleanup aborted';
+  }
   audit.finishedAt = new Date().toISOString();
   audit.freedBytes = audit.entries.reduce((sum, e) => sum + e.freedBytes, 0);
   audit.plannedBytes = audit.entries

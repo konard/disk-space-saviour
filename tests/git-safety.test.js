@@ -10,7 +10,6 @@ import { existsSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { clean, cleanOptions } from '../src/clean.js';
-import { LocalEnv } from '../src/env/local.js';
 import { GitInspector, stateBlockers } from '../src/git.js';
 import { scan } from '../src/scan.js';
 import {
@@ -145,7 +144,7 @@ describe('Git state', () => {
     git(repo, 'push', '-q');
     const { report } = await scanRepo(root);
     expect(report.items[0].blockers).toEqual([
-      `1 file inside ${join(repo, 'node_modules')} tracked by Git`,
+      `1 file inside ${join(repo, 'node_modules')} tracked by Git or not ignored`,
     ]);
     removeRoot(root);
   });
@@ -160,7 +159,9 @@ describe('re-checks right before deleting', () => {
     const work = join(parent, 'gh-issue-solver-example');
     const repo = pushedRepo(join(work, 'checkout'));
     age(work, 40 * DAY_MS);
-    const env = new LocalEnv({ homes: [], tmpDirs: [parent] });
+    const env = fixtureEnv(parent);
+    env.homeDirs = async () => [];
+    env.tmpDirs = async () => [parent];
     env.processes = async () => [];
     env.openPaths = async () => new Set();
     const input = scanInput(env, [], {
@@ -205,7 +206,7 @@ describe('re-checks right before deleting', () => {
     removeRoot(root);
   });
 
-  it('keeps it when the repository has uncommitted changes', async () => {
+  it('cleans ignored dependencies when only source has uncommitted changes', async () => {
     if (readOnlyRuntime()) {
       return;
     }
@@ -214,9 +215,8 @@ describe('re-checks right before deleting', () => {
     const { env, report } = await scanRepo(root);
     writeFileSync(join(repo, 'README.md'), 'work in progress\n');
     const audit = await clean(report, { env, tier: 'moderate', audit: false });
-    expect(audit.entries[0].status).toBe('skipped');
-    expect(audit.entries[0].reason).toMatch(/1 uncommitted change/);
-    expect(existsSync(modules)).toBe(true);
+    expect(audit.entries[0].status).toBe('removed');
+    expect(existsSync(modules)).toBe(false);
     removeRoot(root);
   });
 

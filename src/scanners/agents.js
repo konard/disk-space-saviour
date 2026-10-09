@@ -132,7 +132,7 @@ async function appItems(context, app, root) {
       ...verdict,
       checks: { busy: [], cwd: null, mtime: true },
     });
-    const busy = scanTimeBusy(context, item);
+    const busy = await scanTimeBusy(context, item);
     if (busy) {
       block(item, `busy: ${busy}`);
     }

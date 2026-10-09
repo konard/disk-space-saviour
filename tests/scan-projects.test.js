@@ -69,7 +69,11 @@ describe('project rules find their fixture project', () => {
       const item = report.items.find((candidate) => candidate.rule === rule.id);
       expect(item?.path).toBe(dirs.get(rule.id));
       expect(item.ecosystem).toBe(rule.ecosystem);
-      expect(item.tier).toBe(rule.kind === 'cache' ? 'safe' : 'moderate');
+      expect(item.tier).toBe(
+        rule.kind === 'cache' || rule.id === 'node-modules'
+          ? 'safe'
+          : 'moderate'
+      );
       expect(item.blockers).toEqual([]);
       expect(item.bytes >= 64 * 1024).toBe(true);
       expect(item.action).toEqual({ type: 'remove', paths: [item.path] });

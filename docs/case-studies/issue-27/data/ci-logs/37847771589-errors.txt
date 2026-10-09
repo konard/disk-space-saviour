@@ -1,0 +1,3 @@
+9149: Test (deno on ubuntu-24.04)	UNKNOWN STEP	2026-10-08T21:35:39.7555392Z ^[[0m^[[1m^[[31merror^[[0m: NotCapable: Requires env access to "GITHUB_REPOSITORY", run again with the --allow-env flag
+10722: Test (deno on windows-latest)	UNKNOWN STEP	2026-10-08T21:36:16.4822702Z ^[[0m^[[1m^[[31merror^[[0m: NotCapable: Requires env access to "GITHUB_REPOSITORY", run again with the --allow-env flag
+12305: Test (deno on macos-latest)	UNKNOWN STEP	2026-10-08T21:35:56.4390770Z ^[[0m^[[1m^[[31merror^[[0m: NotCapable: Requires env access to "GITHUB_REPOSITORY", run again with the --allow-env flag

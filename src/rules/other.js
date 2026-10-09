@@ -18,6 +18,7 @@
 export const OTHER_RULES = [
   {
     id: 'playwright-browsers',
+    protectProfiles: true,
     ecosystem: 'browsers',
     description: 'old Playwright browser revisions',
     paths: [
@@ -27,7 +28,7 @@ export const OTHER_RULES = [
     ],
     versionPattern: /^(?<family>[a-z_]+)-(?<version>\d+)$/,
     minAge: 'inactive',
-    tier: 'moderate',
+    tier: 'safe',
     busy: [
       'playwright',
       'playwright-mcp',
@@ -49,7 +50,7 @@ export const OTHER_RULES = [
     ],
     versionPattern: /^(?<version>\d+(?:\.\d+){1,3})$/,
     minAge: 'inactive',
-    tier: 'moderate',
+    tier: 'safe',
     busy: ['playwright'],
   },
   {
@@ -59,7 +60,7 @@ export const OTHER_RULES = [
     paths: ['~/.cache/puppeteer/*/*'],
     versionPattern: /^(?<family>[a-z0-9_-]+)-(?<version>\d[\d.]*)$/,
     minAge: 'inactive',
-    tier: 'moderate',
+    tier: 'safe',
     busy: ['puppeteer', 'chrome', 'chromium', 'headless_shell'],
   },
   {
@@ -69,7 +70,7 @@ export const OTHER_RULES = [
     paths: ['~/.cache/Cypress/*', '~/Library/Caches/Cypress/*'],
     versionPattern: /^(?<version>\d+(?:\.\d+){1,3})$/,
     minAge: 'inactive',
-    tier: 'moderate',
+    tier: 'safe',
     busy: ['Cypress', 'cypress'],
   },
   {
@@ -79,7 +80,7 @@ export const OTHER_RULES = [
     paths: ['~/.cache/selenium/*/*/*'],
     versionPattern: /^(?<version>\d+(?:\.\d+){1,3})$/,
     minAge: 'inactive',
-    tier: 'moderate',
+    tier: 'safe',
     busy: ['chromedriver', 'geckodriver'],
   },
   {

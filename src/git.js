@@ -264,7 +264,7 @@ export class GitInspector {
   }
 
   /** Protect an entire temporary work directory, including nested clones. */
-  async treeBlockers(target) {
+  async treeBlockers(target, { allowNoRepo = false } = {}) {
     const dirs = await this.env.findDirs([target], {
       globs: ['.git'],
       maxDepth: 32,
@@ -283,6 +283,9 @@ export class GitInspector {
       ...files.map((file) => this.env.path.dirname(file)),
     ]);
     if (roots.size === 0) {
+      if (allowNoRepo) {
+        return [];
+      }
       return [`${target}: no Git repository found; cannot verify work`];
     }
     if (roots.size > 50) {
@@ -308,9 +311,27 @@ export class GitInspector {
       const result =
         this.env.kind === 'host'
           ? await safeGitDirectory(root, (safeDir) =>
-              this.#git(root, ['ls-files', '--', relative], safeDir)
+              this.#git(
+                root,
+                [
+                  'ls-files',
+                  '--cached',
+                  '--others',
+                  '--exclude-standard',
+                  '--',
+                  relative,
+                ],
+                safeDir
+              )
             )
-          : await this.#git(root, ['ls-files', '--', relative]);
+          : await this.#git(root, [
+              'ls-files',
+              '--cached',
+              '--others',
+              '--exclude-standard',
+              '--',
+              relative,
+            ]);
       return result.code === 0 ? countLines(result.stdout) : -1;
     } catch {
       return -1;
@@ -336,7 +357,9 @@ export class GitInspector {
       return [`cannot verify Git tracking of ${target}`];
     }
     if (tracked > 0) {
-      return [`${plural(tracked, 'file')} inside ${target} tracked by Git`];
+      return [
+        `${plural(tracked, 'file')} inside ${target} tracked by Git or not ignored`,
+      ];
     }
     return requireClean ? this.repoBlockers(root) : [];
   }

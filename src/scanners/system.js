@@ -55,8 +55,8 @@ export function parseBrewCleanup(output) {
   );
 }
 
-function withBusy(context, item) {
-  const busy = scanTimeBusy(context, item);
+async function withBusy(context, item) {
+  const busy = await scanTimeBusy(context, item);
   if (busy) {
     block(item, `busy: ${busy}`);
   }
@@ -126,7 +126,7 @@ async function snapItems(context, isRoot) {
     if (!isRoot) {
       block(item, 'system location, run as root to clean it');
     }
-    items.push(withBusy(context, item));
+    items.push(await withBusy(context, item));
   }
   return items;
 }
@@ -154,7 +154,7 @@ async function brewItems(context, isRoot) {
     action: { type: 'command', argv: ['brew', 'cleanup'], measure: [] },
     checks: { busy: ['brew'], cwd: null, mtime: false },
   });
-  return [withBusy(context, item)];
+  return [await withBusy(context, item)];
 }
 
 /**

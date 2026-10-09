@@ -17,6 +17,14 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { LocalEnv } from '../../src/env/local.js';
+import { afterAll } from 'test-anywhere';
+
+const temporaryRoots = new Set();
+afterAll(() => {
+  for (const root of temporaryRoots) {
+    removeRoot(root);
+  }
+});
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -27,11 +35,14 @@ export const DAY_MS = 24 * 60 * 60 * 1000;
 export const readOnlyRuntime = () => typeof Deno !== 'undefined';
 
 export function tempRoot(prefix = 'dss-fixture-') {
-  return mkdtempSync(join(tmpdir(), prefix));
+  const root = mkdtempSync(join(tmpdir(), prefix));
+  temporaryRoots.add(root);
+  return root;
 }
 
 export function removeRoot(root) {
   rmSync(root, { recursive: true, force: true });
+  temporaryRoots.delete(root);
 }
 
 /**
@@ -106,6 +117,26 @@ class FixtureEnv extends LocalEnv {
     });
     // Processes report paths with symlinks resolved (macOS: /private/var).
     this.roots = [root, realpathSync(root)];
+    const run = this.executor.run.bind(this.executor);
+    const guard = (argv) => {
+      if (/^docker(?:\.exe)?$/.test(argv[0])) {
+        throw new Error('unit fixture attempted real Docker access');
+      }
+    };
+    this.executor.run = (argv, options) => {
+      guard(argv);
+      return run(argv, options);
+    };
+    this.executor.spawn = (argv) => {
+      guard(argv);
+      throw new Error('fixture spawn must be explicitly mocked');
+    };
+  }
+
+  readText(target, ...args) {
+    return target.startsWith('/proc/self/')
+      ? Promise.resolve(null)
+      : super.readText(target, ...args);
   }
 
   #inside(target) {

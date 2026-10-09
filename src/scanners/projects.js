@@ -169,7 +169,7 @@ function projectTier(context, rule, lastActivityMs) {
   const { inactiveMs } = context.options;
   if (olderThan(context, lastActivityMs, inactiveMs)) {
     return {
-      tier: 'moderate',
+      tier: rule.id === 'node-modules' ? 'safe' : 'moderate',
       reason: 'project inactive, re-created by the build or install step',
     };
   }
@@ -185,7 +185,7 @@ async function addBlockers(context, item, requireClean) {
   })) {
     block(item, reason);
   }
-  const busy = scanTimeBusy(context, item);
+  const busy = await scanTimeBusy(context, item);
   if (busy) {
     block(item, `busy: ${busy}`);
   }
@@ -209,7 +209,7 @@ async function projectActivity(context, project, candidate, usage, globs) {
 }
 
 async function projectItem(context, { candidate, rule }, usage, globs) {
-  const { env, options } = context;
+  const { env } = context;
   const project = rule.parentName
     ? env.path.dirname(candidate.parent)
     : candidate.parent;
@@ -234,11 +234,7 @@ async function projectItem(context, { candidate, rule }, usage, globs) {
     ...projectTier(context, rule, lastActivityMs),
     checks: { busy: rule.busy ?? [], cwd: project, mtime: true },
   });
-  await addBlockers(
-    context,
-    item,
-    item.tier !== 'safe' && !options.allowDirtyRepos
-  );
+  await addBlockers(context, item, false);
   return item;
 }
 

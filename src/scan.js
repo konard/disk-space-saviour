@@ -3,15 +3,19 @@
  * Docker, inside running containers and nested daemons. Never deletes.
  */
 
-import { configureContainerHost } from './docker/writable.js';
+import {
+  configureContainerHost,
+  resetWritableLayers,
+} from './docker/writable.js';
 import { scanDocker } from './docker/scan.js';
 import { LocalEnv } from './env/local.js';
+import { configureScanPolicy } from './env/policy.js';
 import { block, tierTotals } from './items.js';
 import { hostExecutor, trace } from './exec.js';
 import { GitInspector } from './git.js';
 import { LivenessProbe } from './liveness.js';
 import { resolveOptions } from './options.js';
-import { existingPaths, isWithin, matchesGlob } from './paths.js';
+import { existingPaths, isWithin, matchesExcluded } from './paths.js';
 import { scanAgents } from './scanners/agents.js';
 import { scanGlobal } from './scanners/global.js';
 import { scanProjects } from './scanners/projects.js';
@@ -28,6 +32,8 @@ export const SCANNERS = {
 
 export const REPORT_SCHEMA = 1;
 const trustedReports = new WeakMap();
+const reportEnvironments = new WeakMap();
+export const scannedEnvironment = (report) => reportEnvironments.get(report);
 const RESCAN_OPTIONS = new Set([
   'roots',
   'scanners',
@@ -117,6 +123,10 @@ async function defaultRoots(env, homes, tmpDirs) {
  * @param {{roots?: string[]|null}} [overrides]
  */
 export async function environmentContext(env, options, overrides = {}) {
+  await configureScanPolicy(env, {
+    ...options,
+    roots: overrides.roots ?? options.roots,
+  });
   const liveness = new LivenessProbe(env, {
     staleAgeMs: options.staleAgeMs,
     now: options.now,
@@ -166,6 +176,19 @@ export async function scanEnvironment(env, options, extra = {}) {
     }
     trace('scanner', name, 'in', env.id, `${Date.now() - started}ms`);
   }
+  await attributeStorage(env, items);
+  for (const item of items) {
+    for (const target of item.paths) {
+      block(item, env.scanPolicy.removalReason(target));
+    }
+  }
+  for (const message of env.accessErrors?.values() ?? []) {
+    errors.push({ env: env.id, scanner: 'filesystem', message });
+  }
+  return items;
+}
+
+async function attributeStorage(env, items) {
   if (env.writableLayer) {
     const usages = await env.usageMany([
       ...new Set(items.flatMap((item) => item.paths)),
@@ -183,16 +206,17 @@ export async function scanEnvironment(env, options, extra = {}) {
         (sum, usage) => sum + (usage.imageBytes ?? 0),
         0
       );
+      item.imageRef =
+        measured.find((usage) => usage.imageRef)?.imageRef ?? null;
       item.sizeUnknown = measured.some((usage) => usage.sizeUnknown);
       if (!item.sizeUnknown && item.bytes === 0 && item.imageBytes > 0) {
         block(
           item,
-          'all bytes are in the image layer; rebuild the image to reclaim them'
+          'all bytes are in the image layer; remove the stopped container and its unused image after the task completes, or rebuild without caches'
         );
       }
     }
   }
-  return items;
 }
 
 /**
@@ -238,13 +262,13 @@ function matchesOnly(item, only) {
 }
 
 function excluded(item, exclude, pathApi) {
-  return item.paths.some((target) =>
-    exclude.some(
-      (pattern) =>
-        isWithin(target, pattern, pathApi) ||
-        isWithin(pattern, target, pathApi) ||
-        matchesGlob(pathApi.basename(target), pattern)
-    )
+  return item.paths.some(
+    (target) =>
+      matchesExcluded(target, exclude, pathApi) ||
+      exclude.some(
+        (pattern) =>
+          !/[*?[]/.test(pattern) && isWithin(pattern, target, pathApi)
+      )
   );
 }
 
@@ -276,7 +300,14 @@ export function filterItems(items, options, daemons = [], pathApi) {
 }
 
 function envDescriptor(env, depth, chain) {
-  return { id: env.id, label: env.label, kind: env.kind, depth, chain };
+  return {
+    id: env.id,
+    label: env.label,
+    kind: env.kind,
+    depth,
+    chain,
+    hint: env.probeHint ?? null,
+  };
 }
 
 async function withDisk(env, descriptor) {
@@ -346,7 +377,15 @@ export async function scan(input = {}) {
   const env = input.env ?? new LocalEnv();
   const startedAt = options.now();
   const errors = [];
-  await configureContainerHost(env, await selfContainerIds(env));
+  resetWritableLayers(env.executor);
+  env.writableLayer = null;
+  env.scanPolicy = null;
+  await configureScanPolicy(env, options);
+  await configureContainerHost(
+    env,
+    options.docker === false ? [] : await selfContainerIds(env),
+    options
+  );
   const hostItems =
     options.host === false
       ? []
@@ -364,7 +403,7 @@ export async function scan(input = {}) {
     environments.push(inner);
   }
   environments[0] = await withDisk(env, environments[0]);
-  return buildReport({
+  const report = buildReport({
     options,
     env,
     items,
@@ -373,6 +412,8 @@ export async function scan(input = {}) {
     errors,
     startedAt,
   });
+  reportEnvironments.set(report, env);
+  return report;
 }
 
 function reportOptions(options) {

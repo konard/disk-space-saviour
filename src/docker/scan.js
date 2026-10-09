@@ -310,14 +310,38 @@ async function stoppedItem(daemon, ps, inspected, options) {
   return item;
 }
 
-function matchesFilter(ps, filters) {
-  if (!filters || filters.length === 0) {
-    return true;
+export function selectContainers(rows, filters = []) {
+  if (!filters.length) {
+    return { ids: new Set(rows.map((row) => row.ID)), errors: [] };
   }
-  const names = String(ps.Names ?? '').split(',');
-  return filters.some(
-    (filter) => ps.ID.startsWith(filter) || names.includes(filter)
-  );
+  const ids = new Set();
+  const errors = [];
+  for (const filter of filters) {
+    const exact = rows.filter(
+      (row) =>
+        row.ID === filter ||
+        String(row.Names ?? '')
+          .split(',')
+          .includes(filter)
+    );
+    const matches = exact.length
+      ? exact
+      : rows.filter(
+          (row) =>
+            row.ID.startsWith(filter) ||
+            String(row.Names ?? '')
+              .split(',')
+              .some((name) => name.startsWith(filter))
+        );
+    if (matches.length === 1) {
+      ids.add(matches[0].ID);
+    } else {
+      errors.push(
+        `container filter ${filter}: ${matches.length ? `ambiguous (${matches.length} matches)` : 'no matching container'}`
+      );
+    }
+  }
+  return { ids, errors };
 }
 
 function pinnedImage(ps, all, inspected, inventory) {
@@ -508,9 +532,19 @@ class DockerScan {
         }
       }
     }
+    const selection = selectContainers(
+      all,
+      inherited ? [] : this.options.containerFilter
+    );
+    this.result.errors.push(
+      ...selection.errors.map((message) => ({
+        env: record.env.id,
+        scanner: 'docker',
+        message,
+      }))
+    );
     for (const ps of all) {
-      const selected =
-        inherited || matchesFilter(ps, this.options.containerFilter);
+      const selected = selection.ids.has(ps.ID);
       if (!selected) {
         continue;
       }
@@ -558,10 +592,10 @@ class DockerScan {
       entry.note = `state ${ps.State}, left alone`;
       return;
     }
-    await this.running(record, depth, ps, entry);
+    await this.running(record, depth, ps, entry, inspected);
   }
 
-  async running(record, depth, ps, entry) {
+  async running(record, depth, ps, entry, inspected) {
     const label = `${record.env.label}/${entry.name}`;
     const executor = containerExecutor(record.executor, ps.ID, { label });
     const env = new ShellEnv(executor, {
@@ -569,6 +603,7 @@ class DockerScan {
       label,
       kind: 'container',
     });
+    env.writableLayer.inspected = inspected;
     const probe = await executor.run(['sh', '-c', 'true'], {
       timeoutMs: 30000,
     });
@@ -609,6 +644,9 @@ class DockerScan {
  */
 export async function scanDocker(hostRecord, options, scanEnvironment) {
   const scan = new DockerScan(options, scanEnvironment);
+  if (options.docker === false) {
+    return scan.result;
+  }
   if (!(await hostRecord.env.which('docker'))) {
     return scan.result;
   }

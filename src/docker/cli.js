@@ -8,6 +8,7 @@
  */
 
 import { pipeInto } from '../exec.js';
+import { diffSnapshot } from './snapshots.js';
 
 const DECIMAL_UNITS = {
   b: 1,
@@ -268,9 +269,8 @@ export class DockerCli {
     }
   }
 
-  async diff(id) {
-    const result = await this.run(['diff', id]);
-    return result.code === 0 ? result.stdout : null;
+  diff(id, options) {
+    return diffSnapshot(this, id, options);
   }
 
   /** Check a small file in a stopped container without starting it. */

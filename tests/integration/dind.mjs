@@ -21,10 +21,10 @@ const DIND_IMAGE =
   'docker:28-dind@sha256:2a232a42256f70d78e3cc5d2b5d6b3276710a0de0596c145f627ecfae90282ac';
 const BUSYBOX_IMAGE =
   'busybox@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e';
-const DIND_TAG = 'dss-it/dind:pinned';
-const BUSYBOX_TAG = 'dss-it/busybox:pinned';
-const L1 = 'dss-it-l1';
-const L2 = 'dss-it-l2';
+const DIND_TAG = `dss-it/dind:${process.pid}-pinned`;
+const BUSYBOX_TAG = `dss-it/busybox:${process.pid}-pinned`;
+const L1 = `dss-it-l1-${process.pid}`;
+const L2 = `dss-it-l2-${process.pid}`;
 const CACHE_BYTES = 2 * 1024 * 1024;
 
 const DSS = join(
@@ -81,7 +81,7 @@ function buildChain() {
   ]) {
     sh(`docker pull -q ${image} && docker tag ${image} ${tag}`);
   }
-  const daemon = `--privileged -e DOCKER_TLS_CERTDIR= ${DIND_TAG}`;
+  const daemon = `--privileged --memory=2g --memory-swap=2g --pids-limit=768 -e DOCKER_TLS_CERTDIR= ${DIND_TAG}`;
   sh(`docker run -d --name ${L1} ${daemon}`);
   waitForDaemon(`docker exec ${L1} `, 'l1');
   sh(

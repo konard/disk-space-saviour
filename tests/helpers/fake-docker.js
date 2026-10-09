@@ -91,6 +91,9 @@ export class FakeDockerWorld {
       return fail('Error response from daemon: container is not running');
     }
     const [command, ...args] = target.argv;
+    if (command === 'cat' && args[0] === '/proc/meminfo') {
+      return ok('MemAvailable: 1048576 kB\n');
+    }
     if (command === 'sh') {
       return this.#shell(target, args);
     }
