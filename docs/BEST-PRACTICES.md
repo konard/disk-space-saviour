@@ -278,6 +278,37 @@ if: !cancelled() && needs.lint.result == 'success'
 
 When a workflow run is cancelled, `always()` still evaluates to `true`, causing dependent jobs to run unnecessarily. `!cancelled()` properly stops the chain.
 
+### 15. No False Positives, No False Negatives
+
+A check that passes without proving anything, or warns about something
+harmless on every run, trains readers to ignore it. Each check here either
+proves its claim or says why it could not:
+
+- **Prove credentials, do not infer them.** The release preflight asks npm's
+  OIDC package exchange for a publish token; an
+  `ACTIONS_ID_TOKEN_REQUEST_URL` variable alone only shows that GitHub can
+  mint an ID token, not that npm trusts this repository. After a repository
+  transfer the npm trusted publisher must be updated by a maintainer on
+  npmjs.com; the probe fails until then.
+- **Release only after every check.** The release jobs need every check job,
+  including Docker-in-Docker, and refuse to run after a failed or cancelled
+  one.
+- **Pin what can change under you.** Runner images (`ubuntu-24.04`,
+  `macos-15`, `windows-2025`) and workflow tools (secretlint, zizmor) are
+  pinned, so a new default image cannot turn a green branch red.
+- **Keep every lockfile in step.** `deno.lock` must record the same ranges as
+  `package.json` (`tests/deno-lock.test.js`); a stale lock makes Deno
+  re-resolve on the runner, where its minimum dependency age rejects
+  same-day releases.
+- **Name the real reason for a skip.** A skipped test logs what it lacked
+  (for example the Deno net permission), not a guess such as "unreachable".
+- **Report what is not blocking.** `audit-fixable` fails only on fixable
+  high-severity advisories and prints a notice with the counts it did not
+  block on, so a clean summary is never a silent one.
+- **Give tools inputs that cannot be empty.** lychee walks the checkout by
+  extension; a glob whose matches are all excluded makes it warn on every
+  run.
+
 ## Quality Enforcement Strategy
 
 The template implements a defense-in-depth approach:
