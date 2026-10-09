@@ -269,6 +269,39 @@ describe('workflow concurrency policy', () => {
   });
 });
 
+describe('lychee link check inputs', () => {
+  it('excludes Vite source HTML from raw lychee file scans', () => {
+    const linksWorkflow = readWorkflow('.github/workflows/links.yml');
+    const viteSourceHtmlPath = 'examples/universal-app/index.html';
+    const viteSourceHtml = readWorkflow(viteSourceHtmlPath);
+
+    expect(viteSourceHtml).toContain('href="/favicon.svg"');
+    expect(viteSourceHtml).toContain('src="/src/main.js"');
+    expect(linksWorkflow).toContain(`--exclude-path ${viteSourceHtmlPath}`);
+    expectOrdered(linksWorkflow, [
+      '--exclude-path docs/case-studies',
+      `--exclude-path ${viteSourceHtmlPath}`,
+    ]);
+  });
+
+  it('walks the checkout for Markdown and HTML files by extension', () => {
+    // A glob input whose every match is excluded makes lychee warn
+    // "No files found for this input source"; a directory input filtered by
+    // extension stays silent, respects .gitignore and, with --hidden, also
+    // covers tracked files under dot directories such as .changeset.
+    const linksWorkflow = readWorkflow('.github/workflows/links.yml');
+    const lycheeArgs = linksWorkflow
+      .split('- name: Check links with lychee')[1]
+      .split('args: >-')[1]
+      .split(/\n\s+#/)[0];
+
+    expect(lycheeArgs).toContain('--extensions md,html');
+    expect(lycheeArgs).toContain('--hidden');
+    expect(lycheeArgs).not.toContain('*');
+    expect(/^\s+\.$/m.test(lycheeArgs)).toBe(true);
+  });
+});
+
 describe('workflow reliability policy', () => {
   it('sets Git default branch config before checkout initializes repositories', () => {
     const workflowPaths = [
@@ -293,22 +326,6 @@ describe('workflow reliability policy', () => {
         '- uses: actions/checkout@v6',
       ]);
     }
-  });
-
-  it('excludes Vite source HTML from raw lychee file scans', () => {
-    const linksWorkflow = readWorkflow('.github/workflows/links.yml');
-    const viteSourceHtmlPath = 'examples/universal-app/index.html';
-    const viteSourceHtml = readWorkflow(viteSourceHtmlPath);
-
-    expect(viteSourceHtml).toContain('href="/favicon.svg"');
-    expect(viteSourceHtml).toContain('src="/src/main.js"');
-    expect(linksWorkflow).toContain(`--exclude-path ${viteSourceHtmlPath}`);
-    expectOrdered(linksWorkflow, [
-      '--exclude-path docs/case-studies',
-      `--exclude-path ${viteSourceHtmlPath}`,
-      "'./**/*.md'",
-      "'./**/*.html'",
-    ]);
   });
 
   it('uploads preview regeneration artifacts when screenshot rendering fails', () => {
