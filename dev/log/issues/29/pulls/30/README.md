@@ -129,9 +129,9 @@ The template's own `main` release currently fails in Release Preflight with `npm
 
 - Every fix has a test that fails without it. Examples: `tests/deno-lock.test.js` fails on the old lock; the lychee input test fails on the old `links.yml`; `tests/release-preflight.test.js` fails on the old environment-variable probe.
 - Local: `npm run lint`, `npm run format:check`, `npm run check:duplication`, `npm test`, `bun test --timeout 30000`, `deno test --allow-read`.
-- CI on this branch: see the PR checks. The link-check run reports 0 errors and no `No files found` warning.
+- CI on this branch: see the PR checks. The link-check run reports 0 errors and no `No files found` warning. In [run 37985930630](https://github.com/link-foundation/disk-space-saviour/actions/runs/37985930630), the Windows legs load use-m (`Loaded command-stream on v24.21.0` under Node, `v26.3.0` under Bun) where they used to skip (F6).
 
 ## Remaining limits
 
 - E1 needs the manual npm setting above; until then, every release run fails in Release Preflight with an explicit message, not at publish time.
-- Whether use-m now loads on Windows is only proven by the Windows CI legs. If it still fails there, the test logs the loader rejection and skips (F6).
+- The Deno legs still skip the use-m interop, because the suite runs without `--allow-net`. The skip now names the denied permission (W2). Granting network access to the whole Deno suite would widen what every test may do, so it was not changed.
