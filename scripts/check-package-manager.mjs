@@ -43,7 +43,8 @@ const FOREIGN_LOCKFILES = [
  * Lockfiles a runtime keeps for its own config, whatever the package manager:
  * `deno test` reads and writes deno.lock next to deno.json. They are listed,
  * not warned about, since removing them is not an option and a warning on
- * every release that nobody can act on teaches readers to skip warnings.
+ * every release that nobody can act on teaches readers to skip warnings
+ * (https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/226).
  */
 const RUNTIME_LOCKFILES = {
   'deno.lock': ['deno.json', 'deno.jsonc'],

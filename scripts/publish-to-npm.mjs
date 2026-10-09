@@ -174,7 +174,8 @@ function analyzePublishResult(publishResult, commandError) {
     ? `${publishResult.stdout || ''}\n${publishResult.stderr || ''}`
     : '';
 
-  // No need to print combinedOutput: command-stream mirrored it live.
+  // No need to print combinedOutput: command-stream mirrored it live
+  // (https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/227).
 
   // Check for failure patterns in output (most reliable for changeset)
   const failurePattern = detectPublishFailure(combinedOutput);
