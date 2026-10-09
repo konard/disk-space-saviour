@@ -617,6 +617,7 @@ jobs:
         id: check_release
         env:
           HAS_CHANGESETS: ${{ steps.check_changesets.outputs.has_changesets }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-release-needed.mjs
 
       - name: Merge multiple changesets
