@@ -71,6 +71,20 @@ export function blockingAdvisories(report) {
   return [...advisories.values()];
 }
 
+/**
+ * Counts of the advisories below the blocking severities, from the report
+ * metadata, e.g. "8 moderate". Empty when there are none. These never fail
+ * the gate, but a summary that names only high and critical advisories would
+ * read as a clean audit.
+ */
+export function nonBlockingSummary(report) {
+  const counts = report.metadata?.vulnerabilities ?? {};
+  return ['moderate', 'low', 'info']
+    .filter((severity) => counts[severity] > 0)
+    .map((severity) => `${counts[severity]} ${severity}`)
+    .join(', ');
+}
+
 /** Versions of a package the lock file installs. */
 export function installedVersions(lock, name) {
   const suffix = `node_modules/${name}`;
@@ -139,6 +153,12 @@ function main() {
   for (const advisory of fixable) {
     console.log(
       `::error::Fixed in ${advisory.name}@${advisory.fix}, upgrade: ${describe(advisory)}`
+    );
+  }
+  const lower = nonBlockingSummary(report);
+  if (lower) {
+    console.log(
+      `::notice::Lower-severity advisories, not blocking: ${lower} (run npm audit for details)`
     );
   }
   console.log(

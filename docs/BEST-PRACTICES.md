@@ -138,18 +138,19 @@ violation as a race makes a release die after the version bump has already been
 committed in the runner, with a log that blames a race that never happened
 (link-foundation/js-ai-driven-development-pipeline-template#143).
 
-The fallback needs a dedicated `RELEASE_PR_TOKEN` secret containing a
-fine-grained PAT from an actor other than the workflow's built-in
-`GITHUB_TOKEN`. Scope it to this repository with Contents and Pull requests
-write access plus Checks read access. Teams can instead generate a short-lived
-GitHub App installation token and wire that action output to the same inputs.
-Pull requests opened by `GITHUB_TOKEN` do not start ordinary `pull_request`
-workflows, so they can never satisfy a required `Pipeline Status` check. The
-helper fails before pushing a temporary branch when the dedicated token is
-absent, opens the PR as that actor, waits for the PR's checks with
-`gh pr checks --watch --fail-fast`, and only then merges it. A real failed check
-or policy error is returned immediately; only brief check-discovery and
-mergeability races are retried.
+The release and instant-release jobs prefer a dedicated `RELEASE_PR_TOKEN` when
+configured. This can be a fine-grained PAT or short-lived GitHub App token with
+Contents and Pull requests write access plus Checks read access. Without it,
+the helper uses the built-in `GITHUB_TOKEN`. Pull requests opened by that token
+do not start ordinary `pull_request` workflows, so the helper first proves the
+version commit is a direct child of the validated workflow SHA and changes only
+release metadata. It creates a successful `Pipeline Status` check on the exact
+new SHA, linked to the validating run. The release jobs have `checks: write` for
+this purpose; GitHub Actions must be allowed to create pull requests in the
+repository settings. Additional exact metadata paths may be set through
+`RELEASE_METADATA_PATHS`. The helper then waits for all required checks with
+`gh pr checks --required --watch --fail-fast` before merging. Unexpected paths,
+API denials, failed checks, and merge-policy errors fail closed.
 
 The temporary branch is never force-pushed and never deleted, so it stays
 compatible with rulesets that forbid destruction on `~ALL` refs, and the merge
@@ -216,7 +217,7 @@ a test, network call, package install, or release step hangs:
   Actions' six-hour default.
 - Matrix test jobs have a 10-minute cap per runtime and operating
   system.
-- Release jobs have 30 minutes for package registry and GitHub API
+- Release jobs have 50 minutes for package registry and GitHub API
   retries without allowing an unbounded release run.
 - The broken link checker has 10 minutes for slow external hosts and
   Web Archive fallback probes.
@@ -276,6 +277,37 @@ if: !cancelled() && needs.lint.result == 'success'
 ```
 
 When a workflow run is cancelled, `always()` still evaluates to `true`, causing dependent jobs to run unnecessarily. `!cancelled()` properly stops the chain.
+
+### 15. No False Positives, No False Negatives
+
+A check that passes without proving anything, or warns about something
+harmless on every run, trains readers to ignore it. Each check here either
+proves its claim or says why it could not:
+
+- **Prove credentials, do not infer them.** The release preflight asks npm's
+  OIDC package exchange for a publish token; an
+  `ACTIONS_ID_TOKEN_REQUEST_URL` variable alone only shows that GitHub can
+  mint an ID token, not that npm trusts this repository. After a repository
+  transfer the npm trusted publisher must be updated by a maintainer on
+  npmjs.com; the probe fails until then.
+- **Release only after every check.** The release jobs need every check job,
+  including Docker-in-Docker, and refuse to run after a failed or cancelled
+  one.
+- **Pin what can change under you.** Runner images (`ubuntu-24.04`,
+  `macos-15`, `windows-2025`) and workflow tools (secretlint, zizmor) are
+  pinned, so a new default image cannot turn a green branch red.
+- **Keep every lockfile in step.** `deno.lock` must record the same ranges as
+  `package.json` (`tests/deno-lock.test.js`); a stale lock makes Deno
+  re-resolve on the runner, where its minimum dependency age rejects
+  same-day releases.
+- **Name the real reason for a skip.** A skipped test logs what it lacked
+  (for example the Deno net permission), not a guess such as "unreachable".
+- **Report what is not blocking.** `audit-fixable` fails only on fixable
+  high-severity advisories and prints a notice with the counts it did not
+  block on, so a clean summary is never a silent one.
+- **Give tools inputs that cannot be empty.** lychee walks the checkout by
+  extension; a glob whose matches are all excluded makes it warn on every
+  run.
 
 ## Quality Enforcement Strategy
 

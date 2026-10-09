@@ -1,0 +1,3 @@
+Check Links	UNKNOWN STEP	2026-10-07T14:30:28.2282075Z   [WARN] ./**/*.html: No files found for this input source
+Check Links	UNKNOWN STEP	2026-10-07T14:30:30.4450091Z | 🔍 Total       | 62    |
+Check Links	UNKNOWN STEP	2026-10-07T14:30:30.4454760Z | 👻 Excluded    | 2     |

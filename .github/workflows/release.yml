@@ -158,6 +158,9 @@ jobs:
         env:
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RELEASE_PR_ACTOR: ${{ vars.RELEASE_PR_ACTOR }}
         run: node scripts/check-version.mjs
 
   # === CHANGESET CHECK - only runs on PRs with code changes ===
@@ -193,13 +196,8 @@ jobs:
           GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RELEASE_PR_ACTOR: ${{ vars.RELEASE_PR_ACTOR }}
         run: |
-          # Skip changeset check for automated version PRs
-          if [[ "$GITHUB_HEAD_REF" == "changeset-release/"* ]]; then
-            echo "Skipping changeset check for automated release PR"
-            exit 0
-          fi
-
           # Run changeset validation script
           # This validates that exactly ONE changeset was ADDED by this PR
           # Pre-existing changesets from other merged PRs are ignored
@@ -248,6 +246,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Exercise versioning without credentials, even if release-preflight fails.
+      # Restore consumed changesets and metadata on success or failure so lint
+      # checks the fresh merge rather than generated release files.
+      - name: Dry-run release versioning (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          trap 'git restore --source=HEAD --staged --worktree -- .' EXIT
+          npm run changeset:version
+          git status --short
+
       - name: Run ESLint
         run: npm run lint
 
@@ -258,7 +266,7 @@ jobs:
         run: npm run check:duplication
 
       - name: Check for secrets
-        run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint "**/*"
+        run: npx --yes -p secretlint@13.0.7 -p @secretlint/secretlint-rule-preset-recommend@13.0.7 secretlint "**/*"
 
   # Test matrix: 3 runtimes (Node.js, Bun, Deno) x 3 OS (Ubuntu, macOS, Windows)
   # IMPORTANT: Tests must validate the ACTUAL merge result, not a stale merge preview.
@@ -305,7 +313,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-15, windows-2025]
         runtime: [node, bun, deno]
     steps:
       - uses: actions/checkout@v6
@@ -340,7 +348,7 @@ jobs:
         if: matrix.runtime == 'bun'
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: latest
+          bun-version: '1.x'
 
       - name: Install dependencies (Bun)
         if: matrix.runtime == 'bun'
@@ -527,10 +535,22 @@ jobs:
   # Release - only runs on main after tests pass (for push events)
   release:
     name: Release
-    needs: [lint, test, release-preflight]
-    # Typical run is well under 10min. 30min gives npm and GitHub
-    # release APIs room for retries without allowing a 6h hang.
-    timeout-minutes: 30
+    needs:
+      [
+        detect-changes,
+        test-compilation,
+        check-file-line-limits,
+        version-check,
+        changeset-check,
+        lint,
+        test,
+        docker-build,
+        dind,
+        validate-docs,
+        release-preflight,
+      ]
+    # Registry verification can take over 15 minutes after a successful publish.
+    timeout-minutes: 50
     concurrency:
       group: main-writer-${{ github.repository }}-main
       cancel-in-progress: false
@@ -542,11 +562,15 @@ jobs:
       github.event_name == 'push' &&
       needs.release-preflight.result == 'success' &&
       needs.lint.result == 'success' &&
-      needs.test.result == 'success'
+      needs.test.result == 'success' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-24.04
     # Permissions required for npm OIDC trusted publishing
     permissions:
       contents: write
+      pull-requests: write
+      checks: write
       id-token: write
     outputs:
       published: ${{ steps.publish.outputs.published }}
@@ -593,6 +617,7 @@ jobs:
         id: check_release
         env:
           HAS_CHANGESETS: ${{ steps.check_changesets.outputs.has_changesets }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-release-needed.mjs
 
       - name: Merge multiple changesets
@@ -605,9 +630,11 @@ jobs:
         if: steps.check_changesets.outputs.has_changesets == 'true'
         id: version
         env:
-          # A separately provisioned actor opens the fallback PR so GitHub runs
-          # its ordinary pull_request checks (issues #143 and #192).
+          # Prefer the dedicated actor when configured. Otherwise the built-in
+          # token attests a metadata-only version commit after parent validation.
           RELEASE_PR_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_METADATA_PATHS: ${{ vars.RELEASE_METADATA_PATHS }}
         run: node scripts/version-and-commit.mjs --mode changeset
 
       - name: Publish to npm
@@ -622,13 +649,13 @@ jobs:
         # package's first version is published once with
         # package-registry-manager, which also attaches this workflow as its
         # trusted publisher.
-        run: bash scripts/run-with-budget-warning.sh 420 "npm publish" node scripts/publish-to-npm.mjs --should-pull
+        run: bash scripts/run-with-budget-warning.sh 1200 "npm publish and registry verification" node scripts/publish-to-npm.mjs --should-pull
 
       - name: Smoke-test published npm package
         if: steps.publish.outputs.published == 'true'
         env:
           PACKAGE_VERSION: ${{ steps.publish.outputs.published_version }}
-        run: bash scripts/run-with-budget-warning.sh 300 "npm package smoke test" node scripts/smoke-test-package.mjs --package-version "$PACKAGE_VERSION"
+        run: bash scripts/run-with-budget-warning.sh 600 "npm package smoke test" node scripts/smoke-test-package.mjs --package-version "$PACKAGE_VERSION"
 
       - name: Create GitHub Release
         if: steps.publish.outputs.published == 'true'
@@ -653,23 +680,40 @@ jobs:
   instant-release:
     name: Instant Release
     # Publishing must wait for both quality gates and require explicit success.
-    needs: [lint, test, release-preflight]
+    needs:
+      [
+        detect-changes,
+        test-compilation,
+        check-file-line-limits,
+        version-check,
+        changeset-check,
+        lint,
+        test,
+        docker-build,
+        dind,
+        validate-docs,
+        release-preflight,
+      ]
     if: |
       !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
       github.event.inputs.release_mode == 'instant' &&
       needs.release-preflight.result == 'success' &&
       needs.lint.result == 'success' &&
-      needs.test.result == 'success'
+      needs.test.result == 'success' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-24.04
     # Same publish envelope as the automated release path.
-    timeout-minutes: 30
+    timeout-minutes: 50
     concurrency:
       group: main-writer-${{ github.repository }}-main
       cancel-in-progress: false
     # Permissions required for npm OIDC trusted publishing
     permissions:
       contents: write
+      pull-requests: write
+      checks: write
       id-token: write
     outputs:
       published: ${{ steps.publish.outputs.published }}
@@ -705,8 +749,10 @@ jobs:
         env:
           BUMP_TYPE: ${{ github.event.inputs.bump_type }}
           RELEASE_DESCRIPTION: ${{ github.event.inputs.description }}
-          # See the release job above (issues #143 and #192).
+          # See the release job above (issues #143, #192, and #196).
           RELEASE_PR_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_METADATA_PATHS: ${{ vars.RELEASE_METADATA_PATHS }}
         run: node scripts/version-and-commit.mjs --mode instant --bump-type "$BUMP_TYPE" --description "$RELEASE_DESCRIPTION"
 
       - name: Publish to npm
@@ -714,13 +760,13 @@ jobs:
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         id: publish
         # npm trusted publishing (OIDC) only, as in the release job.
-        run: node scripts/publish-to-npm.mjs
+        run: bash scripts/run-with-budget-warning.sh 1200 "npm publish and registry verification" node scripts/publish-to-npm.mjs
 
       - name: Smoke-test published npm package
         if: steps.publish.outputs.published == 'true'
         env:
           PACKAGE_VERSION: ${{ steps.publish.outputs.published_version }}
-        run: node scripts/smoke-test-package.mjs --package-version "$PACKAGE_VERSION"
+        run: bash scripts/run-with-budget-warning.sh 600 "npm package smoke test" node scripts/smoke-test-package.mjs --package-version "$PACKAGE_VERSION"
 
       - name: Create GitHub Release
         if: steps.publish.outputs.published == 'true'
@@ -745,7 +791,7 @@ jobs:
   docker-publish-config:
     name: Configure Docker Hub Publish
     needs: [release, instant-release, release-preflight]
-    timeout-minutes: 10
+    timeout-minutes: 30
     concurrency:
       group: main-writer-${{ github.repository }}-main
       cancel-in-progress: false
@@ -791,7 +837,7 @@ jobs:
         if: steps.docker_config.outputs.enabled == 'true'
         env:
           VERSION: ${{ env.RELEASE_VERSION }}
-        run: node scripts/wait-for-npm.mjs --release-version "${VERSION}"
+        run: bash scripts/run-with-budget-warning.sh 1100 "Docker npm availability wait" node scripts/wait-for-npm.mjs --release-version "${VERSION}"
 
   # Build each architecture on a native runner. Each build is pushed by digest;
   # docker-publish combines those immutable digests into the release tags.

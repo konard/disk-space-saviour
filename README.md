@@ -471,7 +471,7 @@ The GitHub Actions workflow (`.github/workflows/release.yml`) implements a fast-
 
 Every CI job declares an explicit `timeout-minutes` so hung steps fail
 in minutes instead of reaching the GitHub Actions default of six hours.
-Fast checks use 5-10 minute caps, release jobs use 30 minutes, and the
+Fast checks use 5-10 minute caps, release jobs use 50 minutes, and the
 link checker uses 10 minutes for external network variance.
 
 That cap is a backstop, never the deadline: GitHub reports a job it
@@ -545,13 +545,14 @@ variants without script edits.
 
 The link checker workflow (`.github/workflows/links.yml`) validates all links in Markdown and HTML files:
 
-1. **Detection**: Uses [lychee](https://github.com/lycheeverse/lychee-action) to scan all `*.md` and `*.html` files
-2. **Web Archive fallback**: For any broken links found, automatically checks the [Wayback Machine](https://web.archive.org) for archived versions
-3. **Actionable suggestions**: Reports one of three outcomes for each broken link:
+1. **Detection**: Uses [lychee](https://github.com/lycheeverse/lychee-action) to walk the checkout for `.md` and `.html` files (respecting `.gitignore`, including dot directories such as `.changeset`)
+2. **Transient re-check**: Links that failed with a transport error or an HTTP 429/5xx answer are retried with a capped wait before they count as broken; GitHub file links fall back to the contents API. Set `RECHECK_VERBOSE=true` to log every probe
+3. **Web Archive fallback**: For any broken links found, automatically checks the [Wayback Machine](https://web.archive.org) for archived versions
+4. **Actionable suggestions**: Reports one of three outcomes for each broken link:
    - **Archived**: Suggests the Web Archive URL as a replacement
    - **Not archived**: Clearly reports the link is unrecoverable
-4. **Scheduled checks**: Runs weekly to catch links that break over time (even if no files changed)
-5. **Issue creation**: On scheduled runs, creates a GitHub Issue with the full broken links report
+5. **Scheduled checks**: Runs weekly to catch links that break over time (even if no files changed)
+6. **Issue creation**: On scheduled runs, creates a GitHub Issue with the full broken links report
 
 Add regex patterns to `.lycheeignore` to exclude URLs from checks (e.g., local dev URLs, example.com, known rate-limited sites).
 

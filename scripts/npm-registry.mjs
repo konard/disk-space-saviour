@@ -56,11 +56,17 @@ export function buildPackageMetadataUrl(
   return `${normalizeRegistryUrl(registryUrl)}/${encodePackageName(packageName)}`;
 }
 
+/** Request a fresh, small document for one immutable version. */
+export function buildPackageVersionUrl(packageName, version, registryUrl) {
+  return `${buildPackageMetadataUrl(packageName, registryUrl)}/${encodeURIComponent(version)}`;
+}
+
 /**
  * Check whether a package version exists in npm registry metadata.
  * HTTP 404 means the package has not been published yet and is not an error.
- * The registry CDN serves metadata cached for up to five minutes, so every
- * request carries a unique query parameter and asks for an uncached answer.
+ * The per-version document stays small however many versions exist, and the
+ * registry CDN serves metadata cached for up to five minutes, so every request
+ * carries a unique query parameter and asks for an uncached answer.
  * @param {string} packageName
  * @param {string} version
  * @param {object} options
@@ -82,8 +88,8 @@ export async function isPackageVersionPublished(
     throw new Error('Package version is required');
   }
 
-  const metadataUrl = buildPackageMetadataUrl(packageName, registryUrl);
-  const response = await fetchFn(`${metadataUrl}?_=${now()}`, {
+  const versionUrl = buildPackageVersionUrl(packageName, version, registryUrl);
+  const response = await fetchFn(`${versionUrl}?_=${now()}`, {
     cache: 'no-store',
     headers: {
       accept: 'application/json',
@@ -102,5 +108,5 @@ export async function isPackageVersionPublished(
   }
 
   const metadata = await response.json();
-  return Object.hasOwn(metadata?.versions || {}, version);
+  return metadata?.version === version;
 }

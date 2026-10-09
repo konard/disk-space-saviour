@@ -12,9 +12,9 @@
  * failure.
  */
 
-// About five minutes in all: npm can take over two minutes to list a new
-// version published with provenance.
-export const DEFAULT_VERIFY_ATTEMPTS = 13;
+// 34 checks span 15.5 minutes with the backoff below. Recent accepted npm
+// publishes took over five minutes to reach the public read path.
+export const DEFAULT_VERIFY_ATTEMPTS = 34;
 export const DEFAULT_VERIFY_INITIAL_DELAY = 2000;
 export const DEFAULT_VERIFY_MAX_DELAY = 30000;
 
@@ -85,14 +85,15 @@ export async function waitForVersionOnRegistry({
   log = () => {},
 }) {
   let delay = initialDelay;
+  let lastError = null;
   for (let attempt = 1; attempt <= attempts; attempt++) {
     await sleepFn(delay);
     let found = false;
     try {
       found = await verify();
+      lastError = null;
     } catch (error) {
-      // A transient registry/network error is indistinguishable from a miss
-      // here, so polling continues and the release is not failed at this point.
+      lastError = error;
       log(`Verification attempt ${attempt} errored: ${error.message}`);
     }
     if (found) {
@@ -103,6 +104,12 @@ export async function waitForVersionOnRegistry({
       `Verification attempt ${attempt} of ${attempts}: version not visible yet`
     );
     delay = Math.min(delay * 2, maxDelay);
+  }
+  if (lastError) {
+    throw new Error(
+      `Registry verification ended in an unknown state: ${lastError.message}`,
+      { cause: lastError }
+    );
   }
   return false;
 }

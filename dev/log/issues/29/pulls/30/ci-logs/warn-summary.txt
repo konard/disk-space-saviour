@@ -1,0 +1,209 @@
+=== run-37979761428.log
+     16 Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+     16 Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+      8 Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+      8 Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+      4 Test (node on windows-latest)	Run tests (Node.js) Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+      4 Test (node on ubuntu-24.04)	Run tests (Node.js) Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+      4 Test (node on macos-latest)	Run tests (Node.js) Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+      4 Test (bun on windows-latest)	Run tests (Bun) Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+      4 Test (bun on ubuntu-24.04)	Run tests (Bun) Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+      4 Test (bun on macos-latest)	Run tests (Bun) Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+      4 Release	Publish to npm 🦋  ^[[31merror^[[39m 
+      2 Test (node on windows-latest)	Run tests (Node.js) warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+      2 Test (node on windows-latest)	Run tests (Node.js) Skipping: use-m imports resolved paths without a file:// scheme, which the Windows ESM loader rejects (ERR_UNSUPPORTED_ESM_URL_SCHEME).
+      2 Test (node on windows-latest)	Run tests (Node.js) Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+      2 Test (node on ubuntu-24.04)	Run tests (Node.js) Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+      2 Test (node on macos-latest)	Run tests (Node.js) Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+      2 Test (deno on windows-latest)	Run tests (Deno) Skipping: use-m imports resolved paths without a file:// scheme, which the Windows ESM loader rejects (ERR_UNSUPPORTED_ESM_URL_SCHEME).
+      2 Test (deno on windows-latest)	Run tests (Deno) Skipping: this runtime is not allowed to listen on 127.0.0.1.
+      2 Test (deno on ubuntu-24.04)	Run tests (Deno) Skipping: this runtime is not allowed to listen on 127.0.0.1.
+      2 Test (deno on ubuntu-24.04)	Run tests (Deno) Skipping: https://unpkg.com/use-m/use.js is unreachable, so use-m cannot be evaluated.
+      2 Test (deno on macos-latest)	Run tests (Deno) Skipping: this runtime is not allowed to listen on 127.0.0.1.
+      2 Test (deno on macos-latest)	Run tests (Deno) Skipping: https://unpkg.com/use-m/use.js is unreachable, so use-m cannot be evaluated.
+      2 Test (bun on windows-latest)	Run tests (Bun) warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+      2 Test (bun on windows-latest)	Run tests (Bun) Skipping: use-m imports resolved paths without a file:// scheme, which the Windows ESM loader rejects (ERR_UNSUPPORTED_ESM_URL_SCHEME).
+      2 Test (bun on windows-latest)	Run tests (Bun) Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+      2 Test (bun on ubuntu-24.04)	Run tests (Bun) Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+      2 Test (bun on macos-latest)	Run tests (Bun) Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+      2 Release	Publish to npm 🦋  ^[[31merror^[[39m npm error 404
+      2 Detect Changes	Detect changes   scripts/publish-failure-classifier.mjs
+      1 Test Compilation	Check .mjs syntax Checking scripts/push-failure-classifier.mjs...
+      1 Test Compilation	Check .mjs syntax Checking scripts/publish-failure-classifier.mjs...
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ version-and-commit.mjs push failure reporting (0.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ run-with-budget-warning.sh privileged survivor handling (2.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ run-with-budget-warning.sh argument validation (0.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ run-with-budget-warning.sh SIGKILL escalation (1.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ run-with-budget-warning.sh (9.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ push failure classifier (6.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ publish failure classifier (8.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ isAlreadyPublishedError (0.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ formatFailureMessage (0.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ filterWarningsToChangedLines (3.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ✔ extractErrorsSection (4.Nms)
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ version-and-commit.mjs push failure reporting
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ run-with-budget-warning.sh privileged survivor handling
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ run-with-budget-warning.sh argument validation
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ run-with-budget-warning.sh SIGKILL escalation
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ run-with-budget-warning.sh
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ push failure classifier
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ publish failure classifier
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ isAlreadyPublishedError
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ formatFailureMessage
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ filterWarningsToChangedLines
+      1 Test (node on windows-latest)	Run tests (Node.js) ▶ extractErrorsSection
+      1 Test (node on windows-latest)	Run tests (Node.js) ℹ todo 0
+      1 Test (node on windows-latest)	Run tests (Node.js) ℹ skipped 0
+      1 Test (node on windows-latest)	Run tests (Node.js) ℹ fail 0
+      1 Test (node on windows-latest)	Run tests (Node.js) warning: in the working copy of '.changeset/consumed.md', LF will be replaced by CRLF the next time Git touches it
+      1 Test (node on windows-latest)	Run tests (Node.js) shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+      1 Test (node on windows-latest)	Run tests (Node.js) ^[[36;1mbash scripts/run-with-budget-warning.sh 300 "Node.js test suite" npm test^[[0m
+      1 Test (node on windows-latest)	Run tests (Node.js) Running Node.js test suite with a 300s budget (warning at 210s).
+=== run-37979761495.log
+      6 Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+      5 Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+      4 Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+      2 Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+      1 Regenerate Preview Images	Run actions/checkout@v6  * [new branch]      release-skip-deleted-changesets -> origin/release-skip-deleted-changesets
+      1 Regenerate Preview Images	Regenerate preview images npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+      1 Regenerate Preview Images	Regenerate preview images npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, wh
+      1 Regenerate Preview Images	Regenerate preview images npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support f
+      1 Regenerate Preview Images	Regenerate preview images npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+      1 Regenerate Preview Images	Install example app dependencies npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+      1 Regenerate Preview Images	Install example app dependencies npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key va
+      1 Regenerate Preview Images	Install example app dependencies npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Su
+      1 Regenerate Preview Images	Install example app dependencies npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+      1 Regenerate Preview Images	Install browser automation dependencies npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+      1 Regenerate Preview Images	Install browser automation dependencies   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed shell: /usr/bin/bash -e {0}
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed env:
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed Failed jobs:    <none>
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed Cancelled jobs: <none>
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed All required jobs succeeded or were legitimately skipped.
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed ##[endgroup]
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   RUN_SHA: ca452ae8de405466d90873634040d3bd874555f3
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   NEEDS_JSON: {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   GIT_CONFIG_VALUE_0: main
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   GIT_CONFIG_KEY_0: init.defaultBranch
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   GIT_CONFIG_COUNT: 1
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   BRANCH_NAME: main
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	}
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  }
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "web-build": {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "preview-regen": {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "pages-deploy": {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "ios-build": {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "desktop-package": {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "android-build": {
+      1 Package desktop app (windows-latest)	Upload desktop package   if-no-files-found: error
+      1 Package desktop app (windows-latest)	Package Electron app shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+      1 Package desktop app (windows-latest)	Package Electron app ^[[36;1mecho "::error::Desktop package output was not created at examples/universal-app/out"^[[0m
+      1 Package desktop app (windows-latest)	Install app dependencies npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+      1 Package desktop app (windows-latest)	Install app dependencies npm warn install-scripts 2 packages have install scripts not yet covered by allowScripts:
+      1 Package desktop app (windows-latest)	Install app dependencies npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
+      1 Package desktop app (windows-latest)	Install app dependencies npm warn install-scripts   electron-winstaller@5.4.0 (install: node ./script/select-7z-arch.js)
+      1 Package desktop app (windows-latest)	Install app dependencies npm warn install-scripts
+      1 Package desktop app (windows-latest)	Install app dependencies npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+      1 Package desktop app (windows-latest)	Install app dependencies npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key
+      1 Package desktop app (windows-latest)	Install app dependencies npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update.
+      1 Package desktop app (windows-latest)	Install app dependencies npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+      1 Package desktop app (ubuntu-24.04)	Upload desktop package   if-no-files-found: error
+      1 Package desktop app (ubuntu-24.04)	Package Electron app shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+      1 Package desktop app (ubuntu-24.04)	Package Electron app ^[[36;1mecho "::error::Desktop package output was not created at examples/universal-app/out"^[[0m
+      1 Package desktop app (ubuntu-24.04)	Install app dependencies npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+      1 Package desktop app (ubuntu-24.04)	Install app dependencies npm warn install-scripts 2 packages have install scripts not yet covered by allowScripts:
+      1 Package desktop app (ubuntu-24.04)	Install app dependencies npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
+      1 Package desktop app (ubuntu-24.04)	Install app dependencies npm warn install-scripts   electron-winstaller@5.4.0 (install: node ./script/select-7z-arch.js)
+      1 Package desktop app (ubuntu-24.04)	Install app dependencies npm warn install-scripts
+      1 Package desktop app (ubuntu-24.04)	Install app dependencies npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+      1 Package desktop app (ubuntu-24.04)	Install app dependencies npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key v
+      1 Package desktop app (ubuntu-24.04)	Install app dependencies npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. S
+      1 Package desktop app (ubuntu-24.04)	Install app dependencies npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+=== run-37979761528.log
+      4 Check Links	Check links with lychee shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed shell: /usr/bin/bash -e {0}
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed env:
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed Failed jobs:    <none>
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed Cancelled jobs: <none>
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed All required jobs succeeded or were legitimately skipped.
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed ##[endgroup]
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   RUN_SHA: ca452ae8de405466d90873634040d3bd874555f3
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   NEEDS_JSON: {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   GIT_CONFIG_VALUE_0: main
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   GIT_CONFIG_KEY_0: init.defaultBranch
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   GIT_CONFIG_COUNT: 1
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   BRANCH_NAME: main
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	}
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  }
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "link-checker": {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+      1 Check Links	Check links with lychee | 🚫 Errors      | 0     |
+      1 Check Links	Check links with lychee   failIfEmpty: true
+      1 Check Links	Check links with lychee   fail: false
+      1 Check Links	Check links with lychee   [WARN] ./**/*.html: No files found for this input source
+      1 Check Links	Check links with lychee   INPUT_FAILIFEMPTY: true
+      1 Check Links	Check links with lychee   INPUT_FAIL: false
+=== run-37979761381.log
+      9 CodeQL (actions)	Initialize CodeQL                 "pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+      6 CodeQL (javascript-typescript)	Initialize CodeQL                 "pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+      6 CodeQL (actions)	Initialize CodeQL                 "description" : "Controls the level of verbosity of the extractor. The supported levels are (in order of increasing verbosity):\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or 
+      4 CodeQL (javascript-typescript)	Initialize CodeQL                 "description" : "Controls the level of verbosity of the extractor. The supported levels are (in order of increasing verbosity):\n  - off\n  - errors\n  - warnings\n  - info or progress\
+      3 Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+      3 CodeQL (actions)	Initialize CodeQL           "skip_types" : {
+      3 CodeQL (actions)	Initialize CodeQL             "title" : "Skip type extraction for TypeScript",
+      3 CodeQL (actions)	Initialize CodeQL             "title" : "DEPRECATED - Whether to use buildless (standalone) extraction.",
+      3 CodeQL (actions)	Initialize CodeQL             "description" : "Whether to skip the extraction of types in a TypeScript application",
+      3 CodeQL (actions)	Initialize CodeQL             "description" : "DEPRECATED: Use `--build-mode none` instead.\nA value indicating, which type of extraction the autobuilder should perform. If 'true', then the standalone extractor will be used, otherwis
+      3 CodeQL (actions)	Initialize CodeQL                 "description" : "Controls the level of verbosity of the CodeQL Python extractor.\nThe supported levels are (in order of increasing verbosity):\n\n  - off\n  - errors\n  - warnings\n  - info or progre
+      2 Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+      2 Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+      2 CodeQL (javascript-typescript)	Initialize CodeQL           "skip_types" : {
+      2 CodeQL (javascript-typescript)	Initialize CodeQL             "title" : "Skip type extraction for TypeScript",
+      2 CodeQL (javascript-typescript)	Initialize CodeQL             "title" : "DEPRECATED - Whether to use buildless (standalone) extraction.",
+      2 CodeQL (javascript-typescript)	Initialize CodeQL             "description" : "Whether to skip the extraction of types in a TypeScript application",
+      2 CodeQL (javascript-typescript)	Initialize CodeQL             "description" : "DEPRECATED: Use `--build-mode none` instead.\nA value indicating, which type of extraction the autobuilder should perform. If 'true', then the standalone extractor will be 
+      2 CodeQL (javascript-typescript)	Initialize CodeQL                 "description" : "Controls the level of verbosity of the CodeQL Python extractor.\nThe supported levels are (in order of increasing verbosity):\n\n  - off\n  - errors\n  - warnings\n  - 
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed shell: /usr/bin/bash -e {0}
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed env:
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed Failed jobs:    <none>
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed Cancelled jobs: <none>
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed All required jobs succeeded or were legitimately skipped.
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed ##[endgroup]
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   RUN_SHA: ca452ae8de405466d90873634040d3bd874555f3
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   NEEDS_JSON: {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   GIT_CONFIG_VALUE_0: main
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   GIT_CONFIG_KEY_0: init.defaultBranch
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   GIT_CONFIG_COUNT: 1
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed   BRANCH_NAME: main
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	}
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  }
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "npm-audit": {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "dependency-review": {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	  "codeql": {
+      1 Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+      1 CodeQL (javascript-typescript)	Initialize CodeQL [command]tar -x --zstd --ignore-zeros --warning=no-unknown-keyword --overwrite -f - -C /opt/hostedtoolcache/CodeQL/2.27.2/x64
+      1 CodeQL (javascript-typescript)	Initialize CodeQL     "suppressesMissingFileBaselineWarning": true
+      1 CodeQL (javascript-typescript)	Analyze [84/89] Loaded /opt/hostedtoolcache/CodeQL/2.27.2/x64/codeql/qlpacks/codeql/javascript-queries/2.4.7/Diagnostics/ExtractionErrors.qlx.
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:50] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/run-with-budget-warning.test.js
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:50] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/run-with-budget-warning.test.js (75 ms)
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:49] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/push-failure-classifier.test.js
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:49] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/publish-failure-classifier.test.js
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:49] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/push-failure-classifier.test.js (16 ms)
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:49] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/tests/publish-failure-classifier.test.js (21 ms)
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:48] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/push-failure-classifier.mjs
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:48] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/publish-failure-classifier.mjs
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:48] [build-stdout] Extracting /home/runner/work/disk-space-saviour/disk-space-saviour/experiments/test-failure-detection.mjs
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:48] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/push-failure-classifier.mjs (16 ms)
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:48] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/scripts/publish-failure-classifier.mjs (14 ms)
+      1 CodeQL (javascript-typescript)	Analyze [2026-10-09 19:22:48] [build-stdout] Done extracting /home/runner/work/disk-space-saviour/disk-space-saviour/experiments/test-failure-detection.mjs (39 ms)
+      1 CodeQL (javascript-typescript)	Analyze [2/89 eval 4.1s] Evaluation done; writing results to codeql/javascript-queries/Diagnostics/ExtractionErrors.bqrs.
+      1 CodeQL (javascript-typescript)	Analyze Starting evaluation of codeql/javascript-queries/Diagnostics/ExtractionErrors.ql.
+      1 CodeQL (javascript-typescript)	Analyze No precomputed diff ranges found; skipping diff-informed analysis stage.
+      1 CodeQL (javascript-typescript)	Analyze Interpreting /opt/hostedtoolcache/CodeQL/2.27.2/x64/codeql/qlpacks/codeql/javascript-queries/2.4.7/Diagnostics/ExtractionErrors.ql...
+      1 CodeQL (javascript-typescript)	Analyze Interpreted diagnostic query "Extraction errors" (js/diagnostics/extraction-errors) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Diagnostics/ExtractionErrors.bqrs
+      1 CodeQL (javascript-typescript)	Analyze  ... found results file at /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Diagnostics/ExtractionErrors.bqrs.
+      1 CodeQL (javascript-typescript)	Analyze   skip-queries: false
