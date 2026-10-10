@@ -196,7 +196,7 @@ Initialize mimic-function@5.0.1
 ./tests/check-file-line-limits.test.js => warns without failing for files above the warning threshold ... ok (152ms)
 ./tests/check-file-line-limits.test.js => still fails files over the hard limit ... ok (88ms)
 ------- post-test output -------
-package.json ./tests/check-release-needed.test.js => repairs a missing GitHub release for an npm-published version without bumping ...----- post-test output end -----
+package.json\0./tests/check-release-needed.test.js => repairs a missing GitHub release for an npm-published version without bumping ...----- post-test output end -----
 ./tests/check-release-needed.test.js => repairs a missing GitHub release for an npm-published version without bumping ... ok (246ms)
 ./tests/check-changesets.test.js => counts Markdown files with a recognized package bump in frontmatter ... ok (181ms)
 ./tests/check-file-line-limits.test.js => fails .js and .cjs files over the hard limit ... ok (97ms)
@@ -869,11 +869,11 @@ $ git commit -m 1.2.3 "quoted" \ path $HOME $(printf nope) `printf nope`
 ./tests/recheck-broken-links.test.js => releases the gate when a cached 503 recovers with a fresh success ... ok (476ms)
 ------- post-test output -------
 f3c47809bef23e23e14b3486f714bfce6b3450d2
-D .changeset/fix.md M package.json 02922b7a612c8d60b08587029a9b4ac85933a597
+D\0.changeset/fix.md\0M\0package.json\002922b7a612c8d60b08587029a9b4ac85933a597
 f3c47809bef23e23e14b3486f714bfce6b3450d2
 180d4d108caa57b0d83ec81716903c48e8246772
 02922b7a612c8d60b08587029a9b4ac85933a597
-M src.js ./tests/release-metadata.test.js => checks a real version commit against its validated parent ...----- post-test output end -----
+M\0src.js\0./tests/release-metadata.test.js => checks a real version commit against its validated parent ...----- post-test output end -----
 ./tests/release-metadata.test.js => checks a real version commit against its validated parent ... ok (387ms)
 ./tests/recheck-broken-links.test.js => does not release the gate when a 404 remains beside a recovered link ... ok (204ms)
 ./tests/pr-guards.test.js => does not accept a base fragment when the CI comparison fails ... ok (421ms)

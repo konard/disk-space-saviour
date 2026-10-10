@@ -1,0 +1,1881 @@
+{
+  "conclusion": "success",
+  "createdAt": "2026-10-10T12:12:48Z",
+  "headSha": "0aeef701bbc17de5db9352ec4d0f3914fa3d1b70",
+  "jobs": [
+    {
+      "completedAt": "2026-10-10T12:12:59Z",
+      "conclusion": "success",
+      "databaseId": 114210331019,
+      "name": "Release Preflight",
+      "startedAt": "2026-10-10T12:12:51Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:12:53Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:12:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:12:54Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:12:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:12:56Z",
+          "conclusion": "success",
+          "name": "Probe every release credential",
+          "number": 3,
+          "startedAt": "2026-10-10T12:12:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:12:56Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 6,
+          "startedAt": "2026-10-10T12:12:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:12:56Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 7,
+          "startedAt": "2026-10-10T12:12:56Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210331019"
+    },
+    {
+      "completedAt": "2026-10-10T12:13:14Z",
+      "conclusion": "success",
+      "databaseId": 114210331245,
+      "name": "Check for Manual Version Changes",
+      "startedAt": "2026-10-10T12:13:09Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:13:11Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:13:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:13:12Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:13:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:13:13Z",
+          "conclusion": "success",
+          "name": "Check for version changes in package.json",
+          "number": 3,
+          "startedAt": "2026-10-10T12:13:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:13:13Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 6,
+          "startedAt": "2026-10-10T12:13:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:13:13Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 7,
+          "startedAt": "2026-10-10T12:13:13Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210331245"
+    },
+    {
+      "completedAt": "2026-10-10T12:13:33Z",
+      "conclusion": "success",
+      "databaseId": 114210331336,
+      "name": "Detect Changes",
+      "startedAt": "2026-10-10T12:13:26Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:13:28Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:13:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:13:29Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:13:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:13:30Z",
+          "conclusion": "success",
+          "name": "Detect changes",
+          "number": 3,
+          "startedAt": "2026-10-10T12:13:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:13:31Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 6,
+          "startedAt": "2026-10-10T12:13:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:13:31Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 7,
+          "startedAt": "2026-10-10T12:13:31Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210331336"
+    },
+    {
+      "completedAt": "2026-10-10T12:14:33Z",
+      "conclusion": "success",
+      "databaseId": 114210456593,
+      "name": "Lint and Format Check",
+      "startedAt": "2026-10-10T12:14:01Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:14:02Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:14:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:04Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:14:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:05Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:14:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:06Z",
+          "conclusion": "success",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:14:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:08Z",
+          "conclusion": "success",
+          "name": "Install dependencies",
+          "number": 5,
+          "startedAt": "2026-10-10T12:14:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:20Z",
+          "conclusion": "success",
+          "name": "Dry-run release versioning (PR only)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:14:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:24Z",
+          "conclusion": "success",
+          "name": "Run ESLint",
+          "number": 7,
+          "startedAt": "2026-10-10T12:14:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:28Z",
+          "conclusion": "success",
+          "name": "Check formatting",
+          "number": 8,
+          "startedAt": "2026-10-10T12:14:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:28Z",
+          "conclusion": "success",
+          "name": "Check code duplication",
+          "number": 9,
+          "startedAt": "2026-10-10T12:14:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:31Z",
+          "conclusion": "success",
+          "name": "Check for secrets",
+          "number": 10,
+          "startedAt": "2026-10-10T12:14:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:31Z",
+          "conclusion": "success",
+          "name": "Post Setup Node.js",
+          "number": 19,
+          "startedAt": "2026-10-10T12:14:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:31Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 20,
+          "startedAt": "2026-10-10T12:14:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:31Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-10-10T12:14:31Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456593"
+    },
+    {
+      "completedAt": "2026-10-10T12:14:27Z",
+      "conclusion": "success",
+      "databaseId": 114210456630,
+      "name": "Test Compilation",
+      "startedAt": "2026-10-10T12:14:20Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:14:22Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:14:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:24Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:14:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:25Z",
+          "conclusion": "success",
+          "name": "Check .mjs syntax",
+          "number": 3,
+          "startedAt": "2026-10-10T12:14:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:25Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 6,
+          "startedAt": "2026-10-10T12:14:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:25Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 7,
+          "startedAt": "2026-10-10T12:14:25Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456630"
+    },
+    {
+      "completedAt": "2026-10-10T12:16:10Z",
+      "conclusion": "success",
+      "databaseId": 114210456654,
+      "name": "Docker-in-Docker Integration",
+      "startedAt": "2026-10-10T12:14:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:14:18Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:14:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:20Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:14:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:22Z",
+          "conclusion": "success",
+          "name": "Setup Node.js",
+          "number": 3,
+          "startedAt": "2026-10-10T12:14:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:07Z",
+          "conclusion": "success",
+          "name": "Run the nested Docker integration test",
+          "number": 4,
+          "startedAt": "2026-10-10T12:14:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:07Z",
+          "conclusion": "success",
+          "name": "Post Setup Node.js",
+          "number": 7,
+          "startedAt": "2026-10-10T12:16:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:07Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 8,
+          "startedAt": "2026-10-10T12:16:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:07Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-10-10T12:16:07Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456654"
+    },
+    {
+      "completedAt": "2026-10-10T12:14:48Z",
+      "conclusion": "success",
+      "databaseId": 114210456750,
+      "name": "Check for Changesets",
+      "startedAt": "2026-10-10T12:14:39Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:14:40Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:14:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:42Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:14:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:43Z",
+          "conclusion": "success",
+          "name": "Setup Node.js",
+          "number": 3,
+          "startedAt": "2026-10-10T12:14:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:46Z",
+          "conclusion": "success",
+          "name": "Install dependencies",
+          "number": 4,
+          "startedAt": "2026-10-10T12:14:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:46Z",
+          "conclusion": "success",
+          "name": "Check for changesets",
+          "number": 5,
+          "startedAt": "2026-10-10T12:14:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:46Z",
+          "conclusion": "success",
+          "name": "Post Setup Node.js",
+          "number": 9,
+          "startedAt": "2026-10-10T12:14:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:46Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 10,
+          "startedAt": "2026-10-10T12:14:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:47Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 11,
+          "startedAt": "2026-10-10T12:14:46Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456750"
+    },
+    {
+      "completedAt": "2026-10-10T12:14:44Z",
+      "conclusion": "success",
+      "databaseId": 114210456761,
+      "name": "Check File Line Limits",
+      "startedAt": "2026-10-10T12:14:39Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:14:40Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:14:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:41Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:14:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:41Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:14:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:42Z",
+          "conclusion": "success",
+          "name": "Check file line limits",
+          "number": 4,
+          "startedAt": "2026-10-10T12:14:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:43Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 8,
+          "startedAt": "2026-10-10T12:14:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:14:43Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-10-10T12:14:43Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456761"
+    },
+    {
+      "completedAt": "2026-10-10T12:16:08Z",
+      "conclusion": "success",
+      "databaseId": 114210456784,
+      "name": "Validate Documentation",
+      "startedAt": "2026-10-10T12:16:04Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:16:05Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:16:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:06Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:16:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:06Z",
+          "conclusion": "success",
+          "name": "Check required documentation sections",
+          "number": 3,
+          "startedAt": "2026-10-10T12:16:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:06Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 6,
+          "startedAt": "2026-10-10T12:16:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:06Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 7,
+          "startedAt": "2026-10-10T12:16:06Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456784"
+    },
+    {
+      "completedAt": "2026-10-10T12:16:48Z",
+      "conclusion": "success",
+      "databaseId": 114210457059,
+      "name": "Docker Image Build Check",
+      "startedAt": "2026-10-10T12:16:41Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:16:44Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:16:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:45Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:16:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:45Z",
+          "conclusion": "success",
+          "name": "Check Docker build configuration",
+          "number": 3,
+          "startedAt": "2026-10-10T12:16:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:45Z",
+          "conclusion": "skipped",
+          "name": "Set up Docker Buildx (resilient)",
+          "number": 4,
+          "startedAt": "2026-10-10T12:16:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:45Z",
+          "conclusion": "skipped",
+          "name": "Build Docker image (no push)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:16:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:46Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 10,
+          "startedAt": "2026-10-10T12:16:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:46Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 11,
+          "startedAt": "2026-10-10T12:16:46Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210457059"
+    },
+    {
+      "completedAt": "2026-10-10T12:14:34Z",
+      "conclusion": "skipped",
+      "databaseId": 114210629407,
+      "name": "Create Changeset PR",
+      "startedAt": "2026-10-10T12:14:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210629407"
+    },
+    {
+      "completedAt": "2026-10-10T12:17:02Z",
+      "conclusion": "success",
+      "databaseId": 114210672734,
+      "name": "Test (node on windows-2025)",
+      "startedAt": "2026-10-10T12:15:03Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:15:05Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:15:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:13Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:15:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:13Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:15:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:19Z",
+          "conclusion": "success",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:15:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:28Z",
+          "conclusion": "success",
+          "name": "Install dependencies (Node.js)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:15:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:57Z",
+          "conclusion": "success",
+          "name": "Run tests (Node.js)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:15:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:57Z",
+          "conclusion": "skipped",
+          "name": "Setup Bun",
+          "number": 7,
+          "startedAt": "2026-10-10T12:16:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:57Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Bun)",
+          "number": 8,
+          "startedAt": "2026-10-10T12:16:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:57Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Bun)",
+          "number": 9,
+          "startedAt": "2026-10-10T12:16:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:57Z",
+          "conclusion": "skipped",
+          "name": "Setup Deno",
+          "number": 10,
+          "startedAt": "2026-10-10T12:16:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:57Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Deno)",
+          "number": 11,
+          "startedAt": "2026-10-10T12:16:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:59Z",
+          "conclusion": "success",
+          "name": "Post Setup Node.js",
+          "number": 21,
+          "startedAt": "2026-10-10T12:16:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:01Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 22,
+          "startedAt": "2026-10-10T12:16:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:01Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-10-10T12:17:01Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672734"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:09Z",
+      "conclusion": "success",
+      "databaseId": 114210672752,
+      "name": "Test (bun on ubuntu-24.04)",
+      "startedAt": "2026-10-10T12:16:50Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:16:52Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:16:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:54Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:16:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:54Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:16:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:54Z",
+          "conclusion": "skipped",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:16:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:54Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Node.js)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:16:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:54Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Node.js)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:16:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:56Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 7,
+          "startedAt": "2026-10-10T12:16:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:56Z",
+          "conclusion": "success",
+          "name": "Install dependencies (Bun)",
+          "number": 8,
+          "startedAt": "2026-10-10T12:16:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:01Z",
+          "conclusion": "success",
+          "name": "Run tests (Bun)",
+          "number": 9,
+          "startedAt": "2026-10-10T12:16:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:01Z",
+          "conclusion": "skipped",
+          "name": "Setup Deno",
+          "number": 10,
+          "startedAt": "2026-10-10T12:18:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:01Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Deno)",
+          "number": 11,
+          "startedAt": "2026-10-10T12:18:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:08Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 21,
+          "startedAt": "2026-10-10T12:18:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:08Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 22,
+          "startedAt": "2026-10-10T12:18:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:08Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-10-10T12:18:08Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672752"
+    },
+    {
+      "completedAt": "2026-10-10T12:17:46Z",
+      "conclusion": "success",
+      "databaseId": 114210672755,
+      "name": "Test (bun on macos-15)",
+      "startedAt": "2026-10-10T12:16:13Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:16:15Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:16:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:17Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:16:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:18Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:16:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:18Z",
+          "conclusion": "skipped",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:16:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:18Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Node.js)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:16:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:18Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Node.js)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:16:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:20Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 7,
+          "startedAt": "2026-10-10T12:16:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:21Z",
+          "conclusion": "success",
+          "name": "Install dependencies (Bun)",
+          "number": 8,
+          "startedAt": "2026-10-10T12:16:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:40Z",
+          "conclusion": "success",
+          "name": "Run tests (Bun)",
+          "number": 9,
+          "startedAt": "2026-10-10T12:16:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:40Z",
+          "conclusion": "skipped",
+          "name": "Setup Deno",
+          "number": 10,
+          "startedAt": "2026-10-10T12:17:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:40Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Deno)",
+          "number": 11,
+          "startedAt": "2026-10-10T12:17:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:42Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 21,
+          "startedAt": "2026-10-10T12:17:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:43Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 22,
+          "startedAt": "2026-10-10T12:17:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:44Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-10-10T12:17:43Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672755"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:02Z",
+      "conclusion": "success",
+      "databaseId": 114210672765,
+      "name": "Test (deno on ubuntu-24.04)",
+      "startedAt": "2026-10-10T12:17:00Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:17:03Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:17:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:04Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:17:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:04Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:17:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:04Z",
+          "conclusion": "skipped",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:17:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:04Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Node.js)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:17:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:04Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Node.js)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:17:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:04Z",
+          "conclusion": "skipped",
+          "name": "Setup Bun",
+          "number": 7,
+          "startedAt": "2026-10-10T12:17:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:04Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Bun)",
+          "number": 8,
+          "startedAt": "2026-10-10T12:17:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:04Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Bun)",
+          "number": 9,
+          "startedAt": "2026-10-10T12:17:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:06Z",
+          "conclusion": "success",
+          "name": "Setup Deno",
+          "number": 10,
+          "startedAt": "2026-10-10T12:17:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:00Z",
+          "conclusion": "success",
+          "name": "Run tests (Deno)",
+          "number": 11,
+          "startedAt": "2026-10-10T12:17:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:00Z",
+          "conclusion": "success",
+          "name": "Post Setup Deno",
+          "number": 21,
+          "startedAt": "2026-10-10T12:18:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:00Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 22,
+          "startedAt": "2026-10-10T12:18:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:00Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-10-10T12:18:00Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672765"
+    },
+    {
+      "completedAt": "2026-10-10T12:16:39Z",
+      "conclusion": "success",
+      "databaseId": 114210672769,
+      "name": "Test (deno on macos-15)",
+      "startedAt": "2026-10-10T12:15:48Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:15:50Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:15:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:15:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "skipped",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Node.js)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Node.js)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "skipped",
+          "name": "Setup Bun",
+          "number": 7,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Bun)",
+          "number": 8,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Bun)",
+          "number": 9,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:54Z",
+          "conclusion": "success",
+          "name": "Setup Deno",
+          "number": 10,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:35Z",
+          "conclusion": "success",
+          "name": "Run tests (Deno)",
+          "number": 11,
+          "startedAt": "2026-10-10T12:15:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:36Z",
+          "conclusion": "success",
+          "name": "Post Setup Deno",
+          "number": 21,
+          "startedAt": "2026-10-10T12:16:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:36Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 22,
+          "startedAt": "2026-10-10T12:16:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:36Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-10-10T12:16:36Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672769"
+    },
+    {
+      "completedAt": "2026-10-10T12:16:44Z",
+      "conclusion": "success",
+      "databaseId": 114210672787,
+      "name": "Test (node on macos-15)",
+      "startedAt": "2026-10-10T12:15:48Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:15:49Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:15:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:15:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:52Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:53Z",
+          "conclusion": "success",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:15:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:55Z",
+          "conclusion": "success",
+          "name": "Install dependencies (Node.js)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:15:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:37Z",
+          "conclusion": "success",
+          "name": "Run tests (Node.js)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:15:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:37Z",
+          "conclusion": "skipped",
+          "name": "Setup Bun",
+          "number": 7,
+          "startedAt": "2026-10-10T12:16:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:37Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Bun)",
+          "number": 8,
+          "startedAt": "2026-10-10T12:16:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:37Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Bun)",
+          "number": 9,
+          "startedAt": "2026-10-10T12:16:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:37Z",
+          "conclusion": "skipped",
+          "name": "Setup Deno",
+          "number": 10,
+          "startedAt": "2026-10-10T12:16:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:37Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Deno)",
+          "number": 11,
+          "startedAt": "2026-10-10T12:16:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:40Z",
+          "conclusion": "success",
+          "name": "Post Setup Node.js",
+          "number": 21,
+          "startedAt": "2026-10-10T12:16:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:40Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 22,
+          "startedAt": "2026-10-10T12:16:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:41Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-10-10T12:16:40Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672787"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:24Z",
+      "conclusion": "success",
+      "databaseId": 114210672800,
+      "name": "Test (node on ubuntu-24.04)",
+      "startedAt": "2026-10-10T12:17:03Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:17:06Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:17:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:07Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:17:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:08Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:17:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:09Z",
+          "conclusion": "success",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:17:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:17:12Z",
+          "conclusion": "success",
+          "name": "Install dependencies (Node.js)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:17:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:21Z",
+          "conclusion": "success",
+          "name": "Run tests (Node.js)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:17:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:21Z",
+          "conclusion": "skipped",
+          "name": "Setup Bun",
+          "number": 7,
+          "startedAt": "2026-10-10T12:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:21Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Bun)",
+          "number": 8,
+          "startedAt": "2026-10-10T12:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:21Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Bun)",
+          "number": 9,
+          "startedAt": "2026-10-10T12:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:21Z",
+          "conclusion": "skipped",
+          "name": "Setup Deno",
+          "number": 10,
+          "startedAt": "2026-10-10T12:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:21Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Deno)",
+          "number": 11,
+          "startedAt": "2026-10-10T12:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:22Z",
+          "conclusion": "success",
+          "name": "Post Setup Node.js",
+          "number": 21,
+          "startedAt": "2026-10-10T12:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:22Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 22,
+          "startedAt": "2026-10-10T12:18:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:22Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-10-10T12:18:22Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672800"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:18Z",
+      "conclusion": "success",
+      "databaseId": 114210672803,
+      "name": "Test (deno on windows-2025)",
+      "startedAt": "2026-10-10T12:16:36Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:16:38Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:16:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:48Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:16:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:48Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:16:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:48Z",
+          "conclusion": "skipped",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:16:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:48Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Node.js)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:16:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:48Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Node.js)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:16:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:48Z",
+          "conclusion": "skipped",
+          "name": "Setup Bun",
+          "number": 7,
+          "startedAt": "2026-10-10T12:16:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:48Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Bun)",
+          "number": 8,
+          "startedAt": "2026-10-10T12:16:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:48Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Bun)",
+          "number": 9,
+          "startedAt": "2026-10-10T12:16:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:16:50Z",
+          "conclusion": "success",
+          "name": "Setup Deno",
+          "number": 10,
+          "startedAt": "2026-10-10T12:16:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:13Z",
+          "conclusion": "success",
+          "name": "Run tests (Deno)",
+          "number": 11,
+          "startedAt": "2026-10-10T12:16:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:14Z",
+          "conclusion": "success",
+          "name": "Post Setup Deno",
+          "number": 21,
+          "startedAt": "2026-10-10T12:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:16Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 22,
+          "startedAt": "2026-10-10T12:18:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:16Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-10-10T12:18:16Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672803"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:20Z",
+      "conclusion": "success",
+      "databaseId": 114210672812,
+      "name": "Test (bun on windows-2025)",
+      "startedAt": "2026-10-10T12:14:58Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:15:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:14:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:09Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:15:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:10Z",
+          "conclusion": "success",
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "number": 3,
+          "startedAt": "2026-10-10T12:15:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:10Z",
+          "conclusion": "skipped",
+          "name": "Setup Node.js",
+          "number": 4,
+          "startedAt": "2026-10-10T12:15:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:10Z",
+          "conclusion": "skipped",
+          "name": "Install dependencies (Node.js)",
+          "number": 5,
+          "startedAt": "2026-10-10T12:15:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:10Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Node.js)",
+          "number": 6,
+          "startedAt": "2026-10-10T12:15:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:14Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 7,
+          "startedAt": "2026-10-10T12:15:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:15:25Z",
+          "conclusion": "success",
+          "name": "Install dependencies (Bun)",
+          "number": 8,
+          "startedAt": "2026-10-10T12:15:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:13Z",
+          "conclusion": "success",
+          "name": "Run tests (Bun)",
+          "number": 9,
+          "startedAt": "2026-10-10T12:15:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:13Z",
+          "conclusion": "skipped",
+          "name": "Setup Deno",
+          "number": 10,
+          "startedAt": "2026-10-10T12:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:13Z",
+          "conclusion": "skipped",
+          "name": "Run tests (Deno)",
+          "number": 11,
+          "startedAt": "2026-10-10T12:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:16Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 21,
+          "startedAt": "2026-10-10T12:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:18Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 22,
+          "startedAt": "2026-10-10T12:18:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:18Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-10-10T12:18:18Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672812"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:24Z",
+      "conclusion": "skipped",
+      "databaseId": 114211308227,
+      "name": "Instant Release",
+      "startedAt": "2026-10-10T12:18:24Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308227"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:34Z",
+      "conclusion": "success",
+      "databaseId": 114211308658,
+      "name": "Pipeline Status",
+      "startedAt": "2026-10-10T12:18:26Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-10T12:18:28Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-10T12:18:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:29Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-10T12:18:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:32Z",
+          "conclusion": "success",
+          "name": "Setup Node.js",
+          "number": 3,
+          "startedAt": "2026-10-10T12:18:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:32Z",
+          "conclusion": "success",
+          "name": "Fail the run when a required job was cancelled or failed",
+          "number": 4,
+          "startedAt": "2026-10-10T12:18:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:32Z",
+          "conclusion": "success",
+          "name": "Post Setup Node.js",
+          "number": 7,
+          "startedAt": "2026-10-10T12:18:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:32Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 8,
+          "startedAt": "2026-10-10T12:18:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-10T12:18:32Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-10-10T12:18:32Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308658"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:24Z",
+      "conclusion": "skipped",
+      "databaseId": 114211308709,
+      "name": "Release",
+      "startedAt": "2026-10-10T12:18:25Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308709"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:24Z",
+      "conclusion": "skipped",
+      "databaseId": 114211308838,
+      "name": "Configure Docker Hub Publish",
+      "startedAt": "2026-10-10T12:18:25Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308838"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:24Z",
+      "conclusion": "skipped",
+      "databaseId": 114211308918,
+      "name": "Build Docker Image (${{ matrix.platform }})",
+      "startedAt": "2026-10-10T12:18:25Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308918"
+    },
+    {
+      "completedAt": "2026-10-10T12:18:24Z",
+      "conclusion": "skipped",
+      "databaseId": 114211309242,
+      "name": "Optional Docker Hub Publish",
+      "startedAt": "2026-10-10T12:18:25Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211309242"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238"
+}

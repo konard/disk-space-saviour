@@ -1,0 +1,266 @@
+[
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308658",
+    "name": "Pipeline Status",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211309242",
+    "name": "Optional Docker Hub Publish",
+    "state": "SKIPPED",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308918",
+    "name": "Build Docker Image (${{ matrix.platform }})",
+    "state": "SKIPPED",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308838",
+    "name": "Configure Docker Hub Publish",
+    "state": "SKIPPED",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308709",
+    "name": "Release",
+    "state": "SKIPPED",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114211308227",
+    "name": "Instant Release",
+    "state": "SKIPPED",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672800",
+    "name": "Test (node on ubuntu-24.04)",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672765",
+    "name": "Test (deno on ubuntu-24.04)",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672752",
+    "name": "Test (bun on ubuntu-24.04)",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210457059",
+    "name": "Docker Image Build Check",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672803",
+    "name": "Test (deno on windows-2025)",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672755",
+    "name": "Test (bun on macos-15)",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456784",
+    "name": "Validate Documentation",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136229/job/114210613404",
+    "name": "Pipeline Status",
+    "state": "SUCCESS",
+    "workflow": "Example app"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672769",
+    "name": "Test (deno on macos-15)",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672787",
+    "name": "Test (node on macos-15)",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672734",
+    "name": "Test (node on windows-2025)",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210672812",
+    "name": "Test (bun on windows-2025)",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456750",
+    "name": "Check for Changesets",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456761",
+    "name": "Check File Line Limits",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210629407",
+    "name": "Create Changeset PR",
+    "state": "SKIPPED",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136213/job/114210607037",
+    "name": "Pipeline Status",
+    "state": "SUCCESS",
+    "workflow": "Security"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456630",
+    "name": "Test Compilation",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456654",
+    "name": "Docker-in-Docker Integration",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/runs/114210549362",
+    "name": "CodeQL",
+    "state": "SUCCESS",
+    "workflow": ""
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456593",
+    "name": "Lint and Format Check",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136213/job/114210331377",
+    "name": "Audit npm lock (examples/universal-app)",
+    "state": "SUCCESS",
+    "workflow": "Security"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136229/job/114210487261",
+    "name": "Deploy GitHub Pages",
+    "state": "SKIPPED",
+    "workflow": "Example app"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136327/job/114210396571",
+    "name": "Pipeline Status",
+    "state": "SUCCESS",
+    "workflow": "Broken Link Checker"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136229/job/114210331654",
+    "name": "Package desktop app (ubuntu-24.04)",
+    "state": "SUCCESS",
+    "workflow": "Example app"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136213/job/114210331395",
+    "name": "Audit npm lock (.)",
+    "state": "SUCCESS",
+    "workflow": "Security"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136229/job/114210331530",
+    "name": "Package desktop app (macos-15)",
+    "state": "SUCCESS",
+    "workflow": "Example app"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210331336",
+    "name": "Detect Changes",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136229/job/114210331574",
+    "name": "Build web app",
+    "state": "SUCCESS",
+    "workflow": "Example app"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136213/job/114210331369",
+    "name": "CodeQL (javascript-typescript)",
+    "state": "SUCCESS",
+    "workflow": "Security"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136213/job/114210331383",
+    "name": "CodeQL (actions)",
+    "state": "SUCCESS",
+    "workflow": "Security"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136213/job/114210331191",
+    "name": "Dependency Review",
+    "state": "SUCCESS",
+    "workflow": "Security"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210331245",
+    "name": "Check for Manual Version Changes",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136327/job/114210331454",
+    "name": "Check Links",
+    "state": "SUCCESS",
+    "workflow": "Broken Link Checker"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136229/job/114210353150",
+    "name": "Build iOS app",
+    "state": "SKIPPED",
+    "workflow": "Example app"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136229/job/114210331374",
+    "name": "Package desktop app (windows-2025)",
+    "state": "SUCCESS",
+    "workflow": "Example app"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136229/job/114210348464",
+    "name": "Regenerate Preview Images",
+    "state": "SKIPPED",
+    "workflow": "Example app"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210331019",
+    "name": "Release Preflight",
+    "state": "SUCCESS",
+    "workflow": "Checks and release"
+  },
+  {
+    "link": "https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136229/job/114210332095",
+    "name": "Build Android app",
+    "state": "SKIPPED",
+    "workflow": "Example app"
+  }
+]

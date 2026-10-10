@@ -11,6 +11,6 @@
 - [x] Keep experiments bounded; retain executable repro scripts in experiments; save large check output to files.
 - [x] Run focused tests and all local CI checks before atomic commits; add a release changeset rather than manually changing version.
 - [x] Review complete PR diff for regressions and unchanged safety boundaries; merge latest main into prepared branch if needed.
-- [ ] Push only issue-40-bcb1f5ac3122; replace PR title/body with concrete reproduction, tests, limitations and separate Fixes references for all eight issues.
-- [ ] Inspect latest CI run timestamps/SHAs; preserve/analyze failed logs, fix verified failures, repeat required checks.
-- [ ] Mark PR 41 ready; verify passing checks, clean tree, final code/test/docs consistency and no unfinished background work.
+- [x] Push only issue-40-bcb1f5ac3122; replace PR title/body with concrete reproduction, tests, limitations and separate Fixes references for all eight issues.
+- [x] Inspect latest CI run timestamps/SHAs; preserve/analyze failed logs, fix verified failures, repeat required checks.
+- [x] Mark PR 41 ready; verify passing checks, clean tree, final code/test/docs consistency and no unfinished background work.

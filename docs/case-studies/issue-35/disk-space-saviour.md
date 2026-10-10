@@ -36,4 +36,6 @@ Each row also inherits the common evidence, online research, upstream triage, tr
 
 Run the corresponding `tests/issue-35*.test.js` with Node’s test runner (30-second test budget), or use the repository’s full Node/Bun/Deno commands. Regression logs before and after changes are retained in this directory’s data folder. Reproductions use temporary fixtures or fake executors; no large production Rust tree or unbounded memory experiment is required.
 
+The [nested Docker CI integration](https://github.com/link-foundation/disk-space-saviour/actions/runs/38051136238/job/114210456654) passed on implementation commit `0aeef70`; [the full log](data/dind-ci-passed.log) is retained alongside the local cgroup failure. Null-GraphDriver storage discovery and allocated-byte accounting are covered separately by the focused fixtures above.
+
 See [validation and limitations](../issue-40/disk-space-saviour.md#validation-and-limitations) for runtime results, infrastructure constraints and remaining conservative cases. No original safety override is weakened. Workarounds and alternative designs are recorded in the matrix above.

@@ -255,7 +255,7 @@ tests/git-safety.test.js:
 (pass) liveness re-checks right before deleting > keeps it while the package manager runs inside the project [1205.32ms]
 
 tests/check-staged-formatting.test.js:
-package.json Checking formatting...
+package.json\0Checking formatting...
 All matched files use Prettier code style!
 (pass) staged release formatting > checks a formatted file while skipping a consumed changeset deletion [477.10ms]
 
@@ -1154,11 +1154,11 @@ tests/scan-caches.test.js:
 tests/release-metadata.test.js:
 d19279e14cc28b77834d8d4f272a7636fb4e97ae
 e8154982ca3a1b12f04c73d8700d8128619abb09
-D .changeset/fix.md M package.json d19279e14cc28b77834d8d4f272a7636fb4e97ae
+D\0.changeset/fix.md\0M\0package.json\0d19279e14cc28b77834d8d4f272a7636fb4e97ae
 e8154982ca3a1b12f04c73d8700d8128619abb09
 b9db3db63a748decbcd59534b5ff21e37ab8a25d
 d19279e14cc28b77834d8d4f272a7636fb4e97ae
-M src.js (pass) release metadata attestation > checks a real version commit against its validated parent [182.17ms]
+M\0src.js\0(pass) release metadata attestation > checks a real version commit against its validated parent [182.17ms]
 
 tests/index.test.js:
 (pass) library entry point > exports scan, clean and emergency [0.07ms]
