@@ -12,6 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 export const AUDIT_SCHEMA = 1;
+let privateAuditDirectory;
 
 export function throwIfAborted(options) {
   if (options.signal?.aborted) {
@@ -74,8 +75,24 @@ export function startAudit(command, fields = {}) {
  * @returns {Promise<string>}
  */
 export async function writeAudit(audit, options = {}) {
-  const dir = auditDirectory(options);
-  await fsp.mkdir(dir, { recursive: true });
+  let dir = auditDirectory(options);
+  // sudo/docker exec may retain another user's HOME. Do not leave root-owned
+  // default state there; explicit audit locations remain the caller's choice.
+  if (
+    !options.auditDir &&
+    !process.env.DSS_AUDIT_DIR &&
+    process.getuid?.() === 0
+  ) {
+    const home = os.homedir();
+    const owner = await fsp.stat(home).catch(() => null);
+    if (owner && owner.uid !== 0 && dir.startsWith(`${home}${path.sep}`)) {
+      privateAuditDirectory ??= fsp.mkdtemp(
+        path.join(os.tmpdir(), 'dss-audit-0-')
+      );
+      dir = await privateAuditDirectory;
+    }
+  }
+  await fsp.mkdir(dir, { recursive: true, mode: 0o700 });
   if (!options.inProgress) {
     audit.finishedAt ??= new Date().toISOString();
   }

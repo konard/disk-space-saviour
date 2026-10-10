@@ -296,7 +296,12 @@ class Cli {
     const report = await this.api.scan(options);
     const audit = scanAudit(report);
     if (options.audit !== false) {
-      await writeAudit(audit, options);
+      try {
+        await writeAudit(audit, options);
+      } catch (error) {
+        report.audit = { file: null, error: error.message, code: error.code };
+        this.io.stderr(`Audit log: not written (${error.message})`);
+      }
     }
     this.print(values, report, () =>
       [
