@@ -2,7 +2,7 @@ import { describe, it, expect } from 'test-anywhere';
 import path from 'node:path';
 import { LocalEnv } from '../src/env/local.js';
 import { LivenessProbe } from '../src/liveness.js';
-import { readOnlyRuntime } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const denied = () =>
   Object.assign(new Error('permission denied'), { code: 'EACCES' });
@@ -46,34 +46,38 @@ function procFs() {
 }
 
 describe('issue 25 partial process inspection', () => {
-  it('retains readable paths when a root daemon denies inspection', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'retains readable paths when a root daemon denies inspection',
+    async () => {
+      const env = new LocalEnv({
+        platform: 'linux',
+        procFs: procFs(),
+        executor: {
+          run: async () => ({
+            code: 1,
+            stdout: '',
+            stderr: 'sudo unavailable',
+          }),
+        },
+      });
+      env.stat = async () => ({ uid: 1001 });
+      env.realPath = async (target) => target;
+      const probe = new LivenessProbe(env, { staleAgeMs: 0 });
+      await probe.refresh();
+      await probe.resolve([
+        '/home/box/.cache/bun',
+        '/var/lib/docker/data',
+        '/work',
+      ]);
+      expect(probe.openPaths.has('/work/tool.js')).toBe(true);
+      const item = (target) => ({ paths: [target], checks: { mtime: false } });
+      expect(probe.busyReason(item('/home/box/.cache/bun'))).toBe(null);
+      expect(probe.busyReason(item('/var/lib/docker/data'))).toMatch(
+        /unreadable|in use/
+      );
+      expect(probe.busyReason(item('/work'))).toMatch(/in use/);
     }
-    const env = new LocalEnv({
-      platform: 'linux',
-      procFs: procFs(),
-      executor: {
-        run: async () => ({ code: 1, stdout: '', stderr: 'sudo unavailable' }),
-      },
-    });
-    env.stat = async () => ({ uid: 1001 });
-    env.realPath = async (target) => target;
-    const probe = new LivenessProbe(env, { staleAgeMs: 0 });
-    await probe.refresh();
-    await probe.resolve([
-      '/home/box/.cache/bun',
-      '/var/lib/docker/data',
-      '/work',
-    ]);
-    expect(probe.openPaths.has('/work/tool.js')).toBe(true);
-    const item = (target) => ({ paths: [target], checks: { mtime: false } });
-    expect(probe.busyReason(item('/home/box/.cache/bun'))).toBe(null);
-    expect(probe.busyReason(item('/var/lib/docker/data'))).toMatch(
-      /unreadable|in use/
-    );
-    expect(probe.busyReason(item('/work'))).toMatch(/in use/);
-  });
+  );
 
   it('protects a package path passed to node even with no open descriptor', async () => {
     const env = {

@@ -343,7 +343,7 @@ Configured in `.prettierrc`:
 npm install
 npm test                  # Node.js, 30s per test
 bun test --timeout 30000  # Bun
-deno test --allow-read    # Deno (read-only tests)
+deno test -A --parallel   # Deno (fixtures need -A)
 npm run check             # lint + format + duplication
 npm run test:dind         # Docker-in-Docker integration (needs --privileged)
 node bin/dss.js scan --verbose

@@ -11,13 +11,10 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
+import { itUnless, noPosixShell, sandboxed } from './helpers/skip.js';
 
 const workflowPath = '.github/workflows/security.yml';
 const probePath = 'scripts/check-dependency-graph.sh';
-const canRunBash =
-  typeof Deno === 'undefined' &&
-  typeof process !== 'undefined' &&
-  process.platform !== 'win32';
 const workflow = existsSync(workflowPath)
   ? readFileSync(workflowPath, 'utf8').replaceAll('\r\n', '\n')
   : '';
@@ -193,70 +190,80 @@ describe('security workflow', () => {
 });
 
 describe('dependency graph probe', () => {
-  if (!canRunBash) {
-    it('is skipped where bash is unavailable', () => {});
-    return;
-  }
+  itUnless(sandboxed, noPosixShell)(
+    'asks the compare API for the pull request range',
+    () => {
+      const { args } = runProbe({ status: '200', body: '[]' });
 
-  it('asks the compare API for the pull request range', () => {
-    const { args } = runProbe({ status: '200', body: '[]' });
+      expect(args).toContain(
+        'https://api.example.test/repos/acme/widget/dependency-graph/compare/base123...head456'
+      );
+      expect(args).toContain('Authorization: Bearer stub-token');
+    }
+  );
 
-    expect(args).toContain(
-      'https://api.example.test/repos/acme/widget/dependency-graph/compare/base123...head456'
-    );
-    expect(args).toContain('Authorization: Bearer stub-token');
-  });
+  itUnless(sandboxed, noPosixShell)(
+    'enables the review when the dependency graph answers',
+    () => {
+      const result = runProbe({ status: '200', body: '[]' });
 
-  it('enables the review when the dependency graph answers', () => {
-    const result = runProbe({ status: '200', body: '[]' });
+      expect(result.code).toBe(0);
+      expect(result.output).toBe('available=true\n');
+    }
+  );
 
-    expect(result.code).toBe(0);
-    expect(result.output).toBe('available=true\n');
-  });
-
-  it('skips the review with a warning when the dependency graph is disabled', () => {
-    const result = runProbe({
-      status: '403',
-      body: '{"message":"Forbidden","status":"403"}',
-    });
-
-    expect(result.code).toBe(0);
-    expect(result.output).toBe('available=false\n');
-    expect(result.stdout).toContain(
-      '::warning title=Dependency review skipped::'
-    );
-    expect(result.stdout).toContain(
-      'https://example.test/acme/widget/settings/security_analysis'
-    );
-  });
-
-  it('fails on a rate-limited 403, which says nothing about the setting', () => {
-    const result = runProbe({
-      status: '403',
-      body: '{"message":"API rate limit exceeded for installation."}',
-    });
-
-    expect(result.code).toBe(1);
-    expect(result.output).toBe('');
-    expect(result.stdout).toContain(
-      '::error title=Dependency graph probe failed::'
-    );
-  });
-
-  it('fails on any other answer, on one annotation line', () => {
-    for (const status of ['404', '500', '000']) {
+  itUnless(sandboxed, noPosixShell)(
+    'skips the review with a warning when the dependency graph is disabled',
+    () => {
       const result = runProbe({
-        status,
-        body: '{\n  "message": "Not Found"\n}\n',
+        status: '403',
+        body: '{"message":"Forbidden","status":"403"}',
+      });
+
+      expect(result.code).toBe(0);
+      expect(result.output).toBe('available=false\n');
+      expect(result.stdout).toContain(
+        '::warning title=Dependency review skipped::'
+      );
+      expect(result.stdout).toContain(
+        'https://example.test/acme/widget/settings/security_analysis'
+      );
+    }
+  );
+
+  itUnless(sandboxed, noPosixShell)(
+    'fails on a rate-limited 403, which says nothing about the setting',
+    () => {
+      const result = runProbe({
+        status: '403',
+        body: '{"message":"API rate limit exceeded for installation."}',
       });
 
       expect(result.code).toBe(1);
       expect(result.output).toBe('');
-      const [annotation] = result.stdout.split('\n');
-      expect(annotation).toContain(`answered HTTP ${status}:`);
-      expect(annotation).toContain('"message": "Not Found"');
+      expect(result.stdout).toContain(
+        '::error title=Dependency graph probe failed::'
+      );
     }
-  });
+  );
+
+  itUnless(sandboxed, noPosixShell)(
+    'fails on any other answer, on one annotation line',
+    () => {
+      for (const status of ['404', '500', '000']) {
+        const result = runProbe({
+          status,
+          body: '{\n  "message": "Not Found"\n}\n',
+        });
+
+        expect(result.code).toBe(1);
+        expect(result.output).toBe('');
+        const [annotation] = result.stdout.split('\n');
+        expect(annotation).toContain(`answered HTTP ${status}:`);
+        expect(annotation).toContain('"message": "Not Found"');
+      }
+    }
+  );
 });
 
 it('excludes experiments and examples through an explicit CodeQL configuration', () => {

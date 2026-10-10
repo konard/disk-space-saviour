@@ -373,7 +373,14 @@ jobs:
       - name: Run tests (Deno)
         if: matrix.runtime == 'deno'
         shell: bash
-        run: bash scripts/run-with-budget-warning.sh 100 "Deno test suite" deno test --allow-read
+        # -A: the fixtures write temporary trees, spawn processes and read
+        # /proc, which Deno grants only as "all access". With fewer
+        # permissions tests/helpers/skip.js reports them as skipped, so the
+        # Deno leg would pass while covering a fraction of what Node covers.
+        # --parallel runs test files concurrently, as Node and Bun do; run
+        # one by one the full suite takes about 4x as long (152s against
+        # 35s locally).
+        run: bash scripts/run-with-budget-warning.sh 200 "Deno test suite" deno test -A --parallel
 
   # === DOCKER IMAGE BUILD CHECK (pull requests) ===
   # Builds the Dockerfile without pushing so a broken image fails the pull

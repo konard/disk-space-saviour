@@ -17,12 +17,12 @@ import {
   age,
   fixtureEnv,
   projectFixture,
-  readOnlyRuntime,
   removeRoot,
   scanInput,
   tempRoot,
   writeBlob,
 } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 let aged = null;
 
@@ -61,181 +61,195 @@ function agedScan() {
 
 describe('project rules find their fixture project', () => {
   for (const rule of PROJECT_RULES) {
-    it(`${rule.ecosystem}: ${rule.id} (${rule.names[0]})`, async () => {
-      if (readOnlyRuntime()) {
-        return;
+    itUnless(sandboxed)(
+      `${rule.ecosystem}: ${rule.id} (${rule.names[0]})`,
+      async () => {
+        const { dirs, report } = await agedScan();
+        const item = report.items.find(
+          (candidate) => candidate.rule === rule.id
+        );
+        expect(item?.path).toBe(dirs.get(rule.id));
+        expect(item.ecosystem).toBe(rule.ecosystem);
+        expect(item.tier).toBe(
+          rule.kind === 'cache' || rule.id === 'node-modules'
+            ? 'safe'
+            : 'moderate'
+        );
+        expect(item.blockers).toEqual([]);
+        expect(item.bytes >= 64 * 1024).toBe(true);
+        expect(item.action).toEqual({ type: 'remove', paths: [item.path] });
       }
-      const { dirs, report } = await agedScan();
-      const item = report.items.find((candidate) => candidate.rule === rule.id);
-      expect(item?.path).toBe(dirs.get(rule.id));
-      expect(item.ecosystem).toBe(rule.ecosystem);
-      expect(item.tier).toBe(
-        rule.kind === 'cache' || rule.id === 'node-modules'
-          ? 'safe'
-          : 'moderate'
-      );
-      expect(item.blockers).toEqual([]);
-      expect(item.bytes >= 64 * 1024).toBe(true);
-      expect(item.action).toEqual({ type: 'remove', paths: [item.path] });
-    });
+    );
   }
 
-  it('reports each fixture exactly once and deletes nothing', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'reports each fixture exactly once and deletes nothing',
+    async () => {
+      const { dirs, report, root } = await agedScan();
+      expect(report.items.map((item) => item.rule).sort()).toEqual(
+        PROJECT_RULES.map((rule) => rule.id).sort()
+      );
+      for (const dir of dirs.values()) {
+        expect(existsSync(join(dir, 'payload.bin'))).toBe(true);
+      }
+      removeRoot(root);
     }
-    const { dirs, report, root } = await agedScan();
-    expect(report.items.map((item) => item.rule).sort()).toEqual(
-      PROJECT_RULES.map((rule) => rule.id).sort()
-    );
-    for (const dir of dirs.values()) {
-      expect(existsSync(join(dir, 'payload.bin'))).toBe(true);
-    }
-    removeRoot(root);
-  });
+  );
 });
 
 describe('project activity and markers', () => {
-  it('counts recent writes in nested source directories', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'counts recent writes in nested source directories',
+    async () => {
+      const root = tempRoot('dss-nested-activity-');
+      try {
+        const rule = PROJECT_RULES.find((entry) => entry.id === 'node-modules');
+        projectFixture(root, rule);
+        age(root, 40 * DAY_MS);
+        writeBlob(join(root, rule.id, 'src', 'deep', 'active.js'));
+        const report = await scan(
+          scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
+        );
+        expect(
+          report.items.find((item) => item.rule === 'node-modules')?.tier
+        ).toBe('aggressive');
+      } finally {
+        removeRoot(root);
+      }
     }
-    const root = tempRoot('dss-nested-activity-');
-    try {
-      const rule = PROJECT_RULES.find((entry) => entry.id === 'node-modules');
+  );
+
+  itUnless(sandboxed)(
+    'blocks a project written inside the activity window',
+    async () => {
+      const root = tempRoot('dss-fresh-');
+      const rule = PROJECT_RULES.find((r) => r.id === 'node-modules');
       projectFixture(root, rule);
+      const report = await scan(
+        scanInput(fixtureEnv(root), [root], {
+          scanners: ['projects'],
+          staleAge: '1h',
+        })
+      );
+      const [item] = report.items;
+      expect(item.tier).toBe('aggressive');
+      expect(item.blockers.join()).toMatch(/inside the 1h activity window/);
+      removeRoot(root);
+    }
+  );
+
+  itUnless(sandboxed)(
+    'keeps recently active projects out of the moderate tier',
+    async () => {
+      const root = tempRoot('dss-active-');
+      const rule = PROJECT_RULES.find((r) => r.id === 'node-modules');
+      projectFixture(root, rule);
+      age(root, 3 * DAY_MS);
+      const report = await scan(
+        scanInput(fixtureEnv(root), [root], {
+          scanners: ['projects'],
+          inactive: '30d',
+        })
+      );
+      expect(report.items[0].tier).toBe('aggressive');
+      expect(report.items[0].blockers).toEqual([]);
+      removeRoot(root);
+    }
+  );
+
+  itUnless(sandboxed)(
+    'ignores same-named directories without the project marker',
+    async () => {
+      const root = tempRoot('dss-unmarked-');
+      for (const name of ['target', 'build', 'vendor', 'lib', 'bin', 'obj']) {
+        writeBlob(join(root, 'plain', name, 'data.bin'));
+      }
+      writeBlob(join(root, 'venv-like', '.venv', 'data.bin'));
       age(root, 40 * DAY_MS);
-      writeBlob(join(root, rule.id, 'src', 'deep', 'active.js'));
       const report = await scan(
         scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
       );
-      expect(
-        report.items.find((item) => item.rule === 'node-modules')?.tier
-      ).toBe('aggressive');
-    } finally {
+      expect(report.items).toEqual([]);
       removeRoot(root);
     }
-  });
+  );
 
-  it('blocks a project written inside the activity window', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'respects --exclude for a project directory',
+    async () => {
+      const root = tempRoot('dss-exclude-');
+      const rule = PROJECT_RULES.find((r) => r.id === 'node-modules');
+      const dir = projectFixture(root, rule);
+      age(root, 40 * DAY_MS);
+      const report = await scan(
+        scanInput(fixtureEnv(root), [root], {
+          scanners: ['projects'],
+          exclude: [dir],
+        })
+      );
+      expect(report.items).toEqual([]);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-fresh-');
-    const rule = PROJECT_RULES.find((r) => r.id === 'node-modules');
-    projectFixture(root, rule);
-    const report = await scan(
-      scanInput(fixtureEnv(root), [root], {
-        scanners: ['projects'],
-        staleAge: '1h',
-      })
-    );
-    const [item] = report.items;
-    expect(item.tier).toBe('aggressive');
-    expect(item.blockers.join()).toMatch(/inside the 1h activity window/);
-    removeRoot(root);
-  });
+  );
 
-  it('keeps recently active projects out of the moderate tier', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'requires a lockfile before reporting installed dependencies and again at clean time',
+    async () => {
+      const root = tempRoot('dss-lockfile-');
+      const rule = PROJECT_RULES.find((entry) => entry.id === 'node-modules');
+      const modules = projectFixture(root, rule);
+      const lock = join(root, rule.id, 'package-lock.json');
+      age(root, 40 * DAY_MS);
+      const env = fixtureEnv(root);
+      const input = scanInput(env, [root], { scanners: ['projects'] });
+      const report = await scan(input);
+      expect(report.items.some((item) => item.path === modules)).toBe(true);
+      rmSync(lock);
+      const audit = await clean(report, {
+        env,
+        tier: 'moderate',
+        audit: false,
+      });
+      expect(audit.entries[0].reason).toMatch(/no lockfile remains/);
+      expect(existsSync(modules)).toBe(true);
+      expect(
+        (await scan(input)).items.some((item) => item.path === modules)
+      ).toBe(false);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-active-');
-    const rule = PROJECT_RULES.find((r) => r.id === 'node-modules');
-    projectFixture(root, rule);
-    age(root, 3 * DAY_MS);
-    const report = await scan(
-      scanInput(fixtureEnv(root), [root], {
-        scanners: ['projects'],
-        inactive: '30d',
-      })
-    );
-    expect(report.items[0].tier).toBe('aggressive');
-    expect(report.items[0].blockers).toEqual([]);
-    removeRoot(root);
-  });
+  );
 
-  it('ignores same-named directories without the project marker', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'does not scan global installs under hidden configuration directories',
+    async () => {
+      const root = tempRoot('dss-global-installs-');
+      writeBlob(
+        join(
+          root,
+          '.config',
+          'yarn',
+          'global',
+          'node_modules',
+          'cli',
+          'index.js'
+        )
+      );
+      writeFileSync(
+        join(root, '.config', 'yarn', 'global', 'package.json'),
+        '{}'
+      );
+      writeFileSync(
+        join(root, '.config', 'yarn', 'global', 'package-lock.json'),
+        '{}'
+      );
+      age(root, 40 * DAY_MS);
+      const report = await scan(
+        scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
+      );
+      expect(report.items).toEqual([]);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-unmarked-');
-    for (const name of ['target', 'build', 'vendor', 'lib', 'bin', 'obj']) {
-      writeBlob(join(root, 'plain', name, 'data.bin'));
-    }
-    writeBlob(join(root, 'venv-like', '.venv', 'data.bin'));
-    age(root, 40 * DAY_MS);
-    const report = await scan(
-      scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
-    );
-    expect(report.items).toEqual([]);
-    removeRoot(root);
-  });
-
-  it('respects --exclude for a project directory', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const root = tempRoot('dss-exclude-');
-    const rule = PROJECT_RULES.find((r) => r.id === 'node-modules');
-    const dir = projectFixture(root, rule);
-    age(root, 40 * DAY_MS);
-    const report = await scan(
-      scanInput(fixtureEnv(root), [root], {
-        scanners: ['projects'],
-        exclude: [dir],
-      })
-    );
-    expect(report.items).toEqual([]);
-    removeRoot(root);
-  });
-
-  it('requires a lockfile before reporting installed dependencies and again at clean time', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const root = tempRoot('dss-lockfile-');
-    const rule = PROJECT_RULES.find((entry) => entry.id === 'node-modules');
-    const modules = projectFixture(root, rule);
-    const lock = join(root, rule.id, 'package-lock.json');
-    age(root, 40 * DAY_MS);
-    const env = fixtureEnv(root);
-    const input = scanInput(env, [root], { scanners: ['projects'] });
-    const report = await scan(input);
-    expect(report.items.some((item) => item.path === modules)).toBe(true);
-    rmSync(lock);
-    const audit = await clean(report, { env, tier: 'moderate', audit: false });
-    expect(audit.entries[0].reason).toMatch(/no lockfile remains/);
-    expect(existsSync(modules)).toBe(true);
-    expect(
-      (await scan(input)).items.some((item) => item.path === modules)
-    ).toBe(false);
-    removeRoot(root);
-  });
-
-  it('does not scan global installs under hidden configuration directories', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const root = tempRoot('dss-global-installs-');
-    writeBlob(
-      join(root, '.config', 'yarn', 'global', 'node_modules', 'cli', 'index.js')
-    );
-    writeFileSync(
-      join(root, '.config', 'yarn', 'global', 'package.json'),
-      '{}'
-    );
-    writeFileSync(
-      join(root, '.config', 'yarn', 'global', 'package-lock.json'),
-      '{}'
-    );
-    age(root, 40 * DAY_MS);
-    const report = await scan(
-      scanInput(fixtureEnv(root), [root], { scanners: ['projects'] })
-    );
-    expect(report.items).toEqual([]);
-    removeRoot(root);
-  });
+  );
 });
 
 function duBytes(target) {
@@ -244,10 +258,10 @@ function duBytes(target) {
 }
 
 describe('sizes', () => {
-  it('match du within 5%', async () => {
-    if (readOnlyRuntime() || process.platform === 'win32') {
-      return;
-    }
+  itUnless(
+    sandboxed,
+    process.platform === 'win32' && 'du is not available on Windows'
+  )('match du within 5%', async () => {
     const root = tempRoot('dss-du-');
     const project = join(root, 'app');
     mkdirSync(project, { recursive: true });

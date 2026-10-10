@@ -15,12 +15,12 @@ import {
   fixtureEnv,
   age,
   DAY_MS,
-  readOnlyRuntime,
   removeRoot,
   scanInput,
   tempRoot,
   writeBlob,
 } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const homeRules = CACHE_RULES.filter((rule) =>
   rule.paths.some((pattern) => pattern.startsWith('~/'))
@@ -49,40 +49,40 @@ function cacheScan() {
 }
 
 describe('global cache rules find their fixture cache', () => {
-  it('reports only old browser revisions and keeps the newest download', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'reports only old browser revisions and keeps the newest download',
+    async () => {
+      const root = tempRoot('dss-browser-revisions-');
+      const home = join(root, 'home');
+      const old = join(home, '.cache', 'ms-playwright', 'chromium-100');
+      const newest = join(home, '.cache', 'ms-playwright', 'chromium-200');
+      writeBlob(join(old, 'chrome'), 1024);
+      writeBlob(join(newest, 'chrome'), 1024);
+      age(root, 40 * DAY_MS);
+      const report = await scan(
+        scanInput(fixtureEnv(root), [], { scanners: ['global'] })
+      );
+      const browsers = report.items.filter(
+        (item) => item.rule === 'playwright-browsers'
+      );
+      expect(browsers.map((item) => item.path)).toEqual([old]);
+      expect(browsers[0].tier).toBe('safe');
+      expect(existsSync(join(newest, 'chrome'))).toBe(true);
+      rmSync(newest, { recursive: true });
+      const audit = await clean(report, {
+        env: fixtureEnv(root),
+        tier: 'moderate',
+        audit: false,
+        docker: false,
+      });
+      expect(
+        audit.entries.find((entry) => entry.rule === 'playwright-browsers')
+          ?.reason
+      ).toMatch(/newest installed browser revision/);
+      expect(existsSync(join(old, 'chrome'))).toBe(true);
+      removeRoot(root);
     }
-    const root = tempRoot('dss-browser-revisions-');
-    const home = join(root, 'home');
-    const old = join(home, '.cache', 'ms-playwright', 'chromium-100');
-    const newest = join(home, '.cache', 'ms-playwright', 'chromium-200');
-    writeBlob(join(old, 'chrome'), 1024);
-    writeBlob(join(newest, 'chrome'), 1024);
-    age(root, 40 * DAY_MS);
-    const report = await scan(
-      scanInput(fixtureEnv(root), [], { scanners: ['global'] })
-    );
-    const browsers = report.items.filter(
-      (item) => item.rule === 'playwright-browsers'
-    );
-    expect(browsers.map((item) => item.path)).toEqual([old]);
-    expect(browsers[0].tier).toBe('safe');
-    expect(existsSync(join(newest, 'chrome'))).toBe(true);
-    rmSync(newest, { recursive: true });
-    const audit = await clean(report, {
-      env: fixtureEnv(root),
-      tier: 'moderate',
-      audit: false,
-      docker: false,
-    });
-    expect(
-      audit.entries.find((entry) => entry.rule === 'playwright-browsers')
-        ?.reason
-    ).toMatch(/newest installed browser revision/);
-    expect(existsSync(join(old, 'chrome'))).toBe(true);
-    removeRoot(root);
-  });
+  );
   it('does not select session transcripts or unique package stores', () => {
     const paths = [...CACHE_RULES, ...OTHER_RULES].flatMap(
       (rule) => rule.paths
@@ -105,10 +105,7 @@ describe('global cache rules find their fixture cache', () => {
   });
 
   for (const rule of homeRules) {
-    it(`${rule.ecosystem}: ${rule.id}`, async () => {
-      if (readOnlyRuntime()) {
-        return;
-      }
+    itUnless(sandboxed)(`${rule.ecosystem}: ${rule.id}`, async () => {
       const { dirs, report } = await cacheScan();
       const item = report.items.find((candidate) => candidate.rule === rule.id);
       expect(item?.paths).toEqual([dirs.get(rule.id)]);
@@ -118,10 +115,7 @@ describe('global cache rules find their fixture cache', () => {
     });
   }
 
-  it('deletes nothing while scanning', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
+  itUnless(sandboxed)('deletes nothing while scanning', async () => {
     const { dirs, root } = await cacheScan();
     for (const [id, dir] of dirs) {
       expect(existsSync(join(dir, `${id}.bin`))).toBe(true);

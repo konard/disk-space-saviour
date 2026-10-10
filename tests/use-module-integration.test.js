@@ -10,8 +10,15 @@
  * job that pushes tags and publishes to npm.
  *
  * The test needs network access. When the fetch of use.js or the package
- * install fails, it logs the reason and passes, so offline development and
- * sandboxed runs are not blocked by an unreachable CDN.
+ * install fails, the tests are registered as skipped with the reason in their
+ * name, so offline development and sandboxed runs are not blocked by an
+ * unreachable CDN, and are not reported as a pass either.
+ *
+ * On Deno it is skipped: use-m imports command-stream from CDN builds there,
+ * not the npm package the release jobs load on Node, and the esm.sh build of
+ * command-stream@2.0.0 calls createRequire('shelljs'), which Deno rejects
+ * with ERR_INVALID_ARG_VALUE (experiments/deno-use-m-probe.mjs).
+ * Upstream: https://github.com/link-foundation/command-stream/issues/219
  *
  * On Windows it runs too, and skips only when the ESM loader rejects a bare
  * drive-letter path with ERR_UNSUPPORTED_ESM_URL_SCHEME ("On Windows,
@@ -22,27 +29,15 @@
  */
 
 import { describe, it, expect } from 'test-anywhere';
+import { itUnless } from './helpers/skip.js';
 
 import { loadCommandStream, USE_M_URL } from '../scripts/use-module.mjs';
 
 /**
  * Explain why use.js cannot be fetched, or return null when it can.
- * Deno without --allow-net denies the fetch before any request is made, so
- * that case is reported as a permission, not as an unreachable CDN.
  * @returns {Promise<string|null>} skip reason
  */
 async function networkSkipReason() {
-  if (typeof globalThis.Deno?.permissions?.query === 'function') {
-    const host = new globalThis.URL(USE_M_URL).host;
-    const { state } = await globalThis.Deno.permissions.query({
-      name: 'net',
-      host,
-    });
-    if (state !== 'granted') {
-      return `Deno net permission for ${host} is ${state}`;
-    }
-  }
-
   try {
     const response = await fetch(USE_M_URL, { method: 'HEAD' });
     return response.ok ? null : `${USE_M_URL} answered HTTP ${response.status}`;
@@ -67,36 +62,41 @@ export function isWindowsFileUrlError(error, platform = process.platform) {
 }
 
 /**
- * Load command-stream through the real use-m, or return null after logging
- * why the test environment cannot (offline, sandboxed fetch, Windows loader).
- * @returns {Promise<Record<string, unknown>|null>} command-stream exports
+ * Load command-stream through the real use-m, or explain why the test
+ * environment cannot (Deno, offline, Windows loader). Any other failure is
+ * kept and rethrown by the tests.
+ * @returns {Promise<{commandStream?: Record<string, unknown>, skip?: string, error?: unknown}>}
  */
 async function loadOrSkip() {
+  if (typeof globalThis.Deno !== 'undefined') {
+    return {
+      skip: 'use-m loads CDN builds on Deno, not the npm package the release jobs run',
+    };
+  }
+
   const skipReason = await networkSkipReason();
   if (skipReason) {
-    console.log(`Skipping: ${skipReason}, so use-m cannot be evaluated.`);
-    return null;
+    return { skip: `${skipReason}, so use-m cannot be evaluated` };
   }
 
   try {
-    return await loadCommandStream();
+    return { commandStream: await loadCommandStream() };
   } catch (error) {
     if (isWindowsFileUrlError(error)) {
-      console.log(
-        'Skipping: use-m imported a path without a file:// scheme, which ' +
-          'the Windows ESM loader rejects (ERR_UNSUPPORTED_ESM_URL_SCHEME).'
-      );
-      return null;
+      return {
+        skip:
+          'use-m imported a path without a file:// scheme, which the ' +
+          'Windows ESM loader rejects (ERR_UNSUPPORTED_ESM_URL_SCHEME)',
+      };
     }
     if (
       /fetch|network|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|registry/i.test(
-        error.message
+        error?.message ?? ''
       )
     ) {
-      console.log(`Skipping: ${error.message}`);
-      return null;
+      return { skip: error.message };
     }
-    throw error;
+    return { error };
   }
 }
 
@@ -119,25 +119,28 @@ describe('isWindowsFileUrlError', () => {
   });
 });
 
-describe('use-m loads command-stream on this Node version', () => {
-  it('exposes a callable $ from command-stream', async () => {
-    const commandStream = await loadOrSkip();
+const loaded = await loadOrSkip();
 
-    if (!commandStream) {
-      return;
-    }
+/**
+ * @returns {Record<string, unknown>} command-stream exports
+ */
+function commandStreamOrThrow() {
+  if (loaded.error) {
+    throw loaded.error;
+  }
+  return loaded.commandStream;
+}
+
+describe('use-m loads command-stream on this Node version', () => {
+  itUnless(loaded.skip)('exposes a callable $ from command-stream', () => {
+    const commandStream = commandStreamOrThrow();
 
     console.log(`Loaded command-stream on ${process.version}`);
     expect(typeof commandStream.$).toBe('function');
   });
 
-  it('rejects when a command exits non-zero', async () => {
-    const { $ } = (await loadOrSkip()) ?? {};
-
-    if (!$) {
-      return;
-    }
-
+  itUnless(loaded.skip)('rejects when a command exits non-zero', async () => {
+    const { $ } = commandStreamOrThrow();
     let rejected = false;
 
     try {

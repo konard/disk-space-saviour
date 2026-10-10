@@ -27,12 +27,12 @@ import {
   DAY_MS,
   age,
   fixtureEnv,
-  readOnlyRuntime,
   removeRoot,
   scanInput,
   tempRoot,
   writeBlob,
 } from './helpers/fixtures.js';
+import { itUnless, notLinux, sandboxed } from './helpers/skip.js';
 
 const SLEEP = ['/bin/sleep', '/usr/bin/sleep'].find((file) => existsSync(file));
 
@@ -66,25 +66,25 @@ describe('process start times', () => {
     expect(parseProcStat('')).toEqual({ state: null, startTime: null });
   });
 
-  it('lists container processes with their start times', async () => {
-    if (process.platform !== 'linux' || readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed, notLinux)(
+    'lists container processes with their start times',
+    async () => {
+      const executor = {
+        label: 'local sh',
+        run: ([command, ...args]) =>
+          new Promise((resolve) => {
+            execFile(command, args, (error, stdout, stderr) =>
+              resolve({ code: error ? (error.code ?? 1) : 0, stdout, stderr })
+            );
+          }),
+      };
+      const processes = await new ShellEnv(executor).processes();
+      const own = processes.find((entry) => entry.pid === process.pid);
+      const stat = parseProcStat(readFileSync('/proc/self/stat', 'utf8'));
+      expect(own.startTime).toBe(stat.startTime);
+      expect(own.aliases).toContain(basename(process.execPath));
     }
-    const executor = {
-      label: 'local sh',
-      run: ([command, ...args]) =>
-        new Promise((resolve) => {
-          execFile(command, args, (error, stdout, stderr) =>
-            resolve({ code: error ? (error.code ?? 1) : 0, stdout, stderr })
-          );
-        }),
-    };
-    const processes = await new ShellEnv(executor).processes();
-    const own = processes.find((entry) => entry.pid === process.pid);
-    const stat = parseProcStat(readFileSync('/proc/self/stat', 'utf8'));
-    expect(own.startTime).toBe(stat.startTime);
-    expect(own.aliases).toContain(basename(process.execPath));
-  });
+  );
 });
 
 describe('health watch', () => {
@@ -196,13 +196,13 @@ async function cleanFixture(stopAgent) {
 }
 
 describe('clean with a health check', () => {
-  const unsupported = () =>
-    readOnlyRuntime() || process.platform !== 'linux' || !SLEEP;
+  const noSleep = SLEEP ? null : 'no sleep binary to stand in for a process';
 
-  it('records the watched processes that survived', async () => {
-    if (unsupported()) {
-      return;
-    }
+  itUnless(
+    sandboxed,
+    notLinux,
+    noSleep
+  )('records the watched processes that survived', async () => {
     const { audit, agent, remaining } = await cleanFixture(false);
     expect(remaining).toBe(0);
     expect(audit.health.length).toBe(1);
@@ -213,10 +213,11 @@ describe('clean with a health check', () => {
     expect(formatAudit(audit)).toContain('1 watched processes still running');
   });
 
-  it('stops cleaning the environment when an agent disappears', async () => {
-    if (unsupported()) {
-      return;
-    }
+  itUnless(
+    sandboxed,
+    notLinux,
+    noSleep
+  )('stops cleaning the environment when an agent disappears', async () => {
     const { audit, agent, remaining } = await cleanFixture(true);
     expect(audit.entries.map((entry) => entry.status)).toEqual([
       'removed',

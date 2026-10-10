@@ -25,6 +25,7 @@ import {
   GITHUB_RELEASE_BODY_MAX_BYTES,
   parseArgs,
 } from '../scripts/create-github-release.mjs';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const scriptPath = fileURLToPath(
   new URL('../scripts/create-github-release.mjs', import.meta.url)
@@ -39,26 +40,21 @@ const isNodeRuntime =
   !isDenoRuntime;
 const isWindowsNodeRuntime = isNodeRuntime && process.platform === 'win32';
 const textEncoder = new globalThis.TextEncoder();
+// The gh fixture is a separate process started from a shell, so Deno's
+// node-compat argument translation does not apply: `deno file.cjs` would run
+// without permissions and fail on the first process.env read.
+const runFixtureScript = isDenoRuntime ? '" run -A "' : '" "';
 // Node on Windows does not execute the .cmd gh fixture through spawnSync.
 // The injected-spawn tests below cover release result handling on that runner.
-const canRunCliFixtures =
-  !isDenoRuntime &&
-  !isWindowsNodeRuntime &&
-  typeof process !== 'undefined' &&
-  process.execPath;
+const windowsNodeCmd =
+  isWindowsNodeRuntime && 'Node on Windows does not spawn the .cmd gh fixture';
 
 function prependPath(env, binPath) {
-  const nextEnv = { ...env };
-  const currentPath =
-    Object.entries(nextEnv).find(
-      ([key]) => key.toLowerCase() === 'path'
-    )?.[1] ?? '';
-
-  for (const key of Object.keys(nextEnv)) {
-    if (key.toLowerCase() === 'path') {
-      delete nextEnv[key];
-    }
-  }
+  const isPath = ([key]) => key.toLowerCase() === 'path';
+  const currentPath = Object.entries(env).find(isPath)?.[1] ?? '';
+  const nextEnv = Object.fromEntries(
+    Object.entries(env).filter((entry) => !isPath(entry))
+  );
 
   return {
     ...nextEnv,
@@ -97,7 +93,7 @@ function createFixture({ jsRoot = '.' } = {}) {
 `
   );
 
-  const fakeGhJs = path.join(binPath, 'fake-gh.js');
+  const fakeGhJs = path.join(binPath, 'fake-gh.cjs');
   writeFileSync(
     fakeGhJs,
     `#!/usr/bin/env node
@@ -136,14 +132,14 @@ process.exit(1);
   writeFileSync(
     fakeGhPath,
     `#!/bin/sh
-exec "${process.execPath}" "$(dirname "$0")/fake-gh.js" "$@"
+exec "${process.execPath}${runFixtureScript}$(dirname "$0")/fake-gh.cjs" "$@"
 `
   );
   chmodSync(fakeGhPath, 0o755);
 
   writeFileSync(
     path.join(binPath, 'gh.cmd'),
-    `@echo off\r\n"${process.execPath}" "%~dp0fake-gh.js" %*\r\n`
+    `@echo off\r\n"${process.execPath}${runFixtureScript}%~dp0fake-gh.cjs" %*\r\n`
   );
 
   return root;
@@ -385,8 +381,9 @@ describe('create-github-release.mjs', () => {
     ).toEqual({ alreadyExists: true });
   });
 
-  if (canRunCliFixtures) {
-    it('passes release payload to gh api and reports success only on exit code 0', () => {
+  itUnless(sandboxed, windowsNodeCmd)(
+    'passes release payload to gh api and reports success only on exit code 0',
+    () => {
       const root = createFixture();
 
       try {
@@ -414,9 +411,12 @@ describe('create-github-release.mjs', () => {
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
-    });
+    }
+  );
 
-    it('auto-detects multi-language release tags and titles', () => {
+  itUnless(sandboxed, windowsNodeCmd)(
+    'auto-detects multi-language release tags and titles',
+    () => {
       const root = createFixture({ jsRoot: 'js' });
 
       try {
@@ -434,9 +434,12 @@ describe('create-github-release.mjs', () => {
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
-    });
+    }
+  );
 
-    it('fails when gh api exits non-zero with an unexpected error', () => {
+  itUnless(sandboxed, windowsNodeCmd)(
+    'fails when gh api exits non-zero with an unexpected error',
+    () => {
       const root = createFixture();
 
       try {
@@ -450,9 +453,12 @@ describe('create-github-release.mjs', () => {
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
-    });
+    }
+  );
 
-    it('treats already_exists as an explicit idempotent skip', () => {
+  itUnless(sandboxed, windowsNodeCmd)(
+    'treats already_exists as an explicit idempotent skip',
+    () => {
       const root = createFixture();
 
       try {
@@ -466,6 +472,6 @@ describe('create-github-release.mjs', () => {
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
-    });
-  }
+    }
+  );
 });

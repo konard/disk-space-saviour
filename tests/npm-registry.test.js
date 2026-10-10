@@ -109,4 +109,13 @@ describe('release npm registry usage', () => {
     expect(publishScript).not.toContain('npm view');
     expect(releaseCheckScript).not.toContain('npm view');
   });
+
+  it('prints the changeset publish output once', () => {
+    // command-stream's .run({ capture: true }) already mirrors the output
+    // live (experiments/command-stream-capture-mirrors.mjs); printing the
+    // captured copy too made each release log look like two publishes.
+    const publishScript = readFileSync('scripts/publish-to-npm.mjs', 'utf8');
+
+    expect(publishScript).not.toContain("console.log('Changeset output:'");
+  });
 });

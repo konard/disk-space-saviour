@@ -1,0 +1,59 @@
+tests/changeset-config.test.js:43	early-return	if (typeof Deno !== 'undefined') {
+tests/check-changesets.test.js:59	wrapped	if (canRunCliFixtures) {
+tests/check-file-line-limits.test.js:73	wrapped	if (canRunBashFixtures) {
+tests/check-file-line-limits.test.js:221	wrapped	if (canRunBashFixtures) {
+tests/check-release-needed.test.js:82	early-return	if (typeof Deno !== 'undefined') {
+tests/check-staged-formatting.test.js:24	silent-pass	if (typeof globalThis.Deno !== 'undefined') {
+tests/check-web-archive.test.js:125	early-return	if (!canRunCliFixtures) {
+tests/commit-message.test.js:12	early-return	if (typeof Deno !== 'undefined') {
+tests/create-github-release.test.js:388	wrapped	if (canRunCliFixtures) {
+tests/detect-code-changes.test.js:121	wrapped	if (canRunCliFixtures) {
+tests/detect-code-changes.test.js:375	wrapped	if (canRunCliFixtures) {
+tests/install-git-hooks.test.js:96	early-return	if (!canRunShellFixtures) {
+tests/merge-changesets.test.js:55	wrapped	if (canRunCliFixtures) {
+tests/no-changelog-comments.test.js:58	wrapped	if (isDenoRuntime) {
+tests/package-manager.test.js:47	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:60	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:79	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:99	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:119	silent-pass	if (!canRunGuardFixtures) {
+tests/package-manager.test.js:141	silent-pass	if (!canRunGuardFixtures) {
+tests/package-metadata.test.js:51	silent-pass	if (typeof Deno !== 'undefined') {
+tests/pipeline-status.test.js:127	wrapped	if (canRunBash) {
+tests/pipeline-status.test.js:239	wrapped	if (canRunBash) {
+tests/pipeline-status.test.js:319	wrapped	if (canRunBash) {
+tests/pr-guards.test.js:65	early-return	if (!canSpawn) {
+tests/pr-guards.test.js:148	early-return	if (!canSpawn) {
+tests/pr-guards.test.js:290	early-return	if (!canSpawn) {
+tests/pr-guards.test.js:363	early-return	if (!canSpawn) {
+tests/push-main-with-rebase-retry.test.js:164	wrapped	if (canRunGitFixtures) {
+tests/recheck-broken-links.test.js:270	early-return	if (typeof Deno !== 'undefined') {
+tests/release-metadata.test.js:20	silent-pass	if (typeof globalThis.Deno !== 'undefined') {
+tests/release-preflight.test.js:162	early-return	if (typeof Deno !== 'undefined') {
+tests/release-preflight.test.js:310	early-return	if (typeof Deno !== 'undefined') {
+tests/required-docs.test.js:55	silent-pass	if (!canRunBash) {
+tests/required-docs.test.js:81	silent-pass	if (!canRunBash) {
+tests/required-docs.test.js:94	wrapped	if (canRunBash) {
+tests/run-with-budget-warning.test.js:39	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:57	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:68	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:84	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:99	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:126	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:159	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:194	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:214	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:257	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:285	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:299	silent-pass	if (!canRunShellFixtures) {
+tests/run-with-budget-warning.test.js:316	silent-pass	if (!canRunShellFixtures) {
+tests/setup-buildx-resilient.test.js:123	swapped	const describeSubprocess = CAN_RUN_SUBPROCESS ? describe : () => {};
+tests/simulate-fresh-merge.test.js:93	early-return	if (!canRunShellFixtures) {
+tests/status-gate-coverage.test.js:34	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:46	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:69	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:99	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:133	silent-pass	if (!canRunCheckerFixtures) {
+tests/status-gate-coverage.test.js:187	silent-pass	if (!canRunCheckerFixtures) {
+tests/use-module.test.js:389	silent-pass	if (!(await canListen())) {
+58 conditional registration(s)

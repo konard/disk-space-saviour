@@ -1,0 +1,66 @@
+# E9: Windows Deno 'versions and formats the real package with Deno absent from PATH'
+# Extracted from the Test (deno on windows-2025) job logs; ANSI colours removed.
+
+## run 38005973122 at 4bad451 (20s spawnSync timeout)
+2026-10-09T23:48:10.4587253Z error: AssertionError: Error: spawnSync node ETIMEDOUT
+2026-10-09T23:48:10.4601174Z FAILED | 1144 passed | 1 failed | 70 ignored (1m27s)
+
+## run 38006829682 at 24bc442 (timing added; second line is a warm re-run of the same file)
+2026-10-09T23:58:09.6009041Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... FAILED (23s)
+2026-10-09T23:58:52.6147657Z error: AssertionError: node_modules/@changesets/cli/bin.js took 20247ms: Error: spawnSync node ETIMEDOUT
+2026-10-09T23:58:52.6156970Z FAILED | 1144 passed | 1 failed | 70 ignored (1m6s)
+2026-10-09T23:58:54.6428945Z node_modules/@changesets/cli/bin.js took 1371ms
+2026-10-09T23:58:54.8416136Z node_modules/prettier/bin/prettier.cjs took 198ms
+2026-10-09T23:58:54.8502125Z versions and formats the real package with Deno absent from PATH ... ok (1s)
+2026-10-09T23:58:54.8549039Z ok | 1 passed | 0 failed | 3 filtered out (1s)
+
+## run 38007233544 at cb429df (timeout kill leaves files locked: EBUSY)
+2026-10-10T00:03:23.1752590Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... FAILED (20s)
+2026-10-10T00:04:21.2289855Z error: Error: EBUSY: resource busy or locked, rm
+2026-10-10T00:04:21.2299118Z FAILED | 1144 passed | 1 failed | 70 ignored (1m19s)
+2026-10-10T00:04:23.7724974Z node_modules/@changesets/cli/bin.js took 1788ms
+2026-10-10T00:04:24.0028153Z node_modules/prettier/bin/prettier.cjs took 230ms
+2026-10-10T00:04:24.0057846Z versions and formats the real package with Deno absent from PATH ... ok (2s)
+2026-10-10T00:04:24.0101872Z ok | 1 passed | 0 failed | 3 filtered out (2s)
+
+## run 38007906410 at 425b44b (runToExit: the fixture passes in 19s; run-to-exit proof test failed)
+2026-10-10T00:11:59.4783000Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... ok (19s)
+2026-10-10T00:12:27.0748086Z error: Error: Expected 80 to be greater than or equal to 3000
+2026-10-10T00:12:27.0752266Z FAILED | 1151 passed | 1 failed | 70 ignored (47s)
+
+## run 38008340404 at 0eeb674 (first run 21s, traced warm re-runs 2s)
+2026-10-10T00:18:14.1705439Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... ok (21s)
+2026-10-10T00:19:14.4682532Z ok | 1152 passed | 0 failed | 70 ignored (1m21s)
+2026-10-10T00:20:26.3144570Z node_modules/@changesets/cli/bin.js took 2192ms (exit after 2192ms): started 65ms after spawn, lived 2105ms
+2026-10-10T00:20:26.3147514Z node_modules/prettier/bin/prettier.cjs took 484ms (exit after 484ms): started 70ms after spawn, lived 386ms
+2026-10-10T00:20:26.3149875Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... ok (2s)
+2026-10-10T00:21:36.7978317Z node_modules/@changesets/cli/bin.js took 2155ms (exit after 2154ms): started 60ms after spawn, lived 2075ms
+2026-10-10T00:21:36.7979114Z node_modules/prettier/bin/prettier.cjs took 444ms (exit after 444ms): started 71ms after spawn, lived 356ms
+2026-10-10T00:21:36.7980843Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... ok (2s)
+
+## run 38008810657 at 6781903 (cold trace step: 20084ms, timed out)
+2026-10-10T00:25:28.3871629Z node_modules/@changesets/cli/bin.js took 20084ms (exit after 20083ms)
+2026-10-10T00:25:28.3876398Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... FAILED (20s)
+2026-10-10T00:25:28.3891238Z FAILED | 1151 passed | 1 failed | 70 ignored (1m16s)
+2026-10-10T00:25:32.6861617Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... ok (3s)
+2026-10-10T00:26:41.7294418Z ok | 1152 passed | 0 failed | 70 ignored (1m12s)
+
+## run 38009230580 at 9b90997 (cold lifetime trace: 17107ms)
+2026-10-10T00:31:21.1471455Z node_modules/@changesets/cli/bin.js took 17107ms (exit after 17106ms) since 1791592207062
+2026-10-10T00:31:21.1473451Z [lifetime 7572 D:\a\disk-space-saviour\disk-space-saviour\node_modules\@changesets\cli\bin.js version] +4352ms spawned 9556 git ["log","--diff-filter=AC","--follow","--max-count=1","--pretty=format:%H:%p",".changeset/release-check.md"]
+2026-10-10T00:31:21.1476743Z [lifetime 7572 D:\a\disk-space-saviour\disk-space-saviour\node_modules\@changesets\cli\bin.js version] +4379ms child 9556 exited 128
+2026-10-10T00:31:21.1481229Z [lifetime 7572 D:\a\disk-space-saviour\disk-space-saviour\node_modules\@changesets\cli\bin.js version] +4409ms spawned 2428 cmd.exe ["/d","/s","/c","\"npx ^\"prettier^\" ^\"--write^\" ^\"--no-error-on-unmatched-pattern^\" ^\"C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\changeset-version-eh5B8n\\CHANGELOG.md^\"\""]
+2026-10-10T00:31:21.1483262Z [lifetime 6708 C:\Program Files\nodejs\node_modules\npm\bin\npm-prefix.js] +357ms exit 0 started=1791592212304 lived=357ms
+2026-10-10T00:31:21.1484700Z [lifetime 8144 C:\Program Files\nodejs\node_modules\npm\bin\npx-cli.js prettier] +4463ms spawned 1916 C:\Windows\system32\cmd.exe ["/d","/s","/c","prettier --write --no-error-on-unmatched-pattern C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\changeset-version-eh5B8n\\CHANGELOG.md"]
+2026-10-10T00:31:21.1486313Z [lifetime 1936 C:\Users\RUNNER~1\AppData\Local\Temp\changeset-version-eh5B8n\node_modules\.deno\prettier@3.9.9\node_modules\prettier\bin\prettier.cjs --write] +476ms exit 0 started=1791592217228 lived=476ms
+2026-10-10T00:31:21.1487576Z [lifetime 8144 C:\Program Files\nodejs\node_modules\npm\bin\npx-cli.js prettier] +5037ms child 1916 exited 0
+2026-10-10T00:31:21.1488401Z [lifetime 8144 C:\Program Files\nodejs\node_modules\npm\bin\npx-cli.js prettier] +5042ms exit 0 started=1791592212716 lived=5042ms
+2026-10-10T00:31:21.1489666Z [lifetime 7572 D:\a\disk-space-saviour\disk-space-saviour\node_modules\@changesets\cli\bin.js version] +12746ms still running: PipeWrap, PipeWrap, PipeWrap, PipeWrap, PipeWrap, PipeWrap, ProcessWrap
+2026-10-10T00:31:21.1490809Z [lifetime 7572 D:\a\disk-space-saviour\disk-space-saviour\node_modules\@changesets\cli\bin.js version] +15477ms child 2428 exited 0
+2026-10-10T00:31:21.1491804Z [lifetime 7572 D:\a\disk-space-saviour\disk-space-saviour\node_modules\@changesets\cli\bin.js version] +15480ms exit 0 started=1791592207821 lived=15480ms
+2026-10-10T00:31:21.1492615Z node_modules/prettier/bin/prettier.cjs took 536ms (exit after 536ms) since 1791592224172
+2026-10-10T00:31:21.1493412Z [lifetime 8804 D:\a\disk-space-saviour\disk-space-saviour\node_modules\prettier\bin\prettier.cjs --check] +420ms exit 0 started=1791592224225 lived=420ms
+2026-10-10T00:31:21.1495994Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... ok (17s)
+2026-10-10T00:31:21.1504697Z ok | 1152 passed | 0 failed | 70 ignored (1m14s)
+2026-10-10T00:31:25.3825119Z ./tests/changeset-config.test.js => versions and formats the real package with Deno absent from PATH ... ok (2s)
+2026-10-10T00:32:33.8444445Z ok | 1152 passed | 0 failed | 70 ignored (1m11s)

@@ -5,11 +5,13 @@
 
 import { execFileSync } from 'node:child_process';
 import {
+  chmodSync,
   mkdirSync,
   mkdtempSync,
   realpathSync,
   readdirSync,
   rmSync,
+  statSync,
   utimesSync,
   writeFileSync,
 } from 'node:fs';
@@ -18,6 +20,7 @@ import { dirname, join } from 'node:path';
 
 import { LocalEnv } from '../../src/env/local.js';
 import { afterAll } from 'test-anywhere';
+import { missingDenoPermissions } from './skip.js';
 
 const temporaryRoots = new Set();
 afterAll(() => {
@@ -29,10 +32,12 @@ afterAll(() => {
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Deno CI grants read access only; tests that write files or start
- * processes return early there.
+ * Whether this is Deno without the permissions the fixtures need (they write
+ * files, start processes and read /proc). CI runs `deno test -A`; a local
+ * `deno test --allow-read` reports the fixture tests as skipped through
+ * tests/helpers/skip.js.
  */
-export const readOnlyRuntime = () => typeof Deno !== 'undefined';
+export const readOnlyRuntime = () => missingDenoPermissions().length > 0;
 
 export function tempRoot(prefix = 'dss-fixture-') {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -70,9 +75,32 @@ export function age(target, ageMs) {
     for (const entry of entries) {
       visit(join(current, entry.name));
     }
-    utimesSync(current, when, when);
+    setTimes(current, when);
   };
   visit(target);
+}
+
+/**
+ * Deno on Windows opens a file for writing to set its times, which fails on
+ * a read-only file such as a Git object; Node sets them on a read-only file.
+ * Granting write access for the call and restoring the mode afterwards
+ * leaves the times as set. https://github.com/denoland/deno/issues/36997
+ */
+function setTimes(file, when) {
+  try {
+    utimesSync(file, when, when);
+  } catch (error) {
+    const { mode } = statSync(file);
+    if (mode & 0o200) {
+      throw error;
+    }
+    chmodSync(file, mode | 0o200);
+    try {
+      utimesSync(file, when, when);
+    } finally {
+      chmodSync(file, mode);
+    }
+  }
 }
 
 const concrete = (name) => name.replaceAll('*', 'app');
@@ -176,8 +204,8 @@ export function scanInput(env, roots, overrides = {}) {
 
 /**
  * Fixture commits are dated 40 days back so projects count as inactive.
- * Built on first use: reading `process.env` needs a permission Deno CI
- * does not grant.
+ * Built on first use: reading `process.env` needs a permission that a
+ * `deno test --allow-read` run does not grant.
  */
 function gitEnv() {
   const date = new Date(Date.now() - 40 * DAY_MS).toISOString();

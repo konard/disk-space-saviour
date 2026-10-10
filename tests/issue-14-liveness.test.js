@@ -5,7 +5,7 @@ import { LivenessProbe, matchingName } from '../src/liveness.js';
 import { ShellEnv } from '../src/env/shell.js';
 import { LocalEnv } from '../src/env/local.js';
 import { containerExecutor } from '../src/exec.js';
-import { readOnlyRuntime } from './helpers/fixtures.js';
+import { itUnless, sandboxed } from './helpers/skip.js';
 
 const cache = (rule, target) => ({
   rule,
@@ -130,73 +130,73 @@ describe('issue 14 process matching', () => {
 });
 
 describe('issue 14 Docker process inspection', () => {
-  it('skips zombie metadata while retaining command paths of live processes', async () => {
-    if (readOnlyRuntime()) {
-      return;
-    }
-    const zombie = '/proc/2147483600';
-    const live = '/proc/2147483601';
-    const original = {
-      readdir: fsp.readdir,
-      readFile: fsp.readFile,
-      readlink: fsp.readlink,
-    };
-    const reads = [];
-    fsp.readdir = async (target, ...args) =>
-      target === '/proc'
-        ? ['2147483600', '2147483601']
-        : original.readdir(target, ...args);
-    fsp.readFile = async (target, ...args) => {
-      if (target.startsWith(zombie) || target.startsWith(live)) {
-        reads.push(target);
-        if (target.endsWith('/stat')) {
-          const state = target.startsWith(zombie) ? 'Z' : 'S';
-          return `1 (agent) ${state} ${Array(18).fill('0').join(' ')} 123`;
+  itUnless(sandboxed)(
+    'skips zombie metadata while retaining command paths of live processes',
+    async () => {
+      const zombie = '/proc/2147483600';
+      const live = '/proc/2147483601';
+      const original = {
+        readdir: fsp.readdir,
+        readFile: fsp.readFile,
+        readlink: fsp.readlink,
+      };
+      const reads = [];
+      fsp.readdir = async (target, ...args) =>
+        target === '/proc'
+          ? ['2147483600', '2147483601']
+          : original.readdir(target, ...args);
+      fsp.readFile = async (target, ...args) => {
+        if (target.startsWith(zombie) || target.startsWith(live)) {
+          reads.push(target);
+          if (target.endsWith('/stat')) {
+            const state = target.startsWith(zombie) ? 'Z' : 'S';
+            return `1 (agent) ${state} ${Array(18).fill('0').join(' ')} 123`;
+          }
+          return target.endsWith('/comm')
+            ? 'node\n'
+            : '/usr/bin/node\0/cache/active/server.js\0';
         }
-        return target.endsWith('/comm')
-          ? 'node\n'
-          : '/usr/bin/node\0/cache/active/server.js\0';
+        return original.readFile(target, ...args);
+      };
+      fsp.readlink = async (target, ...args) => {
+        if (target.startsWith(zombie) || target.startsWith(live)) {
+          reads.push(target);
+          return target.endsWith('/cwd') ? '/cache/active' : '/usr/bin/node';
+        }
+        return original.readlink(target, ...args);
+      };
+      try {
+        const processes = await new LocalEnv({ platform: 'linux' }).processes();
+        expect(processes.length).toBe(1);
+        expect(processes[0].argv).toEqual([
+          '/usr/bin/node',
+          '/cache/active/server.js',
+        ]);
+        expect(reads.filter((target) => target.startsWith(zombie))).toEqual([
+          `${zombie}/stat`,
+        ]);
+      } finally {
+        Object.assign(fsp, original);
       }
-      return original.readFile(target, ...args);
-    };
-    fsp.readlink = async (target, ...args) => {
-      if (target.startsWith(zombie) || target.startsWith(live)) {
-        reads.push(target);
-        return target.endsWith('/cwd') ? '/cache/active' : '/usr/bin/node';
-      }
-      return original.readlink(target, ...args);
-    };
-    try {
-      const processes = await new LocalEnv({ platform: 'linux' }).processes();
-      expect(processes.length).toBe(1);
-      expect(processes[0].argv).toEqual([
-        '/usr/bin/node',
-        '/cache/active/server.js',
-      ]);
-      expect(reads.filter((target) => target.startsWith(zombie))).toEqual([
-        `${zombie}/stat`,
-      ]);
-    } finally {
-      Object.assign(fsp, original);
     }
-  });
+  );
 
-  it('uses the same read-only fallback when dss runs inside the container', async () => {
-    if (readOnlyRuntime()) {
-      return;
+  itUnless(sandboxed)(
+    'uses the same read-only fallback when dss runs inside the container',
+    async () => {
+      const env = new LocalEnv();
+      env.rawOpenPaths = async () => {
+        throw new Error('EACCES: pid 7 (dockerd)');
+      };
+      env.processInspector = {
+        probeExecutor: {},
+        openPaths: async () => new Set(['/cache/open']),
+        processes: async () => [{ pid: 7, name: 'dockerd' }],
+      };
+      expect([...(await env.openPaths())]).toEqual(['/cache/open']);
+      expect(await env.processes()).toEqual([{ pid: 7, name: 'dockerd' }]);
     }
-    const env = new LocalEnv();
-    env.rawOpenPaths = async () => {
-      throw new Error('EACCES: pid 7 (dockerd)');
-    };
-    env.processInspector = {
-      probeExecutor: {},
-      openPaths: async () => new Set(['/cache/open']),
-      processes: async () => [{ pid: 7, name: 'dockerd' }],
-    };
-    expect([...(await env.openPaths())]).toEqual(['/cache/open']);
-    expect(await env.processes()).toEqual([{ pid: 7, name: 'dockerd' }]);
-  });
+  );
   it('retries an incomplete probe as a privileged root read-only exec', async () => {
     const calls = [];
     const parent = {

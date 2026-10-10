@@ -1,0 +1,273 @@
+﻿2026-10-09T22:36:14.5760493Z Current runner version: '2.337.0'
+2026-10-09T22:36:14.5780548Z ##[group]Runner Image Provisioner
+2026-10-09T22:36:14.5781264Z Hosted Compute Agent
+2026-10-09T22:36:14.5781874Z Version: 20261002.596
+2026-10-09T22:36:14.5782384Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-09T22:36:14.5783003Z Build Date: 2026-10-02T22:28:27Z
+2026-10-09T22:36:14.5783576Z Worker ID: {c56aa2a3-4e58-4b2b-9ddc-67b7c7a338b2}
+2026-10-09T22:36:14.5784146Z Region: westus3
+2026-10-09T22:36:14.5784660Z Cloud: Azure
+2026-10-09T22:36:14.5785093Z ##[endgroup]
+2026-10-09T22:36:14.5786084Z ##[group]Operating System
+2026-10-09T22:36:14.5786659Z Ubuntu
+2026-10-09T22:36:14.5787122Z 24.04.5
+2026-10-09T22:36:14.5787608Z LTS
+2026-10-09T22:36:14.5788257Z ##[endgroup]
+2026-10-09T22:36:14.5788700Z ##[group]Runner Image
+2026-10-09T22:36:14.5789309Z Image: ubuntu-24.04
+2026-10-09T22:36:14.5789772Z Version: 20261004.327.1
+2026-10-09T22:36:14.5790852Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-09T22:36:14.5792083Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-09T22:36:14.5792918Z ##[endgroup]
+2026-10-09T22:36:14.5793814Z ##[group]GITHUB_TOKEN Permissions
+2026-10-09T22:36:14.5795402Z Contents: read
+2026-10-09T22:36:14.5795881Z Metadata: read
+2026-10-09T22:36:14.5796381Z ##[endgroup]
+2026-10-09T22:36:14.5798590Z Secret source: Actions
+2026-10-09T22:36:14.5799465Z Cache mode: write
+2026-10-09T22:36:14.5800037Z Prepare workflow directory
+2026-10-09T22:36:14.6113666Z Prepare all required actions
+2026-10-09T22:36:14.6152474Z Getting action download info
+2026-10-09T22:36:14.9016988Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+2026-10-09T22:36:15.0231010Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+2026-10-09T22:36:15.2122465Z Complete job name: Lint and Format Check
+2026-10-09T22:36:15.2742218Z ##[group]Run actions/checkout@v6
+2026-10-09T22:36:15.2742896Z with:
+2026-10-09T22:36:15.2743232Z   fetch-depth: 0
+2026-10-09T22:36:15.2743598Z   persist-credentials: false
+2026-10-09T22:36:15.2744048Z   repository: link-foundation/disk-space-saviour
+2026-10-09T22:36:15.2747077Z   token: ***
+2026-10-09T22:36:15.2747452Z   ssh-strict: true
+2026-10-09T22:36:15.2747936Z   ssh-user: git
+2026-10-09T22:36:15.2748288Z   clean: true
+2026-10-09T22:36:15.2748643Z   sparse-checkout-cone-mode: true
+2026-10-09T22:36:15.2749052Z   fetch-tags: false
+2026-10-09T22:36:15.2749407Z   show-progress: true
+2026-10-09T22:36:15.2749757Z   lfs: false
+2026-10-09T22:36:15.2750084Z   submodules: false
+2026-10-09T22:36:15.2750438Z   set-safe-directory: true
+2026-10-09T22:36:15.2750825Z   allow-unsafe-pr-checkout: false
+2026-10-09T22:36:15.2751421Z env:
+2026-10-09T22:36:15.2751742Z   GIT_CONFIG_COUNT: 1
+2026-10-09T22:36:15.2752122Z   GIT_CONFIG_KEY_0: init.defaultBranch
+2026-10-09T22:36:15.2752596Z   GIT_CONFIG_VALUE_0: main
+2026-10-09T22:36:15.2752963Z ##[endgroup]
+2026-10-09T22:36:15.3555506Z Syncing repository: link-foundation/disk-space-saviour
+2026-10-09T22:36:15.3557041Z ##[group]Getting Git version info
+2026-10-09T22:36:15.3557669Z Working directory is '/home/runner/work/disk-space-saviour/disk-space-saviour'
+2026-10-09T22:36:15.3558852Z [command]/usr/bin/git version
+2026-10-09T22:36:15.3603242Z git version 2.55.0
+2026-10-09T22:36:15.3621006Z ##[endgroup]
+2026-10-09T22:36:15.3652486Z Temporarily overriding HOME='/home/runner/work/_temp/68e94ada-f504-4335-85cc-91ea180f18b3' before making global git config changes
+2026-10-09T22:36:15.3654375Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-09T22:36:15.3658387Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/disk-space-saviour/disk-space-saviour
+2026-10-09T22:36:15.3702630Z Deleting the contents of '/home/runner/work/disk-space-saviour/disk-space-saviour'
+2026-10-09T22:36:15.3706051Z ##[group]Determining repository object format
+2026-10-09T22:36:15.3707981Z ##[endgroup]
+2026-10-09T22:36:15.3708854Z ##[group]Initializing the repository
+2026-10-09T22:36:15.3711816Z [command]/usr/bin/git init /home/runner/work/disk-space-saviour/disk-space-saviour
+2026-10-09T22:36:15.3952306Z Initialized empty Git repository in /home/runner/work/disk-space-saviour/disk-space-saviour/.git/
+2026-10-09T22:36:15.3962286Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/disk-space-saviour
+2026-10-09T22:36:15.4009587Z ##[endgroup]
+2026-10-09T22:36:15.4010197Z ##[group]Disabling automatic garbage collection
+2026-10-09T22:36:15.4013558Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-09T22:36:15.4045958Z ##[endgroup]
+2026-10-09T22:36:15.4046891Z ##[group]Setting up auth
+2026-10-09T22:36:15.4047496Z Removing SSH command configuration
+2026-10-09T22:36:15.4055073Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-09T22:36:15.4090058Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-09T22:36:15.4380407Z Removing HTTP extra header
+2026-10-09T22:36:15.4389964Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-09T22:36:15.4423961Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-09T22:36:15.4641780Z Removing includeIf entries pointing to credentials config files
+2026-10-09T22:36:15.4642755Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-09T22:36:15.4674351Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-09T22:36:15.4867107Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-09T22:36:15.4900466Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git.path /home/runner/work/_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:15.4932595Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:15.4964420Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:15.4992630Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:15.5017954Z ##[endgroup]
+2026-10-09T22:36:15.5018611Z ##[group]Fetching the repository
+2026-10-09T22:36:15.5024850Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +5a3ef04eb500e625dc89617e02befe0a498882f6:refs/remotes/pull/32/merge
+2026-10-09T22:36:17.1392804Z From https://github.com/link-foundation/disk-space-saviour
+2026-10-09T22:36:17.1394862Z  * [new branch]      browser-cache-rules                      -> origin/browser-cache-rules
+2026-10-09T22:36:17.1396922Z  * [new branch]      deno-env-safe-metadata-test              -> origin/deno-env-safe-metadata-test
+2026-10-09T22:36:17.1399400Z  * [new branch]      fixable-audit-closest-and-publish-verify -> origin/fixable-audit-closest-and-publish-verify
+2026-10-09T22:36:17.1401604Z  * [new branch]      issue-1-be42ec7eaaef                     -> origin/issue-1-be42ec7eaaef
+2026-10-09T22:36:17.1403756Z  * [new branch]      issue-14-a8f1fd764c58                    -> origin/issue-14-a8f1fd764c58
+2026-10-09T22:36:17.1406235Z  * [new branch]      issue-27-811cbcce0473                    -> origin/issue-27-811cbcce0473
+2026-10-09T22:36:17.1408398Z  * [new branch]      issue-29-607417a937bb                    -> origin/issue-29-607417a937bb
+2026-10-09T22:36:17.1410407Z  * [new branch]      issue-3-91e570081180                     -> origin/issue-3-91e570081180
+2026-10-09T22:36:17.1412497Z  * [new branch]      issue-31-90cff2ab8274                    -> origin/issue-31-90cff2ab8274
+2026-10-09T22:36:17.1414582Z  * [new branch]      issue-5-7befc2cd1cfb                     -> origin/issue-5-7befc2cd1cfb
+2026-10-09T22:36:17.1416051Z  * [new branch]      main                                     -> origin/main
+2026-10-09T22:36:17.1417930Z  * [new branch]      more-macos-app-and-browser-caches        -> origin/more-macos-app-and-browser-caches
+2026-10-09T22:36:17.1420270Z  * [new branch]      npm-trusted-publishing-only              -> origin/npm-trusted-publishing-only
+2026-10-09T22:36:17.1423145Z  * [new branch]      readme-new-cache-coverage                -> origin/readme-new-cache-coverage
+2026-10-09T22:36:17.1425463Z  * [new branch]      release-skip-deleted-changesets          -> origin/release-skip-deleted-changesets
+2026-10-09T22:36:17.1430151Z  * [new branch]      repository-moved-to-link-foundation      -> origin/repository-moved-to-link-foundation
+2026-10-09T22:36:17.1432083Z  * [new tag]         v0.12.0                                  -> v0.12.0
+2026-10-09T22:36:17.1433350Z  * [new tag]         v0.13.1                                  -> v0.13.1
+2026-10-09T22:36:17.1434594Z  * [new tag]         v0.15.1                                  -> v0.15.1
+2026-10-09T22:36:17.1435991Z  * [new ref]         5a3ef04eb500e625dc89617e02befe0a498882f6 -> pull/32/merge
+2026-10-09T22:36:17.1439595Z ##[endgroup]
+2026-10-09T22:36:17.1441106Z ##[group]Determining the checkout info
+2026-10-09T22:36:17.1442897Z ##[endgroup]
+2026-10-09T22:36:17.1444117Z [command]/usr/bin/git sparse-checkout disable
+2026-10-09T22:36:17.1458203Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-09T22:36:17.1488249Z ##[group]Checking out the ref
+2026-10-09T22:36:17.1490180Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/32/merge
+2026-10-09T22:36:17.2126185Z Note: switching to 'refs/remotes/pull/32/merge'.
+2026-10-09T22:36:17.2127552Z 
+2026-10-09T22:36:17.2128482Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-09T22:36:17.2130397Z changes and commit them, and you can discard any commits you make in this
+2026-10-09T22:36:17.2132172Z state without impacting any branches by switching back to a branch.
+2026-10-09T22:36:17.2133658Z 
+2026-10-09T22:36:17.2134613Z If you want to create a new branch to retain commits you create, you may
+2026-10-09T22:36:17.2136759Z do so (now or later) by using -c with the switch command. Example:
+2026-10-09T22:36:17.2138143Z 
+2026-10-09T22:36:17.2138855Z   git switch -c <new-branch-name>
+2026-10-09T22:36:17.2139800Z 
+2026-10-09T22:36:17.2140397Z Or undo this operation with:
+2026-10-09T22:36:17.2141242Z 
+2026-10-09T22:36:17.2141748Z   git switch -
+2026-10-09T22:36:17.2142410Z 
+2026-10-09T22:36:17.2143478Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-09T22:36:17.2144691Z 
+2026-10-09T22:36:17.2145913Z HEAD is now at 5a3ef04 Merge 6560ed614733f7ce4b48c5cb43c2096b8ab4342d into 12160974676da8c6bd9840c3cb8c5263d24b65ed
+2026-10-09T22:36:17.2150100Z ##[endgroup]
+2026-10-09T22:36:17.2182199Z [command]/usr/bin/git log -1 --format=%H
+2026-10-09T22:36:17.2206466Z 5a3ef04eb500e625dc89617e02befe0a498882f6
+2026-10-09T22:36:17.2217600Z ##[group]Removing auth
+2026-10-09T22:36:17.2219176Z Removing SSH command configuration
+2026-10-09T22:36:17.2221304Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-09T22:36:17.2252776Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-09T22:36:17.2448302Z Removing HTTP extra header
+2026-10-09T22:36:17.2452012Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-09T22:36:17.2486342Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-09T22:36:17.2679333Z Removing includeIf entries pointing to credentials config files
+2026-10-09T22:36:17.2681674Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-09T22:36:17.2708311Z includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git.path
+2026-10-09T22:36:17.2711780Z includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git/worktrees/*.path
+2026-10-09T22:36:17.2714650Z includeif.gitdir:/github/workspace/.git.path
+2026-10-09T22:36:17.2716749Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-09T22:36:17.2721937Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git.path
+2026-10-09T22:36:17.2741701Z /home/runner/work/_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:17.2832730Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git.path /home/runner/work/_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:17.2840388Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git/worktrees/*.path
+2026-10-09T22:36:17.2843700Z /home/runner/work/_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:17.2852444Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:17.2860234Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-09T22:36:17.2880119Z /github/runner_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:17.2895839Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:17.2927528Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-09T22:36:17.2950171Z /github/runner_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:17.2966518Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config
+2026-10-09T22:36:17.2992539Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-09T22:36:17.3184668Z Removing credentials config '/home/runner/work/_temp/git-credentials-dc6bab70-0397-42d0-8f67-348d977e70d0.config'
+2026-10-09T22:36:17.3192389Z ##[endgroup]
+2026-10-09T22:36:17.3425995Z ##[group]Run bash scripts/simulate-fresh-merge.sh
+2026-10-09T22:36:17.3427282Z [36;1mbash scripts/simulate-fresh-merge.sh[0m
+2026-10-09T22:36:17.3623056Z shell: /usr/bin/bash -e {0}
+2026-10-09T22:36:17.3623962Z env:
+2026-10-09T22:36:17.3624645Z   GIT_CONFIG_COUNT: 1
+2026-10-09T22:36:17.3625465Z   GIT_CONFIG_KEY_0: init.defaultBranch
+2026-10-09T22:36:17.3626434Z   GIT_CONFIG_VALUE_0: main
+2026-10-09T22:36:17.3627241Z   BASE_REF: main
+2026-10-09T22:36:17.3628107Z ##[endgroup]
+2026-10-09T22:36:17.3742771Z === Synchronizing PR with latest main ===
+2026-10-09T22:36:17.3744411Z This prevents stale merge preview issues (see docs/case-studies/issue-23)
+2026-10-09T22:36:17.3745410Z 
+2026-10-09T22:36:17.3773998Z Fetching latest main...
+2026-10-09T22:36:17.6438527Z From https://github.com/link-foundation/disk-space-saviour
+2026-10-09T22:36:17.6439772Z  * branch            main       -> FETCH_HEAD
+2026-10-09T22:36:17.6490557Z Current checkout (merge preview): 5a3ef04eb500e625dc89617e02befe0a498882f6
+2026-10-09T22:36:17.6492520Z Latest base branch (main): 12160974676da8c6bd9840c3cb8c5263d24b65ed
+2026-10-09T22:36:17.6493321Z 
+2026-10-09T22:36:17.6507003Z Merge preview is up-to-date with main. No simulation needed.
+2026-10-09T22:36:17.6508174Z 
+2026-10-09T22:36:17.6648631Z ##[group]Run actions/setup-node@v6
+2026-10-09T22:36:17.6649456Z with:
+2026-10-09T22:36:17.6650098Z   node-version: 24.x
+2026-10-09T22:36:17.6650821Z   check-latest: false
+2026-10-09T22:36:17.6656259Z   token: ***
+2026-10-09T22:36:17.6656960Z   package-manager-cache: true
+2026-10-09T22:36:17.6657756Z env:
+2026-10-09T22:36:17.6658571Z   GIT_CONFIG_COUNT: 1
+2026-10-09T22:36:17.6659316Z   GIT_CONFIG_KEY_0: init.defaultBranch
+2026-10-09T22:36:17.6660150Z   GIT_CONFIG_VALUE_0: main
+2026-10-09T22:36:17.6660905Z ##[endgroup]
+2026-10-09T22:36:17.7768342Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+2026-10-09T22:36:17.7770422Z ##[group]Environment details
+2026-10-09T22:36:21.7974108Z node: v24.21.0
+2026-10-09T22:36:21.7974553Z npm: 11.19.0
+2026-10-09T22:36:21.7975004Z yarn: 1.22.22
+2026-10-09T22:36:21.7976092Z ##[endgroup]
+2026-10-09T22:36:21.7979029Z Detected npm as the package manager from package.json's packageManager field. Auto caching has been enabled for npm. If you want to disable it, set package-manager-cache input to false
+2026-10-09T22:36:21.7995490Z [command]/opt/hostedtoolcache/node/24.21.0/x64/bin/npm config get cache
+2026-10-09T22:36:22.1152401Z /home/runner/.npm
+2026-10-09T22:36:22.3928651Z Cache hit for: node-cache-Linux-x64-npm-afc2b9d43dd80bed6b935657fe069cb8af4ee58cc4605b94b2a2673c30363fc8
+2026-10-09T22:36:22.8002215Z Received 2826 of 2826 (100.0%), 0.0 MBs/sec
+2026-10-09T22:36:22.8019911Z Cache Size: ~0 MB (2826 B)
+2026-10-09T22:36:22.8021012Z [command]/usr/bin/tar -xf /home/runner/work/_temp/3987df2f-493c-4f1a-b86e-c964bbfd02b7/cache.tzst -P -C /home/runner/work/disk-space-saviour/disk-space-saviour --use-compress-program unzstd
+2026-10-09T22:36:22.8071199Z Cache restored successfully
+2026-10-09T22:36:22.8075124Z Cache restored from key: node-cache-Linux-x64-npm-afc2b9d43dd80bed6b935657fe069cb8af4ee58cc4605b94b2a2673c30363fc8
+2026-10-09T22:36:22.8186372Z ##[group]Run npm install
+2026-10-09T22:36:22.8186620Z [36;1mnpm install[0m
+2026-10-09T22:36:22.8293211Z shell: /usr/bin/bash -e {0}
+2026-10-09T22:36:22.8293450Z env:
+2026-10-09T22:36:22.8293626Z   GIT_CONFIG_COUNT: 1
+2026-10-09T22:36:22.8293837Z   GIT_CONFIG_KEY_0: init.defaultBranch
+2026-10-09T22:36:22.8294074Z   GIT_CONFIG_VALUE_0: main
+2026-10-09T22:36:22.8294266Z ##[endgroup]
+2026-10-09T22:36:27.0801336Z 
+2026-10-09T22:36:27.0806612Z > disk-space-saviour@0.15.1 prepare
+2026-10-09T22:36:27.0807030Z > node scripts/install-git-hooks.mjs
+2026-10-09T22:36:27.0807207Z 
+2026-10-09T22:36:27.1333067Z 
+2026-10-09T22:36:27.1333941Z added 168 packages, and audited 169 packages in 4s
+2026-10-09T22:36:27.1334321Z 
+2026-10-09T22:36:27.1334556Z 55 packages are looking for funding
+2026-10-09T22:36:27.1335024Z   run `npm fund` for details
+2026-10-09T22:36:27.1342489Z 
+2026-10-09T22:36:27.1342769Z found 0 vulnerabilities
+2026-10-09T22:36:27.2003083Z ##[group]Run trap 'git restore --source=HEAD --staged --worktree -- .' EXIT
+2026-10-09T22:36:27.2003581Z [36;1mtrap 'git restore --source=HEAD --staged --worktree -- .' EXIT[0m
+2026-10-09T22:36:27.2003895Z [36;1mnpm run changeset:version[0m
+2026-10-09T22:36:27.2004160Z [36;1mgit status --short[0m
+2026-10-09T22:36:27.2059573Z shell: /usr/bin/bash -e {0}
+2026-10-09T22:36:27.2059801Z env:
+2026-10-09T22:36:27.2059981Z   GIT_CONFIG_COUNT: 1
+2026-10-09T22:36:27.2060176Z   GIT_CONFIG_KEY_0: init.defaultBranch
+2026-10-09T22:36:27.2060402Z   GIT_CONFIG_VALUE_0: main
+2026-10-09T22:36:27.2060591Z ##[endgroup]
+2026-10-09T22:36:27.2990543Z 
+2026-10-09T22:36:27.2991836Z > disk-space-saviour@0.15.1 changeset:version
+2026-10-09T22:36:27.2992451Z > node scripts/changeset-version.mjs
+2026-10-09T22:36:27.2992757Z 
+2026-10-09T22:36:43.4858382Z Detected single-language repository (package.json in root)
+2026-10-09T22:36:43.4858999Z Running changeset version...
+2026-10-09T22:36:43.7547379Z 🦋 changeset v3.0.3
+2026-10-09T22:36:43.8133416Z 
+2026-10-09T22:36:43.8134347Z No unreleased changesets found.
+2026-10-09T22:36:43.8135185Z 🦋 Exited with code 1
+2026-10-09T22:36:43.8135442Z 
+2026-10-09T22:36:43.8364521Z Error during version bump: Command failed with exit code 1
+2026-10-09T22:36:43.9256948Z ##[error]Process completed with exit code 1.
+2026-10-09T22:36:43.9403432Z Post job cleanup.
+2026-10-09T22:36:44.0077931Z [command]/usr/bin/git version
+2026-10-09T22:36:44.0114479Z git version 2.55.0
+2026-10-09T22:36:44.0148480Z Temporarily overriding HOME='/home/runner/work/_temp/6b52096b-6d1c-4e02-a4cd-207e8733234a' before making global git config changes
+2026-10-09T22:36:44.0149620Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-09T22:36:44.0153276Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/disk-space-saviour/disk-space-saviour
+2026-10-09T22:36:44.0180132Z Removing SSH command configuration
+2026-10-09T22:36:44.0185864Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-09T22:36:44.0215615Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-09T22:36:44.0416948Z Removing HTTP extra header
+2026-10-09T22:36:44.0422239Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-09T22:36:44.0451273Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-09T22:36:44.0655690Z Removing includeIf entries pointing to credentials config files
+2026-10-09T22:36:44.0663463Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-09T22:36:44.0696885Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-09T22:36:44.1043269Z Cleaning up orphan processes

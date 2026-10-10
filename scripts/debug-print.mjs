@@ -25,7 +25,7 @@
  * Read one environment variable without ever throwing.
  *
  * Deno denies `process.env` access unless the run was granted `--allow-env`
- * (the Deno test job only passes `--allow-read`), and the denial surfaces as a
+ * (a local `deno test --allow-read` does not), and the denial surfaces as a
  * `NotCapable` error on the property read itself. Tracing must never be the
  * reason a script or a test fails, so an unreadable variable counts as unset.
  *

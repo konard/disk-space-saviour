@@ -16,6 +16,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import { pullPinned } from './pull-pinned.mjs';
 
 const DIND_IMAGE =
   'docker:28-dind@sha256:2a232a42256f70d78e3cc5d2b5d6b3276710a0de0596c145f627ecfae90282ac';
@@ -79,7 +80,14 @@ function buildChain() {
     [DIND_IMAGE, DIND_TAG],
     [BUSYBOX_IMAGE, BUSYBOX_TAG],
   ]) {
-    sh(`docker pull -q ${image} && docker tag ${image} ${tag}`);
+    const pulled = pullPinned(image, {
+      docker: (args) =>
+        spawnSync('docker', args, { stdio: ['ignore', 'ignore', 'inherit'] })
+          .status === 0,
+      sleep: (ms) => spawnSync('sleep', [String(ms / 1000)]),
+      log,
+    });
+    sh(`docker tag ${pulled} ${tag}`);
   }
   const daemon = `--privileged --memory=2g --memory-swap=2g --pids-limit=768 -e DOCKER_TLS_CERTDIR= ${DIND_TAG}`;
   sh(`docker run -d --name ${L1} ${daemon}`);

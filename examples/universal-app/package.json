@@ -36,6 +36,11 @@
     "electron-builder": "^26.15.3",
     "vite": "^6.4.1"
   },
+  "allowScripts": {
+    "electron-winstaller": true,
+    "esbuild": true,
+    "fsevents": true
+  },
   "build": {
     "appId": "foundation.link.template.example",
     "productName": "Universal Example App",

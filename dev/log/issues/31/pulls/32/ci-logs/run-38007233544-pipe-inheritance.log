@@ -1,0 +1,11 @@
+# experiments/windows-pipe-inheritance.mjs on run 38007233544 (cb429df), Test (deno on ...) jobs.
+# A worker thread keeps 16 three-second sleepers alive while the main thread times 150 quick spawnSync calls; slow = calls over 1500ms.
+## windows-2025 (job 114078915425)
+2026-10-10T00:04:37.9497047Z {"runtime":"deno 2.9.7","platform":"win32","calls":150,"median":24,"max":3048,"slow":3}
+2026-10-10T00:04:40.6729616Z {"runtime":"node v22.23.3","platform":"win32","calls":150,"median":11,"max":14,"slow":0}
+## macos-15 (job 114078915398)
+2026-10-10T00:03:36.8918040Z {"runtime":"deno 2.9.7","platform":"darwin","calls":150,"median":3,"max":13,"slow":0}
+2026-10-10T00:03:38.6416870Z {"runtime":"node v22.23.2","platform":"darwin","calls":150,"median":4,"max":17,"slow":0}
+## ubuntu-24.04 (job 114078915516)
+2026-10-10T00:03:29.4279197Z {"runtime":"deno 2.9.7","platform":"linux","calls":150,"median":1,"max":6,"slow":0}
+2026-10-10T00:03:30.7057792Z {"runtime":"node v22.23.3","platform":"linux","calls":150,"median":2,"max":3,"slow":0}

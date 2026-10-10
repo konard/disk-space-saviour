@@ -174,10 +174,8 @@ function analyzePublishResult(publishResult, commandError) {
     ? `${publishResult.stdout || ''}\n${publishResult.stderr || ''}`
     : '';
 
-  // Log the output for debugging
-  if (combinedOutput.trim()) {
-    console.log('Changeset output:', combinedOutput);
-  }
+  // No need to print combinedOutput: command-stream mirrored it live
+  // (https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/227).
 
   // Check for failure patterns in output (most reliable for changeset)
   const failurePattern = detectPublishFailure(combinedOutput);
