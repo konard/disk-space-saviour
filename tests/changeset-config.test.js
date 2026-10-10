@@ -13,6 +13,7 @@ import {
 import { tmpdir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
 import { describe, it, expect } from 'test-anywhere';
+import { runToExit } from './helpers/run-to-exit.js';
 import { itUnless, sandboxed } from './helpers/skip.js';
 
 const config = JSON.parse(readFileSync('.changeset/config.json', 'utf8'));
@@ -43,7 +44,7 @@ describe('Changesets release formatter', () => {
 
   itUnless(sandboxed)(
     'versions and formats the real package with Deno absent from PATH',
-    () => {
+    async () => {
       const cwd = mkdtempSync(join(tmpdir(), 'changeset-version-'));
       try {
         for (const file of [
@@ -94,15 +95,14 @@ describe('Changesets release formatter', () => {
           spawnSync('deno', ['--version'], { env }).error?.code,
           'ENOENT'
         );
-        const run = (file, args) => {
-          const started = Date.now();
-          const result = spawnSync('node', [resolve(file), ...args], {
+        const run = async (file, args) => {
+          // spawnSync could wait for a process another test file started.
+          const result = await runToExit('node', [resolve(file), ...args], {
             cwd,
             env,
-            encoding: 'utf8',
             timeout: 20000,
           });
-          const took = `${file} took ${Date.now() - started}ms`;
+          const took = `${file} took ${result.ms}ms`;
           if (process.env.DSS_DEBUG) {
             console.error(took);
           }
@@ -112,7 +112,7 @@ describe('Changesets release formatter', () => {
             `${took}: ${result.error || ''}\n${result.stdout}\n${result.stderr}`
           );
         };
-        run('node_modules/@changesets/cli/bin.js', ['version']);
+        await run('node_modules/@changesets/cli/bin.js', ['version']);
         const versionParts = pkg.version.split('.').map(Number);
         versionParts[2] += 1;
         expect(
@@ -124,7 +124,7 @@ describe('Changesets release formatter', () => {
         expect(readFileSync(join(cwd, 'CHANGELOG.md'), 'utf8')).toContain(
           'Check release versioning.'
         );
-        run('node_modules/prettier/bin/prettier.cjs', [
+        await run('node_modules/prettier/bin/prettier.cjs', [
           '--check',
           'package.json',
           'CHANGELOG.md',
