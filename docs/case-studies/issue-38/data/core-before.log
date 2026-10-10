@@ -1,0 +1,112 @@
+▶ issue 33 bounded remote round trips
+  ✖ resolves 1000 fingerprint paths in batches rather than individual execs (23.527153ms)
+  ✖ batches exclusion boundary probes as well as usage measurement (21.301861ms)
+✖ issue 33 bounded remote round trips (47.336723ms)
+▶ issue 34 cancellation and scan budgets
+  ✖ terminates a spawned child when the scan signal aborts (1120.747317ms)
+  ✖ preserves partial findings after cancellation (151.108404ms)
+  ✖ preserves partial findings after a time budget (60.186565ms)
+✖ issue 34 cancellation and scan budgets (1336.676803ms)
+▶ issue 35 containerd writable storage
+  ✖ finds the authoritative root upperdir when GraphDriver is null (38.827698ms)
+✖ issue 35 containerd writable storage (43.431316ms)
+▶ issue 38 permission-aware activity
+  ✖ scopes unreadable root Docker daemons to their storage and runtime paths (2.801968ms)
+  ✖ returns owners and permissions for remote stat, including single paths (0.958458ms)
+  ✖ shows blocked known and unknown sizes without counting nested data twice (0.801244ms)
+✖ issue 38 permission-aware activity (10.260634ms)
+ℹ tests 9
+ℹ suites 4
+ℹ pass 0
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1604.657546
+
+✖ failing tests:
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ resolves 1000 fingerprint paths in batches rather than individual execs (23.527153ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-33-batching.test.js:15:24)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ batches exclusion boundary probes as well as usage measurement (21.301861ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-33-batching.test.js:25:25)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ terminates a spawned child when the scan signal aborts (1120.747317ms)
+  Error: Expected undefined to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:16:30)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ preserves partial findings after cancellation (151.108404ms)
+  Error: Expected 0 to be 1
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:31:37)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ preserves partial findings after a time budget (60.186565ms)
+  Error: Expected 0 to be 1
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:31:37)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ finds the authoritative root upperdir when GraphDriver is null (38.827698ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-35-mountinfo.test.js:21:53)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ scopes unreadable root Docker daemons to their storage and runtime paths (2.801968ms)
+  Error: Expected "unreadable process dockerd (pid 8, uid 0) may use /home/dev/.cache" to be null
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-38-permissions.test.js:12:56)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ returns owners and permissions for remote stat, including single paths (0.958458ms)
+  Error: Expected undefined to be 1001
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-38-permissions.test.js:20:22)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ shows blocked known and unknown sizes without counting nested data twice (0.801244ms)
+  Error: Expected 4096 to be 0
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-38-permissions.test.js:29:34)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)

@@ -41,7 +41,15 @@ export function trace(...parts) {
  * @returns {Promise<{code: number, stdout: string, stderr: string, error?: Error}>}
  */
 export function runProcess(argv, options = {}) {
-  const { input, timeoutMs = DEFAULT_TIMEOUT_MS, cwd, env } = options;
+  const { input, timeoutMs = DEFAULT_TIMEOUT_MS, cwd, env, signal } = options;
+  if (signal?.aborted) {
+    return Promise.resolve({
+      code: 130,
+      stdout: '',
+      stderr: 'aborted',
+      aborted: true,
+    });
+  }
   trace('exec', JSON.stringify(argv));
   return new Promise((resolve) => {
     let child;
@@ -51,6 +59,7 @@ export function runProcess(argv, options = {}) {
         env: env ? { ...process.env, ...env } : process.env,
         stdio: ['pipe', 'pipe', 'pipe'],
         windowsHide: true,
+        detached: process.platform !== 'win32',
       });
     } catch (error) {
       resolve({ code: 127, stdout: '', stderr: String(error), error });
@@ -66,12 +75,33 @@ export function runProcess(argv, options = {}) {
       if (!settled) {
         settled = true;
         clearTimeout(timer);
+        signal?.removeEventListener('abort', abort);
         trace(`exit ${result.code} after ${Date.now() - startedAt}ms`);
         resolve(result);
       }
     };
+    const kill = () => {
+      try {
+        if (process.platform !== 'win32') {
+          process.kill(-child.pid, 'SIGKILL');
+        } else {
+          child.kill('SIGKILL');
+        }
+      } catch {
+        child.kill('SIGKILL');
+      }
+    };
+    const abort = () => {
+      kill();
+      finish({
+        code: 130,
+        stdout: Buffer.concat(stdout).toString('utf8'),
+        stderr: 'aborted',
+        aborted: true,
+      });
+    };
     const timer = setTimeout(() => {
-      child.kill('SIGKILL');
+      kill();
       finish({
         code: 124,
         stdout: Buffer.concat(stdout).toString('utf8'),
@@ -79,6 +109,10 @@ export function runProcess(argv, options = {}) {
         error: new Error(`timed out after ${timeoutMs}ms`),
       });
     }, timeoutMs);
+    signal?.addEventListener('abort', abort, { once: true });
+    if (signal?.aborted) {
+      abort();
+    }
     const collect = (target) => (chunk) => {
       captured += chunk.length;
       if (captured <= captureLimit) {
@@ -117,6 +151,11 @@ export function runProcess(argv, options = {}) {
  * @param {{timeoutMs?: number, cwd?: string}} [options]
  */
 export async function pipeInto(source, argv, options = {}) {
+  const abortSource = () => source.kill?.('SIGKILL');
+  options.signal?.addEventListener('abort', abortSource, { once: true });
+  if (options.signal?.aborted) {
+    abortSource();
+  }
   const sourceErr = [];
   source.stderr?.on('data', (chunk) => sourceErr.push(chunk));
   const sourceDone = new Promise((resolve) => {
@@ -124,7 +163,11 @@ export async function pipeInto(source, argv, options = {}) {
     source.on('close', (code) => resolve({ code: code ?? 1 }));
   });
   const result = await runProcess(argv, { ...options, stdin: source.stdout });
+  if (result.code !== 0) {
+    abortSource();
+  }
   const upstream = await sourceDone;
+  options.signal?.removeEventListener('abort', abortSource);
   if (upstream.code !== 0) {
     return {
       ...result,
@@ -143,11 +186,7 @@ export function hostExecutor() {
     label: 'host',
     depth: 0,
     run: (argv, options) => runProcess(argv, options),
-    spawn: (argv) =>
-      spawn(argv[0], argv.slice(1), {
-        stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true,
-      }),
+    spawn: spawnStream,
   };
 }
 
@@ -175,8 +214,40 @@ export function containerExecutor(parent, containerId, options = {}) {
     parent,
     run: (argv, runOptions = {}) =>
       parent.run(wrap(argv, runOptions.input !== undefined), runOptions),
-    spawn: (argv) => parent.spawn(wrap(argv, false)),
+    spawn: (argv, spawnOptions) =>
+      parent.spawn(wrap(argv, false), spawnOptions),
   };
+}
+
+/** Stream commands (Docker logs/cp) obey the same cancellation and deadline. */
+function spawnStream(argv, options = {}) {
+  const child = spawn(argv[0], argv.slice(1), {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+    detached: process.platform !== 'win32',
+  });
+  const stop = () => {
+    try {
+      if (process.platform !== 'win32') {
+        process.kill(-child.pid, 'SIGKILL');
+      } else {
+        child.kill('SIGKILL');
+      }
+    } catch {
+      child.kill('SIGKILL');
+    }
+  };
+  const timer = setTimeout(stop, options.timeoutMs ?? 600000);
+  timer.unref?.();
+  options.signal?.addEventListener('abort', stop, { once: true });
+  if (options.signal?.aborted) {
+    stop();
+  }
+  child.once('close', () => {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', stop);
+  });
+  return child;
 }
 
 /**

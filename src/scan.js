@@ -7,9 +7,12 @@ import {
   configureContainerHost,
   resetWritableLayers,
 } from './docker/writable.js';
+import { setInterval, clearInterval } from 'node:timers';
 import { scanDocker } from './docker/scan.js';
 import { LocalEnv } from './env/local.js';
 import { configureScanPolicy } from './env/policy.js';
+import { configureCacheRoots } from './env/cache-roots.js';
+import { checkSignal, environmentScope } from './env/scope.js';
 import { block, tierTotals } from './items.js';
 import { hostExecutor, trace } from './exec.js';
 import { GitInspector } from './git.js';
@@ -59,6 +62,9 @@ const RESCAN_OPTIONS = new Set([
   'journalKeep',
   'env',
   'now',
+  'signal',
+  'scanBudget',
+  'onScanProgress',
 ]);
 
 function safetySnapshot(report) {
@@ -133,6 +139,7 @@ export async function environmentContext(env, options, overrides = {}) {
   });
   await liveness.refresh(true);
   const homes = await env.homeDirs();
+  await configureCacheRoots(env, homes);
   const tmpDirs = await env.tmpDirs();
   const roots = overrides.roots ?? (await defaultRoots(env, homes, tmpDirs));
   return {
@@ -152,16 +159,71 @@ export async function environmentContext(env, options, overrides = {}) {
  * @returns {Promise<object[]>} items
  */
 export async function scanEnvironment(env, options, extra = {}) {
-  const errors = extra.errors ?? [];
-  let context;
-  try {
-    context = await environmentContext(env, options, extra);
-  } catch (error) {
-    errors.push({ env: env.id, scanner: 'context', message: error.message });
-    return [];
+  const controller = new AbortController();
+  const abort = () => controller.abort(options.signal.reason);
+  options.signal?.addEventListener('abort', abort, { once: true });
+  if (options.signal?.aborted) {
+    abort();
   }
-  const items = [];
+  const started = Date.now(),
+    deadline = started + options.scanBudgetMs;
+  const timer = setTimeout(
+    () => controller.abort(new Error('scan time budget exceeded')),
+    options.scanBudgetMs
+  );
+  const found = new Map();
+  let scanner = 'context';
+  const progress = () =>
+    options.onScanProgress?.({
+      env: env.id,
+      scanner,
+      elapsedMs: Date.now() - started,
+      items: found.size,
+      status: env.scanStatus,
+    });
+  env.scanStatus = 'scanning';
+  const interval = setInterval(progress, 5000);
+  try {
+    return await environmentScope(
+      env,
+      controller.signal,
+      () => {
+        progress();
+        return scanEnvironmentScoped(env, options, extra, found, (name) => {
+          scanner = name;
+          progress();
+        });
+      },
+      deadline
+    );
+  } catch (error) {
+    env.scanStatus = options.signal?.aborted
+      ? 'aborted'
+      : controller.signal.aborted
+        ? 'budget-exceeded'
+        : 'error';
+    (extra.errors ?? []).push({ env: env.id, scanner, message: error.message });
+    const items = [...found.values()];
+    for (const item of items) {
+      block(item, `scan incomplete: ${error.message}`);
+    }
+    return items;
+  } finally {
+    clearTimeout(timer);
+    clearInterval(interval);
+    options.signal?.removeEventListener('abort', abort);
+    progress();
+  }
+}
+
+async function scanEnvironmentScoped(env, options, extra, found, stage) {
+  const errors = extra.errors ?? [];
+  const context = await environmentContext(env, options, extra);
+  context.emit = (item) => found.set(item.id, item);
+  let incomplete = false;
   for (const name of options.scanners) {
+    checkSignal(env.signal);
+    stage(name);
     const scanner = SCANNERS[name];
     if (!scanner) {
       throw new Error(
@@ -169,13 +231,26 @@ export async function scanEnvironment(env, options, extra = {}) {
       );
     }
     const started = Date.now();
+    const previous = new Set(found.keys());
     try {
-      items.push(...(await scanner(context)));
+      const entries = await scanner(context);
+      for (const item of entries) {
+        context.emit(item);
+      }
     } catch (error) {
+      checkSignal(env.signal);
+      incomplete = true;
+      for (const [id, item] of found) {
+        if (!previous.has(id)) {
+          block(item, `scan incomplete: ${error.message}`);
+        }
+      }
       errors.push({ env: env.id, scanner: name, message: error.message });
     }
     trace('scanner', name, 'in', env.id, `${Date.now() - started}ms`);
   }
+  stage('storage');
+  const items = [...found.values()];
   await attributeStorage(env, items);
   for (const item of items) {
     for (const target of item.paths) {
@@ -185,6 +260,7 @@ export async function scanEnvironment(env, options, extra = {}) {
   for (const message of env.accessErrors?.values() ?? []) {
     errors.push({ env: env.id, scanner: 'filesystem', message });
   }
+  env.scanStatus = incomplete ? 'error' : 'complete';
   return items;
 }
 
@@ -307,6 +383,8 @@ function envDescriptor(env, depth, chain) {
     depth,
     chain,
     hint: env.probeHint ?? null,
+    scanStatus: env.scanStatus ?? null,
+    layerSource: env.writableLayer?.source ?? null,
   };
 }
 
@@ -373,6 +451,30 @@ function blockMountedHostItems(items, mounts, pathApi) {
 }
 
 export async function scan(input = {}) {
+  const env = input.env ?? new LocalEnv();
+  try {
+    return await environmentScope(env, input.signal, () =>
+      scanScoped({ ...input, env })
+    );
+  } catch (error) {
+    if (!input.signal?.aborted) {
+      throw error;
+    }
+    env.scanStatus = 'aborted';
+    const options = resolveOptions(input);
+    return buildReport({
+      options,
+      env,
+      items: [],
+      environments: [envDescriptor(env, 0, [])],
+      docker: null,
+      errors: [{ env: env.id, scanner: 'context', message: error.message }],
+      startedAt: options.now(),
+    });
+  }
+}
+
+async function scanScoped(input) {
   const options = resolveOptions(input);
   const env = input.env ?? new LocalEnv();
   const startedAt = options.now();
@@ -420,6 +522,8 @@ function reportOptions(options) {
   const serializable = { ...options };
   delete serializable.now;
   delete serializable.env;
+  delete serializable.signal;
+  delete serializable.onScanProgress;
   return serializable;
 }
 
@@ -440,6 +544,7 @@ export function buildReport({
     tool: 'disk-space-saviour',
     createdAt: new Date(options.now()).toISOString(),
     durationMs: options.now() - startedAt,
+    aborted: Boolean(options.signal?.aborted),
     host: { env: env.id, label: env.label, platform: env.platform },
     options: reportOptions(options),
     environments,

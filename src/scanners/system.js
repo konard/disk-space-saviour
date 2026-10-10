@@ -1,3 +1,4 @@
+import { scanItems } from '../env/scope.js';
 /**
  * System reclaimers that only the owning tool can clean correctly:
  * journald archives (`journalctl --vacuum-size`), disabled snap revisions
@@ -102,7 +103,7 @@ async function snapItems(context, isRoot) {
     return [];
   }
   const result = await env.run(['snap', 'list', '--all']);
-  const items = [];
+  const items = scanItems(context);
   for (const { name, revision } of parseDisabledSnaps(result.stdout)) {
     const file = `/var/lib/snapd/snaps/${name}_${revision}.snap`;
     const stat = await env.stat(file);
@@ -163,9 +164,9 @@ async function brewItems(context, isRoot) {
  */
 export async function scanSystem(context) {
   const isRoot = await context.env.isRoot();
-  return [
-    ...(await journalItems(context, isRoot)),
-    ...(await snapItems(context, isRoot)),
-    ...(await brewItems(context, isRoot)),
-  ];
+  const items = scanItems(context);
+  for (const scanner of [journalItems, snapItems, brewItems]) {
+    items.push(...(await scanner(context, isRoot)));
+  }
+  return items;
 }

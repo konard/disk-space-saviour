@@ -1,0 +1,8 @@
+$ docker exec -u 0 hive-mind sh -c 'readlink /proc/1/cwd; echo rc=$?'
+rc=1
+$ docker exec hive-mind sh -c 'id -u; readlink /proc/1/cwd'     # as the owner
+1001
+/home/box
+
+safe 0 bun-cache /home/box/.bun/install/cache | busy: unreadable process bash (pid 1, uid 1001) may use /home/box/.bun/install/cache
+safe 0 npm-cache /home/box/.npm/_cacache    | busy: unreadable process bash (pid 1, uid 1001) may use /home/box/.npm/_cacache

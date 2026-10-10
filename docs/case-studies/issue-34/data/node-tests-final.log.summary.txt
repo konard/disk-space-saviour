@@ -1,0 +1,8 @@
+  ✔ preserves partial findings after cancellation (260.763095ms)
+  ✔ preserves partial findings after a time budget (2007.220129ms)
+  ✔ writes a partial scan pre-scan report and exits 143 on SIGTERM (1555.446484ms)
+  ✔ writes a partial scan pre-scan report and exits 130 on SIGINT (1586.667637ms)
+  ✔ writes a partial clean pre-scan report and exits 143 on SIGTERM (1821.212652ms)
+  ✔ writes a partial clean pre-scan report and exits 130 on SIGINT (1874.00696ms)
+  ✔ writes a partial emergency pre-scan report and exits 143 on SIGTERM (1955.20128ms)
+  ✔ writes a partial emergency pre-scan report and exits 130 on SIGINT (1992.475525ms)

@@ -1,0 +1,287 @@
+Docker-in-Docker Integration	Set up job	﻿2026-10-10T12:14:18.2938070Z Current runner version: '2.337.0'
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2961904Z ##[group]Runner Image Provisioner
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2962800Z Hosted Compute Agent
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2963343Z Version: 20261002.596
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2963971Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2964648Z Build Date: 2026-10-02T22:28:27Z
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2965325Z Worker ID: {1e26d1d0-58b0-47b8-b15d-a81233f3af80}
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2966001Z Region: westus3
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2966503Z Cloud: Azure
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2967122Z ##[endgroup]
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2968479Z ##[group]Operating System
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2969083Z Ubuntu
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2969585Z 24.04.5
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2970070Z LTS
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2970551Z ##[endgroup]
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2971098Z ##[group]Runner Image
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2971671Z Image: ubuntu-24.04
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2972207Z Version: 20261004.327.1
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2973189Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2974812Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2975690Z ##[endgroup]
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2976699Z ##[group]GITHUB_TOKEN Permissions
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2978681Z Contents: read
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2979273Z Metadata: read
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2979822Z ##[endgroup]
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2981801Z Secret source: Actions
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2982736Z Cache mode: write
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.2983359Z Prepare workflow directory
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.3400161Z Prepare all required actions
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.3449004Z Getting action download info
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.6324299Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.7255753Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Docker-in-Docker Integration	Set up job	2026-10-10T12:14:18.8797675Z Complete job name: Docker-in-Docker Integration
+Docker-in-Docker Integration	Run actions/checkout@v6	﻿2026-10-10T12:14:18.9640028Z ##[group]Run actions/checkout@v6
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9640863Z with:
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9641291Z   persist-credentials: false
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9641815Z   repository: link-foundation/disk-space-saviour
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9645312Z   token: ***
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9645697Z   ssh-strict: true
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9646091Z   ssh-user: git
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9646464Z   clean: true
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9647092Z   sparse-checkout-cone-mode: true
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9647593Z   fetch-depth: 1
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9647994Z   fetch-tags: false
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9648428Z   show-progress: true
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9648857Z   lfs: false
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9649260Z   submodules: false
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9649696Z   set-safe-directory: true
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9650182Z   allow-unsafe-pr-checkout: false
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9650912Z env:
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9651284Z   GIT_CONFIG_COUNT: 1
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9651723Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9652220Z   GIT_CONFIG_VALUE_0: main
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:18.9652703Z ##[endgroup]
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0747073Z Syncing repository: link-foundation/disk-space-saviour
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0749675Z ##[group]Getting Git version info
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0750489Z Working directory is '/home/runner/work/disk-space-saviour/disk-space-saviour'
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0751526Z [command]/usr/bin/git version
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0848818Z git version 2.55.0
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0875865Z ##[endgroup]
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0894223Z Temporarily overriding HOME='/home/runner/work/_temp/48227233-c377-49ac-8069-da00e98606ab' before making global git config changes
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0896274Z Adding repository directory to the temporary git global config as a safe directory
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0902160Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/disk-space-saviour/disk-space-saviour
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0976714Z Deleting the contents of '/home/runner/work/disk-space-saviour/disk-space-saviour'
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0980442Z ##[group]Determining repository object format
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0983248Z ##[endgroup]
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0984973Z ##[group]Initializing the repository
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.0988786Z [command]/usr/bin/git init /home/runner/work/disk-space-saviour/disk-space-saviour
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1090426Z Initialized empty Git repository in /home/runner/work/disk-space-saviour/disk-space-saviour/.git/
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1101094Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/disk-space-saviour
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1145755Z ##[endgroup]
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1147218Z ##[group]Disabling automatic garbage collection
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1151201Z [command]/usr/bin/git config --local gc.auto 0
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1181149Z ##[endgroup]
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1182379Z ##[group]Setting up auth
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1183258Z Removing SSH command configuration
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1190606Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1223011Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1567198Z Removing HTTP extra header
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1575172Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1610597Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1809663Z Removing includeIf entries pointing to credentials config files
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1817263Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.1849500Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.2039912Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.2075963Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git.path /home/runner/work/_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.2106416Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.2140841Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.2171736Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.2198912Z ##[endgroup]
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.2199865Z ##[group]Fetching the repository
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:19.2207074Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a4b81232ba06d55b28cc3d173a31719db9c375ce:refs/remotes/pull/41/merge
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.7682264Z From https://github.com/link-foundation/disk-space-saviour
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.7684499Z  * [new ref]         a4b81232ba06d55b28cc3d173a31719db9c375ce -> pull/41/merge
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.7688941Z ##[endgroup]
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.7690669Z ##[group]Determining the checkout info
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.7692474Z ##[endgroup]
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.7696020Z [command]/usr/bin/git sparse-checkout disable
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.7745503Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.7778662Z ##[group]Checking out the ref
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.7781358Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/41/merge
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8505068Z Note: switching to 'refs/remotes/pull/41/merge'.
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8507309Z
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8508718Z You are in 'detached HEAD' state. You can look around, make experimental
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8511865Z changes and commit them, and you can discard any commits you make in this
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8514413Z state without impacting any branches by switching back to a branch.
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8515541Z
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8516270Z If you want to create a new branch to retain commits you create, you may
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8518880Z do so (now or later) by using -c with the switch command. Example:
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8520344Z
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8520816Z   git switch -c <new-branch-name>
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8521578Z
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8522269Z Or undo this operation with:
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8523110Z
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8523721Z   git switch -
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8524366Z
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8525346Z Turn off this advice by setting config variable advice.detachedHead to false
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8526724Z
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8528663Z HEAD is now at a4b8123 Merge 0aeef701bbc17de5db9352ec4d0f3914fa3d1b70 into 37f26cac4b975607b74df4d5cad5e8f53a4600c0
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8533872Z ##[endgroup]
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8559579Z [command]/usr/bin/git log -1 --format=%H
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8583622Z a4b81232ba06d55b28cc3d173a31719db9c375ce
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8597808Z ##[group]Removing auth
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8599276Z Removing SSH command configuration
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8602981Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8632810Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8826298Z Removing HTTP extra header
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8829184Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.8860926Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9042753Z Removing includeIf entries pointing to credentials config files
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9046432Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9070643Z includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git.path
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9073852Z includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git/worktrees/*.path
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9076241Z includeif.gitdir:/github/workspace/.git.path
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9078667Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9085662Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git.path
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9102476Z /home/runner/work/_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9113586Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git.path /home/runner/work/_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9144146Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git/worktrees/*.path
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9163984Z /home/runner/work/_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9175575Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/disk-space-saviour/disk-space-saviour/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9205249Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9261644Z /github/runner_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9269953Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9300114Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9322145Z /github/runner_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9335044Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9365835Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9548352Z Removing credentials config '/home/runner/work/_temp/git-credentials-1d4c2a20-aaf4-4a14-a512-e606e0709573.config'
+Docker-in-Docker Integration	Run actions/checkout@v6	2026-10-10T12:14:20.9556886Z ##[endgroup]
+Docker-in-Docker Integration	Setup Node.js	﻿2026-10-10T12:14:20.9904680Z ##[group]Run actions/setup-node@v6
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9905901Z with:
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9906771Z   node-version: 24.x
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9907972Z   check-latest: false
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9916089Z   token: ***
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9917115Z   package-manager-cache: true
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9918178Z env:
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9919019Z   GIT_CONFIG_COUNT: 1
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9920026Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9921204Z   GIT_CONFIG_VALUE_0: main
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:20.9922202Z ##[endgroup]
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.1329408Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.1333077Z ##[group]Environment details
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.5098327Z node: v24.21.0
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.5098955Z npm: 11.19.0
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.5099377Z yarn: 1.22.22
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.5100945Z ##[endgroup]
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.5105101Z Detected npm as the package manager from package.json's packageManager field. Auto caching has been enabled for npm. If you want to disable it, set package-manager-cache input to false
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.5125389Z [command]/opt/hostedtoolcache/node/24.21.0/x64/bin/npm config get cache
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.6344521Z /home/runner/.npm
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:21.8477522Z Cache hit for: node-cache-Linux-x64-npm-0d1b7f3172666a2b998426eafba047e84f5ec37b247127bbaa3fc6552e3bac56
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:22.7215189Z Received 1009560 of 1009560 (100.0%), 1.5 MBs/sec
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:22.7217402Z Cache Size: ~1 MB (1009560 B)
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:22.7243389Z [command]/usr/bin/tar -xf /home/runner/work/_temp/cccb51c1-be4a-434b-afec-237d78b6ea57/cache.tzst -P -C /home/runner/work/disk-space-saviour/disk-space-saviour --use-compress-program unzstd
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:22.7379782Z Cache restored successfully
+Docker-in-Docker Integration	Setup Node.js	2026-10-10T12:14:22.7384611Z Cache restored from key: node-cache-Linux-x64-npm-0d1b7f3172666a2b998426eafba047e84f5ec37b247127bbaa3fc6552e3bac56
+Docker-in-Docker Integration	Run the nested Docker integration test	﻿2026-10-10T12:14:22.7505416Z ##[group]Run bash scripts/run-with-budget-warning.sh 780 "Docker-in-Docker integration" npm run test:dind
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:22.7506407Z ^[[36;1mbash scripts/run-with-budget-warning.sh 780 "Docker-in-Docker integration" npm run test:dind^[[0m
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:22.7696647Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:22.7697398Z env:
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:22.7697632Z   GIT_CONFIG_COUNT: 1
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:22.7697888Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:22.7698171Z   GIT_CONFIG_VALUE_0: main
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:22.7698416Z ##[endgroup]
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:22.7893130Z Running Docker-in-Docker integration with a 780s budget (warning at 546s).
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:23.8130396Z
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:23.8131506Z > disk-space-saviour@0.15.2 test:dind
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:23.8132115Z > node tests/integration/dind.mjs
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:23.8132407Z
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:23.8133198Z [dind] pulling docker:28-dind@sha256:2a232a42256f70d78e3cc5d2b5d6b3276710a0de0596c145f627ecfae90282ac (attempt 1/3)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:29.8984130Z [dind] pulling busybox@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e (attempt 1/3)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:14:47.1221688Z [dind] l1 daemon is up
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:08.4177771Z [dind] l2 daemon is up
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:09.4338349Z [dind] dss docker scan --recursive --container dss-it-l1-2403 --scanner global --min-size 0 --older-than 0 --no-native --audit-dir /tmp/dss-dind-5Mg4xb/audit --backup-dir /tmp/dss-dind-5Mg4xb/backup --json
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:10.4567403Z [scan] host/dss-it-l1-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:10.4568413Z [scan] host/dss-it-l1-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:11.4745414Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:11.4763827Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:11.4765078Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:12.4906099Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:13.5079299Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:13.5080191Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:18.5952796Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:19.6138009Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:20.6297944Z [dind] finished in 11.6s
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:20.6298715Z [dind] scan reached depth 2 daemons and depth 3 containers
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:20.6300457Z [dind] dss docker clean --yes --only npm-cache --recursive --container dss-it-l1-2403 --scanner global --min-size 0 --older-than 0 --no-native --audit-dir /tmp/dss-dind-5Mg4xb/audit --backup-dir /tmp/dss-dind-5Mg4xb/backup --json
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:20.6335099Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 3s, 1 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:20.6335745Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 3s, 1 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:21.6523765Z [scan] host/dss-it-l1-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:21.6525039Z [scan] host/dss-it-l1-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:22.6696114Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:22.6697906Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:22.6708176Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:23.6867868Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:24.7042876Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:24.7044258Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:29.7873450Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:30.8055281Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:31.8216414Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 3s, 1 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:32.8378996Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 3s, 1 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:34.8681218Z [dind] finished in 13.5s
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:34.8681986Z [dind] cache removed inside a running container, nothing stopped
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:34.8689459Z [dind] dss docker clean --yes --tier moderate --only docker-stopped-container --recursive --container dss-it-l1-2403 --scanner global --min-size 0 --older-than 0 --no-native --audit-dir /tmp/dss-dind-5Mg4xb/audit --backup-dir /tmp/dss-dind-5Mg4xb/backup --json
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:34.8719950Z [scan] host/dss-it-l1-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:35.8887916Z [scan] host/dss-it-l1-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:35.8889377Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:35.8891121Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:36.9064744Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:37.9227025Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:37.9229177Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:37.9230132Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:43.0013986Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:44.0180636Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:45.0343759Z [dind] finished in 10.5s
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:45.0370157Z [dind] dss docker clean --dry-run --remove-stopped-containers --tier moderate --only docker-stopped-container --recursive --container dss-it-l1-2403 --scanner global --min-size 0 --older-than 0 --no-native --audit-dir /tmp/dss-dind-5Mg4xb/audit --backup-dir /tmp/dss-dind-5Mg4xb/backup --json
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:45.0428220Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 2s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:45.0442055Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 2s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:46.0638369Z [scan] host/dss-it-l1-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:46.0639337Z [scan] host/dss-it-l1-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:47.0785091Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:47.0785967Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:47.0787775Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:48.0986958Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:49.1212455Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:49.1213237Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:53.1917283Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:55.2274193Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:55.2275886Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 2s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:56.2426718Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 2s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:56.2428078Z [dind] finished in 10.5s
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:56.2430427Z [dind] dss docker clean --yes --remove-stopped-containers --tier moderate --only docker-stopped-container --recursive --container dss-it-l1-2403 --scanner global --min-size 0 --older-than 0 --no-native --audit-dir /tmp/dss-dind-5Mg4xb/audit --backup-dir /tmp/dss-dind-5Mg4xb/backup --json
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:56.2464943Z [scan] host/dss-it-l1-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:57.2648376Z [scan] host/dss-it-l1-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:57.2649567Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:57.2650442Z [scan] host/dss-it-l1-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:58.2807428Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:58.2808347Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:59.2991334Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:15:59.2992459Z [scan] host/dss-it-l1-2403/dss-it-l2-2403: storage, 1s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:16:04.3880313Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: context, 0s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:16:05.4054734Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: global, 1s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:16:06.4249922Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 2s, 0 items (scanning)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:16:06.4251478Z [scan] host/dss-it-l1-2403/dss-it-l2-2403/app: storage, 2s, 0 items (complete)
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:16:07.4298313Z [dind] finished in 11.2s
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:16:07.4299509Z [dind] stopped container removed after a log backup, unsaved Git work kept
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:16:07.4300504Z [dind] an audit log was written for every run
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:16:07.4301139Z [dind] PASS
+Docker-in-Docker Integration	Run the nested Docker integration test	2026-10-10T12:16:07.4329687Z Docker-in-Docker integration finished in 105s of its 780s budget (exit 0).
+Docker-in-Docker Integration	Post Setup Node.js	﻿2026-10-10T12:16:07.4450433Z Post job cleanup.
+Docker-in-Docker Integration	Post Setup Node.js	2026-10-10T12:16:07.5607141Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-0d1b7f3172666a2b998426eafba047e84f5ec37b247127bbaa3fc6552e3bac56, not saving cache.
+Docker-in-Docker Integration	Post Run actions/checkout@v6	﻿2026-10-10T12:16:07.5741782Z Post job cleanup.
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.6708033Z [command]/usr/bin/git version
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.6739933Z git version 2.55.0
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.6789720Z Temporarily overriding HOME='/home/runner/work/_temp/1731cf65-ea54-48a2-acbb-b6ea74fc4dc4' before making global git config changes
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.6791313Z Adding repository directory to the temporary git global config as a safe directory
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.6797692Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/disk-space-saviour/disk-space-saviour
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.6831797Z Removing SSH command configuration
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.6839824Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.6877869Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.7087768Z Removing HTTP extra header
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.7095722Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.7132132Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.7356224Z Removing includeIf entries pointing to credentials config files
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.7368210Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Docker-in-Docker Integration	Post Run actions/checkout@v6	2026-10-10T12:16:07.7403605Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Docker-in-Docker Integration	Complete job	﻿2026-10-10T12:16:07.7741165Z Cleaning up orphan processes

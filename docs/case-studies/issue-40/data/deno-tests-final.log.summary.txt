@@ -1,0 +1,24 @@
+./tests/workflow-reliability.test.js => does not run changeset-pr after cancellation ... ok (791µs)
+./tests/workflow-reliability.test.js => reads no npm token anywhere in the release workflow ... ok (432µs)
+./tests/workflow-reliability.test.js => publishes with the OIDC permission in the release job ... ok (427µs)
+./tests/workflow-reliability.test.js => publishes with the OIDC permission in the instant-release job ... ok (248µs)
+./tests/workflow-reliability.test.js => removes deprecated always-auth before npm commands in the release job ... ok (311µs)
+./tests/workflow-reliability.test.js => removes deprecated always-auth before npm commands in the instant-release job ... ok (610µs)
+./tests/workflow-reliability.test.js => smoke-tests the published npm package in the release job ... ok (1ms)
+./tests/workflow-reliability.test.js => smoke-tests the published npm package in the instant-release job ... ok (664µs)
+./tests/run-with-budget-warning.test.js => escalates to SIGKILL when the command ignores SIGTERM ... ok (4s)
+./tests/scan-projects.test.js => match du within 5% ... ok (421ms)
+------- post-test output -------
+Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+Error response from daemon: Get "https://registry-1.docker.io/v2/": timeout
+Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+Error response from daemon: Get "https://mirror.gcr.io/v2/": timeout
+./tests/setup-buildx-resilient.test.js => falls through non-fatally when both the registry and the mirror are down ...----- post-test output end -----
+./tests/setup-buildx-resilient.test.js => falls through non-fatally when both the registry and the mirror are down ... ok (2s)
+./tests/setup-buildx-resilient.test.js => declares the mirror fallback and pins the boot driver image ... ok (301µs)
+./tests/setup-buildx-resilient.test.js => supports verbose tracing and honours RUNNER_DEBUG ... ok (267µs)
+./tests/run-with-budget-warning.test.js => enforces the budget on a fractional poll interval ... ok (1s)
+./tests/run-with-budget-warning.test.js => rejects a poll interval that is not a number ... ok (7ms)
+./tests/run-with-budget-warning.test.js => prints separate real process records with real newlines ... ok (236ms)
+
+ok | 1270 passed | 0 failed | 3 ignored (52s)

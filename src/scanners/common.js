@@ -26,8 +26,13 @@ export async function listMany(env, dirs) {
  * @returns {string|null}
  */
 export async function scanTimeBusy(context, item) {
-  await context.liveness?.resolve(item.paths);
+  await resolvePaths(context, item.paths);
   return context.liveness ? context.liveness.busyReason(item) : null;
+}
+
+/** Prime one batch before constructing items, so later per-item probes are cached. */
+export async function resolvePaths(context, paths) {
+  await context.liveness?.resolve(paths);
 }
 
 /**

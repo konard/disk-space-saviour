@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "tool": "disk-space-saviour",
+  "createdAt": "2026-10-10T11:17:36.540Z",
+  "durationMs": 185,
+  "aborted": true,
+  "host": {
+    "env": "host",
+    "label": "host (fixture)",
+    "platform": "linux"
+  },
+  "options": {
+    "roots": null,
+    "maxDepth": 6,
+    "staleAge": "1h",
+    "inactive": "30d",
+    "minSize": 0,
+    "host": true,
+    "docker": false,
+    "dockerDepth": 3,
+    "containers": [],
+    "scanners": [
+      "interruptFixture"
+    ],
+    "only": [],
+    "exclude": [],
+    "includeVolumes": false,
+    "removeStoppedContainers": false,
+    "investigationMaxAge": null,
+    "removeContainers": [],
+    "removeImages": [],
+    "allowDirtyRepos": false,
+    "allowDirtyContainers": [],
+    "noNative": true,
+    "journalKeep": "512M",
+    "tier": "safe",
+    "yes": false,
+    "backupDir": null,
+    "auditDir": null,
+    "scanBudget": 5000,
+    "staleAgeMs": 3600000,
+    "inactiveMs": 2592000000,
+    "investigationMaxAgeMs": null,
+    "minSizeBytes": 0,
+    "scanBudgetMs": 5000,
+    "journalKeepBytes": 536870912,
+    "containerFilter": []
+  },
+  "environments": [
+    {
+      "id": "host",
+      "label": "host (fixture)",
+      "kind": "host",
+      "depth": 0,
+      "chain": [],
+      "hint": null,
+      "scanStatus": "aborted",
+      "layerSource": null,
+      "disk": {
+        "path": "/",
+        "total": 206900281344,
+        "free": 109152018432,
+        "used": 97731485696
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "host:fixture:/tmp/dss-fixture-ZZMVGr",
+      "env": "host",
+      "envLabel": "host (fixture)",
+      "kind": "cache",
+      "ecosystem": "other",
+      "rule": "fixture",
+      "description": "",
+      "path": "/tmp/dss-fixture-ZZMVGr",
+      "bytes": 8192,
+      "newestMtimeMs": 0,
+      "tier": "safe",
+      "reason": "",
+      "blockers": [
+        "scan incomplete: This operation was aborted"
+      ],
+      "requiresConfirmation": null,
+      "parentId": null,
+      "checks": {
+        "busy": [],
+        "cwd": null,
+        "mtime": true
+      },
+      "paths": [
+        "/tmp/dss-fixture-ZZMVGr"
+      ],
+      "action": {
+        "type": "remove",
+        "paths": [
+          "/tmp/dss-fixture-ZZMVGr"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "safe": {
+      "items": 0,
+      "bytes": 0
+    },
+    "moderate": {
+      "items": 0,
+      "bytes": 0
+    },
+    "aggressive": {
+      "items": 0,
+      "bytes": 0
+    },
+    "consent": {
+      "items": 0,
+      "bytes": 0
+    },
+    "blocked": {
+      "items": 1,
+      "bytes": 8192
+    }
+  },
+  "docker": null,
+  "errors": [
+    {
+      "env": "host",
+      "scanner": "interruptFixture",
+      "message": "This operation was aborted"
+    }
+  ]
+}
+ℹ tests 0
+ℹ suites 0
+ℹ pass 0
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 201.916454

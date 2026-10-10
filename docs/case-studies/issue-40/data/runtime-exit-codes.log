@@ -1,0 +1,37 @@
+Node 26.11.0
+{ expected: 0, close: [ 0, null ] }
+{ expected: 130, close: [ 130, null ] }
+{ expected: 143, close: [ 143, null ] }
+{ delivery: 'child.kill', signal: 'SIGINT', stderr: 'ready\n' }
+{ delivery: 'child.kill', signal: 'SIGINT', stderr: 'handled\n' }
+{ delivery: 'child.kill', signal: 'SIGINT', close: [ 143, null ] }
+{ delivery: 'child.kill', signal: 'SIGTERM', stderr: 'ready\n' }
+{ delivery: 'child.kill', signal: 'SIGTERM', stderr: 'handled\n' }
+{ delivery: 'child.kill', signal: 'SIGTERM', close: [ 143, null ] }
+{ delivery: 'process.kill', signal: 'SIGINT', stderr: 'ready\n' }
+{ delivery: 'process.kill', signal: 'SIGINT', stderr: 'handled\n' }
+{ delivery: 'process.kill', signal: 'SIGINT', close: [ 143, null ] }
+{ delivery: 'process.kill', signal: 'SIGTERM', stderr: 'ready\n' }
+{ delivery: 'process.kill', signal: 'SIGTERM', stderr: 'handled\n' }
+{ delivery: 'process.kill', signal: 'SIGTERM', close: [ 143, null ] }
+
+Deno 2.9.6
+{ expected: 0, close: [ 0, null ] }
+{ expected: 130, close: [ 130, null ] }
+{ expected: 143, close: [ 143, null ] }
+{ delivery: "child.kill", signal: "SIGINT", stderr: "ready\n" }
+{ delivery: "child.kill", signal: "SIGINT", stderr: "handled\n" }
+{ delivery: "child.kill", signal: "SIGINT", close: [ null, "SIGINT" ] }
+{ delivery: "child.kill", signal: "SIGTERM", stderr: "ready\n" }
+{ delivery: "child.kill", signal: "SIGTERM", stderr: "handled\n" }
+{
+  delivery: "child.kill",
+  signal: "SIGTERM",
+  close: [ null, "SIGTERM" ]
+}
+{ delivery: "process.kill", signal: "SIGINT", stderr: "ready\n" }
+{ delivery: "process.kill", signal: "SIGINT", stderr: "handled\n" }
+{ delivery: "process.kill", signal: "SIGINT", close: [ 143, null ] }
+{ delivery: "process.kill", signal: "SIGTERM", stderr: "ready\n" }
+{ delivery: "process.kill", signal: "SIGTERM", stderr: "handled\n" }
+{ delivery: "process.kill", signal: "SIGTERM", close: [ 143, null ] }

@@ -31,6 +31,9 @@ import {
 import { imageNamed } from './docker/images.js';
 import { resolveEnvironment } from './env/resolve.js';
 import { configureScanPolicy } from './env/policy.js';
+import { configureCacheRoots } from './env/cache-roots.js';
+import { environmentScope, signalExecutor } from './env/scope.js';
+import { batches } from './env/batches.js';
 import { GitInspector } from './git.js';
 import { HealthWatch } from './health.js';
 import { consentFlag, dropNested, selectByTier, tierRank } from './items.js';
@@ -219,6 +222,18 @@ export class Cleaner {
       return;
     }
     const ctx = this.context(item.env);
+    const executor = ctx.executor;
+    ctx.executor = signalExecutor(executor, this.options.signal);
+    try {
+      return await environmentScope(ctx.env, this.options.signal, () =>
+        this.#processScoped(ctx, item, entry)
+      );
+    } finally {
+      ctx.executor = executor;
+    }
+  }
+
+  async #processScoped(ctx, item, entry) {
     const fresh = await this.#recheck(ctx, item);
     if (fresh.reason) {
       entry.reason = fresh.reason;
@@ -357,6 +372,10 @@ export class Cleaner {
 
   async #staticBlocker(ctx, item) {
     if (item.recheck?.type === 'version') {
+      if (!ctx.cacheRootsConfigured) {
+        await configureCacheRoots(ctx.env, await ctx.env.homeDirs());
+        ctx.cacheRootsConfigured = true;
+      }
       const rule = VERSION_RULES.find(
         (candidate) => candidate.id === item.rule
       );
@@ -469,6 +488,9 @@ export class Cleaner {
    * item stops; an item checked path by path skips just the busy path.
    */
   async #removePaths(ctx, item, entry) {
+    if (ctx.env.kind === 'container' && item.checks?.perPath) {
+      return this.#removeBatches(ctx, item, entry);
+    }
     for (const target of item.action.paths) {
       if (this.options.signal?.aborted) {
         throw new Error('cleanup aborted');
@@ -490,16 +512,112 @@ export class Cleaner {
         entry.reason = boundary;
         return;
       }
-      await ctx.env.remove([target]);
-      ctx.env.writableLayer?.forget?.(target, ctx.env.path);
-      entry.status = 'removed';
-      entry.deletedPaths.push(target);
-      entry.freedBytes += usage?.bytes ?? 0;
-      await this.options.onProgress?.(entry);
+      await this.#deletePaths(ctx, entry, [target], usage?.bytes ?? 0);
     }
     if (entry.deletedPaths.length === 0 && entry.skippedPaths.length > 0) {
       entry.reason = 'every path was in use or recently written';
     }
+  }
+
+  async #removeBatches(ctx, item, entry) {
+    for (const batch of batches(item.action.paths)) {
+      if (!(await this.#removeBatch(ctx, item, entry, batch))) {
+        return;
+      }
+    }
+  }
+
+  /** One short remote deletion per batch, after fresh health/liveness/boundary checks. */
+  async #removeBatch(ctx, item, entry, batch) {
+    await configureScanPolicy(ctx.env, this.options);
+    await ctx.liveness.refresh(true);
+    const stopped = this.health.verify(item, ctx.liveness.processList());
+    if (stopped) {
+      entry.reason = stopped;
+      return false;
+    }
+    await ctx.liveness.resolve(batch);
+    const usages = await ctx.env.usageMany(batch);
+    const { selected, reason } = this.#batchSelection(
+      ctx,
+      item,
+      entry,
+      batch,
+      usages
+    );
+    if (reason) {
+      entry.reason = reason;
+      return false;
+    }
+    if (!selected.length) {
+      return true;
+    }
+    await this.#deletePaths(ctx, entry, selected, sumBytes(usages, selected));
+    const lost = await this.health.check(ctx.env, item);
+    if (lost) {
+      entry.reason = lost;
+    }
+    return !lost;
+  }
+
+  #batchSelection(ctx, item, entry, batch, usages) {
+    const selected = [];
+    for (const target of batch) {
+      const blocker =
+        ctx.env.scanPolicy.removalReason(target) ??
+        ctx.liveness.busyReason({ ...item, paths: [target] });
+      if (blocker) {
+        return { selected: [], reason: blocker };
+      }
+      const usage = usages.get(target);
+      const busy = this.#pathActivity(ctx, item, target, usage);
+      const unavailable = this.#unavailableUsage(usage);
+      if (busy || unavailable) {
+        entry.skippedPaths.push({ path: target, reason: busy ?? unavailable });
+      } else {
+        selected.push(target);
+      }
+    }
+    return { selected };
+  }
+
+  #unavailableUsage(usage) {
+    if (!usage) {
+      return 'path disappeared';
+    }
+    if (usage.sizeUnknown) {
+      return 'writable-layer size unknown';
+    }
+    return usage.bytes === 0 ? 'no writable bytes remain' : null;
+  }
+
+  async #deletePaths(ctx, entry, selected, estimate) {
+    const before = await ctx.env.writableLayer?.allocatedBytes?.(
+      selected,
+      ctx.env.path
+    );
+    await ctx.env.remove(selected);
+    const after = await ctx.env.writableLayer?.allocatedBytes?.(
+      selected,
+      ctx.env.path
+    );
+    for (const target of selected) {
+      ctx.env.writableLayer?.forget?.(target, ctx.env.path);
+    }
+    entry.status = 'removed';
+    entry.deletedPaths.push(...selected);
+    entry.freedBytes += this.#freedBytes(ctx, entry, before, after, estimate);
+    await this.options.onProgress?.(entry);
+  }
+
+  #freedBytes(ctx, entry, before, after, fallback) {
+    if (typeof before === 'number' && typeof after === 'number') {
+      return Math.max(0, before - after);
+    }
+    if (ctx.env.writableLayer) {
+      entry.freedEstimated = true;
+    }
+    return fallback;
   }
 
   #pathActivity(ctx, item, target, usage) {

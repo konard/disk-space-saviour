@@ -3,11 +3,13 @@ import { DockerCli } from './cli.js';
 import { isWithin } from '../paths.js';
 import { trace } from '../exec.js';
 import { resetDiffSnapshots } from './snapshots.js';
+import { rootUpperdir, upperdirBytes } from './upperdir.js';
 
 let measurementQueue = Promise.resolve();
 const layers = new WeakMap();
 
 export function sharedWritableLayer(executor, id) {
+  executor = executor.unscoped ?? executor;
   if (!layers.has(executor)) {
     layers.set(executor, new Map());
   }
@@ -19,12 +21,14 @@ export function sharedWritableLayer(executor, id) {
 }
 
 export function resetWritableLayers(executor) {
+  executor = executor.unscoped ?? executor;
   layers.delete(executor);
   resetDiffSnapshots(executor);
 }
 
 /** Overlay without an authoritative upper layer must never count merged bytes. */
 export class UnknownWritableLayer {
+  source = 'unknown-overlay';
   measure(env, usages) {
     return Promise.resolve(
       new Map(
@@ -67,14 +71,14 @@ export class WritableLayer {
         if (!container) {
           return { diff: null, container };
         }
-        const upperdir =
-          container.GraphDriver?.Data?.UpperDir ?? this.upperdirCandidate;
+        const { upperdir, source } = await this.upperdir(container);
         if (upperdir?.startsWith('/')) {
           const result = await this.docker.executor
             .run(['stat', '-c', '%F', '--', upperdir])
             .catch(() => null);
           if (result?.code === 0 && result.stdout.trim() === 'directory') {
             trace('using authoritative upperdir', this.id);
+            this.source = source;
             return { container, upperdir, diff: null };
           }
         }
@@ -86,6 +90,7 @@ export class WritableLayer {
           return { diff: null, container };
         }
         const diff = await this.docker.diff(this.id);
+        this.source = diff === null ? 'unknown' : 'docker-diff';
         trace('finished measuring container', this.id);
         // Bound the retained change set; unknown is safer than a partial result.
         return {
@@ -102,6 +107,27 @@ export class WritableLayer {
     return this.snapshotPromise;
   }
 
+  async upperdir(container) {
+    if (container.GraphDriver?.Data?.UpperDir) {
+      return {
+        upperdir: container.GraphDriver.Data.UpperDir,
+        source: 'graphdriver-upperdir',
+      };
+    }
+    const pid = container.State?.Pid;
+    if (Number.isInteger(pid) && pid > 0) {
+      const info = await this.docker.executor.run([
+        'cat',
+        `/proc/${pid}/mountinfo`,
+      ]);
+      const upperdir = info.code === 0 ? rootUpperdir(info.stdout) : null;
+      if (upperdir) {
+        return { upperdir, source: 'mountinfo-upperdir' };
+      }
+    }
+    return { upperdir: this.upperdirCandidate, source: 'overlay-upperdir' };
+  }
+
   forget(target, pathApi) {
     this.removed.add(target);
     for (const file of this.stats.keys()) {
@@ -111,11 +137,55 @@ export class WritableLayer {
     }
   }
 
+  /** Allocated upper blocks before/after deletion, independent of merged data. */
+  async allocatedBytes(paths, pathApi) {
+    const { container, upperdir } = await this.snapshot();
+    if (
+      !upperdir ||
+      (container.Mounts ?? []).some((mount) =>
+        paths.some(
+          (target) =>
+            isWithin(target, mount.Destination, pathApi) ||
+            isWithin(mount.Destination, target, pathApi)
+        )
+      )
+    ) {
+      return null;
+    }
+    const measured = await upperdirBytes(
+      this.docker.executor,
+      paths.map((target) => `${upperdir}/${target.replace(/^\/+/, '')}`)
+    );
+    const values = [...measured.values()];
+    return values.length === paths.length &&
+      values.every((value) => value !== null)
+      ? values.reduce((sum, value) => sum + value, 0)
+      : null;
+  }
+
   async measureUpperdir(env, usages, container, upperdir) {
     const result = new Map();
     const mounts = (container.Mounts ?? [])
       .map((mount) => mount.Destination)
       .filter(Boolean);
+    const upperPath = (target) => `${upperdir}/${target.replace(/^\/+/, '')}`;
+    const targets = [...usages.keys()].filter(
+      (target) => !mounts.some((mount) => isWithin(target, mount, env.path))
+    );
+    const measurements = await upperdirBytes(
+      this.docker.executor,
+      targets.map(upperPath)
+    );
+    const mountRoots = mounts.filter(
+      (mount) =>
+        targets.some((target) => isWithin(mount, target, env.path)) &&
+        !mounts.some(
+          (other) => other !== mount && isWithin(mount, other, env.path)
+        )
+    );
+    const mountedUsage = mountRoots.length
+      ? await env.rawUsageMany(mountRoots)
+      : new Map();
     for (const [target, usage] of usages) {
       if (mounts.some((mount) => isWithin(target, mount, env.path))) {
         result.set(target, {
@@ -125,17 +195,24 @@ export class WritableLayer {
         });
         continue;
       }
-      const measured = await this.docker.executor.run([
-        'du',
-        '-skx',
-        '--',
-        `${upperdir}/${target.replace(/^\/+/, '')}`,
-      ]);
-      const kib = Number(/^([0-9]+)\s/m.exec(measured.stdout)?.[1]);
-      // Missing upperdir leaf means image-only. Other errors remain unknown.
-      const absent = /no such file|not found/i.test(measured.stderr);
-      const known = (measured.code === 0 && Number.isFinite(kib)) || absent;
-      const bytes = known ? Math.min(usage.bytes, absent ? 0 : kib * 1024) : 0;
+      const measured = measurements.get(upperPath(target));
+      const contained = mountRoots.filter((mount) =>
+        isWithin(mount, target, env.path)
+      );
+      const known =
+        measured !== null &&
+        measured !== undefined &&
+        contained.every((mount) => mountedUsage.has(mount));
+      const bytes = known
+        ? Math.min(
+            usage.bytes,
+            measured +
+              contained.reduce(
+                (sum, mount) => sum + mountedUsage.get(mount).bytes,
+                0
+              )
+          )
+        : 0;
       result.set(target, {
         ...usage,
         bytes,

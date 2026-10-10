@@ -1,0 +1,23 @@
+
+> disk-space-saviour@0.15.2 test:dind
+> node tests/integration/dind.mjs
+
+[dind] pulling docker:28-dind@sha256:2a232a42256f70d78e3cc5d2b5d6b3276710a0de0596c145f627ecfae90282ac (attempt 1/3)
+[dind] pulling busybox@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e (attempt 1/3)
+file:///tmp/gh-issue-solver-1791629994547/tests/integration/dind.mjs:52
+    throw new Error(`${command} failed (${result.status}): ${result.stderr}`);
+          ^
+
+Error: docker run -d --name dss-it-l1-35219 --privileged --memory=2g --memory-swap=2g --pids-limit=768 -e DOCKER_TLS_CERTDIR= dss-it/dind:35219-pinned failed (125): docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: unable to apply cgroup configuration: cannot enter cgroupv2 "/sys/fs/cgroup/docker" with domain controllers -- it is in an invalid state
+
+Run 'docker run --help' for more information
+
+    at sh (file:///tmp/gh-issue-solver-1791629994547/tests/integration/dind.mjs:52:11)
+    at buildChain (file:///tmp/gh-issue-solver-1791629994547/tests/integration/dind.mjs:93:3)
+    at main (file:///tmp/gh-issue-solver-1791629994547/tests/integration/dind.mjs:247:5)
+    at file:///tmp/gh-issue-solver-1791629994547/tests/integration/dind.mjs:297:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+    at async node:internal/modules/esm/loader:650:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:5)
+
+Node.js v26.11.0

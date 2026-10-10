@@ -94,3 +94,7 @@ This third condition (`should_release && skip_bump`) is the self-healing path: i
 2. **No automatic version bumping** — The self-healing path publishes the current `package.json` version as-is. If the version is already bumped (e.g., via a previous changeset that was consumed but publish failed), this catches it. This is simpler and safer than auto-bumping.
 
 3. **Minimal workflow changes** — The existing changeset flow is untouched. The new step only adds a parallel path for the edge case where no changesets exist but the version is unpublished.
+
+## disk-space-saviour investigation
+
+See the [disk-space-saviour requirement matrix, root causes, alternatives and evidence](disk-space-saviour.md). Earlier sections document the inherited pipeline template.

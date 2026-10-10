@@ -1,0 +1,113 @@
+▶ issue 36 toolchain caches
+  ✖ finds .perl5/build/perl-5/build.o safely and respects its busy tools (266.121198ms)
+  ✖ finds .perl5/dists/perl.tar.gz safely and respects its busy tools (205.777914ms)
+  ✖ finds .sdkman/tmp/java.zip safely and respects its busy tools (351.695773ms)
+  ✖ finds .sdkman/archives/java.zip safely and respects its busy tools (315.251424ms)
+  ✖ finds .nvm/.cache/bin/node.tar.gz safely and respects its busy tools (242.568249ms)
+  ✖ finds .rbenv/versions/3.3/lib/ruby/gems/3.3.0/cache/test.gem safely and respects its busy tools (347.797ms)
+  ✖ finds .rvm/gems/ruby-3.3/cache/test.gem safely and respects its busy tools (228.60564ms)
+  ✖ finds .local/share/gem/ruby/3.3.0/cache/test.gem safely and respects its busy tools (152.290319ms)
+  ✖ cleans only downloaded gem files, preserving other cache content (171.324039ms)
+  ✖ honors configured cache roots and GOPATH outside the home default (150.826497ms)
+  ✖ reports semver baseline builds at safe tier and blocks an active semver check (95.352958ms)
+✖ issue 36 toolchain caches (2533.391702ms)
+ℹ tests 11
+ℹ suites 1
+ℹ pass 0
+ℹ fail 11
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2857.718467
+
+✖ failing tests:
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ finds .perl5/build/perl-5/build.o safely and respects its busy tools (266.121198ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:27:27)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ finds .perl5/dists/perl.tar.gz safely and respects its busy tools (205.777914ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:27:27)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ finds .sdkman/tmp/java.zip safely and respects its busy tools (351.695773ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:27:27)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ finds .sdkman/archives/java.zip safely and respects its busy tools (315.251424ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:27:27)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ finds .nvm/.cache/bin/node.tar.gz safely and respects its busy tools (242.568249ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:27:27)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ finds .rbenv/versions/3.3/lib/ruby/gems/3.3.0/cache/test.gem safely and respects its busy tools (347.797ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:27:27)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ finds .rvm/gems/ruby-3.3/cache/test.gem safely and respects its busy tools (228.60564ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:27:27)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ finds .local/share/gem/ruby/3.3.0/cache/test.gem safely and respects its busy tools (152.290319ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:27:27)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ cleans only downloaded gem files, preserving other cache content (171.324039ms)
+  Error: Expected true to be false
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:40:48)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ honors configured cache roots and GOPATH outside the home default (150.826497ms)
+  Error: Expected false to be true
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:53:107)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ reports semver baseline builds at safe tier and blocks an active semver check (95.352958ms)
+  Error: Expected undefined to be "safe"
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:63:23)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)

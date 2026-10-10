@@ -1,0 +1,1005 @@
+
+> disk-space-saviour@0.15.2 check
+> npm run lint && npm run format:check && npm run check:duplication
+
+
+> disk-space-saviour@0.15.2 lint
+> node scripts/lint.mjs
+
+8 warning(s) on unchanged lines were not reported. Run LINT_ALL_WARNINGS=1 npm run lint to see them.
+
+> disk-space-saviour@0.15.2 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> disk-space-saviour@0.15.2 check:duplication
+> jscpd .
+
+Using config from .jscpd.json
+Clone found (javascript)
+ - experiments/codemod-visible-skips.mjs [46:1 - 60:65] (15 lines, 108 tokens)
+   tests/helpers/conditional-registration.js [25:1 - 39:65]
+Clone found (javascript)
+ - experiments/global-fixtures.mjs [2:1 - 7:9] (6 lines, 43 tokens)
+   experiments/project-fixtures.mjs [2:1 - 7:9]
+Clone found (javascript)
+ - experiments/image-rm-reason.mjs [24:2 - 29:33] (6 lines, 36 tokens)
+   tests/docker-images.test.js [158:24 - 163:37]
+Clone found (javascript)
+ - experiments/image-rm-reason.mjs [25:21 - 32:4] (8 lines, 42 tokens)
+   tests/docker-images.test.js [179:25 - 186:8]
+Clone found (javascript)
+ - experiments/issue-27-shell-boundaries.mjs [13:57 - 18:55] (6 lines, 52 tokens)
+   tests/issue-27-boundaries.test.js [156:46 - 163:46]
+Clone found (javascript)
+ - experiments/profile-env.mjs [30:1 - 35:6] (6 lines, 73 tokens)
+   experiments/scan-scanner.mjs [18:1 - 23:6]
+Clone found (javascript)
+ - experiments/profile-env.mjs [42:33 - 49:2] (8 lines, 31 tokens)
+   experiments/scan-scanner.mjs [29:35 - 36:2]
+Clone found (javascript)
+ - experiments/project-fixtures.mjs [16:10 - 21:8] (6 lines, 50 tokens)
+   tests/helpers/fixtures.js [120:56 - 125:8]
+Clone found (javascript)
+ - experiments/scan-projects.mjs [11:23 - 18:11] (8 lines, 32 tokens)
+   experiments/scan-scanner.mjs [22:33 - 29:11]
+Clone found (javascript)
+ - experiments/scan-projects.mjs [18:32 - 25:20] (8 lines, 33 tokens)
+   experiments/scan-scanner.mjs [31:32 - 38:20]
+Clone found (javascript)
+ - experiments/test-changeset-scripts.mjs [178:77 - 187:6] (10 lines, 40 tokens)
+   experiments/test-changeset-scripts.mjs [224:63 - 232:6]
+Clone found (javascript)
+ - experiments/test-changeset-scripts.mjs [178:77 - 186:23] (9 lines, 34 tokens)
+   experiments/test-changeset-scripts.mjs [246:61 - 253:23]
+Clone found (javascript)
+ - experiments/test-changeset-scripts.mjs [181:5 - 186:23] (6 lines, 32 tokens)
+   experiments/test-changeset-scripts.mjs [276:5 - 281:23]
+Clone found (javascript)
+ - experiments/test-changeset-scripts.mjs [186:48 - 193:27] (8 lines, 36 tokens)
+   experiments/test-changeset-scripts.mjs [257:78 - 264:27]
+Clone found (javascript)
+ - experiments/test-changeset-scripts.mjs [248:19 - 257:23] (10 lines, 50 tokens)
+   experiments/test-changeset-scripts.mjs [276:19 - 285:23]
+Clone found (javascript)
+ - experiments/test-failure-detection.mjs [13:1 - 37:2] (25 lines, 68 tokens)
+   scripts/publish-to-npm.mjs [80:1 - 104:2]
+Clone found (javascript)
+ - experiments/test-format-major-changes.mjs [15:35 - 49:13] (35 lines, 171 tokens)
+   experiments/test-format-minor-changes.mjs [18:37 - 52:13]
+Clone found (javascript)
+ - experiments/test-format-major-changes.mjs [15:35 - 31:48] (17 lines, 80 tokens)
+   experiments/test-format-no-hash.mjs [10:44 - 26:48]
+Clone found (javascript)
+ - experiments/test-format-major-changes.mjs [15:35 - 49:13] (35 lines, 171 tokens)
+   experiments/test-format-patch-changes.mjs [12:78 - 46:13]
+Clone found (javascript)
+ - experiments/test-format-major-changes.mjs [20:30 - 28:15] (9 lines, 41 tokens)
+   scripts/format-release-notes.mjs [114:35 - 123:17]
+Clone found (javascript)
+ - experiments/test-format-major-changes.mjs [31:70 - 37:58] (7 lines, 34 tokens)
+   scripts/format-release-notes.mjs [123:61 - 131:60]
+Clone found (javascript)
+ - scripts/changeset-version.mjs [53:3 - 65:15] (13 lines, 42 tokens)
+   scripts/instant-version-bump.mjs [151:3 - 164:15]
+Clone found (javascript)
+ - scripts/changeset-version.mjs [69:45 - 74:2] (6 lines, 35 tokens)
+   scripts/create-manual-changeset.mjs [98:44 - 103:2]
+Clone found (javascript)
+ - scripts/changeset-version.mjs [69:45 - 74:2] (6 lines, 35 tokens)
+   scripts/instant-version-bump.mjs [169:53 - 174:2]
+Clone found (javascript)
+ - scripts/changeset-version.mjs [69:60 - 74:2] (6 lines, 31 tokens)
+   scripts/merge-changesets.mjs [284:44 - 289:2]
+Clone found (javascript)
+ - scripts/changeset-version.mjs [69:45 - 74:2] (6 lines, 35 tokens)
+   scripts/validate-changeset.mjs [209:53 - 214:2]
+Clone found (javascript)
+ - scripts/check-changesets.mjs [26:28 - 38:15] (13 lines, 39 tokens)
+   scripts/check-release-needed.mjs [41:66 - 53:15]
+Clone found (javascript)
+ - scripts/check-changesets.mjs [26:28 - 39:2] (14 lines, 47 tokens)
+   scripts/check-web-archive.mjs [35:65 - 48:2]
+Clone found (javascript)
+ - scripts/check-changesets.mjs [33:1 - 38:15] (6 lines, 38 tokens)
+   scripts/check-docker-build.mjs [60:1 - 65:15]
+Clone found (javascript)
+ - scripts/check-changesets.mjs [34:9 - 46:9] (13 lines, 38 tokens)
+   scripts/detect-code-changes.mjs [113:9 - 120:9]
+Clone found (javascript)
+ - scripts/check-changesets.mjs [109:58 - 116:42] (8 lines, 58 tokens)
+   scripts/merge-changesets.mjs [194:61 - 199:42]
+Clone found (javascript)
+ - scripts/check-changesets.mjs [109:58 - 116:42] (8 lines, 58 tokens)
+   scripts/validate-changeset.mjs [147:58 - 152:42]
+Clone found (javascript)
+ - scripts/check-docker-build.mjs [16:1 - 25:2] (10 lines, 52 tokens)
+   scripts/check-docker-publish.mjs [13:1 - 22:2]
+Clone found (javascript)
+ - scripts/check-docker-build.mjs [56:11 - 77:17] (22 lines, 118 tokens)
+   scripts/check-docker-publish.mjs [95:13 - 116:17]
+Clone found (javascript)
+ - scripts/check-docker-build.mjs [57:4 - 65:15] (9 lines, 40 tokens)
+   scripts/detect-code-changes.mjs [109:58 - 117:15]
+Clone found (javascript)
+ - scripts/check-docker-build.mjs [61:9 - 68:9] (8 lines, 38 tokens)
+   scripts/check-release-needed.mjs [49:9 - 60:9]
+Clone found (javascript)
+ - scripts/check-docker-build.mjs [61:47 - 66:2] (6 lines, 30 tokens)
+   scripts/wait-for-npm.mjs [234:44 - 239:2]
+Clone found (javascript)
+ - scripts/check-docker-build.mjs [65:39 - 76:7] (12 lines, 48 tokens)
+   scripts/wait-for-npm.mjs [301:51 - 313:7]
+Clone found (javascript)
+ - scripts/check-docker-build.mjs [66:1 - 74:2] (9 lines, 44 tokens)
+   scripts/create-github-release.mjs [297:1 - 305:2]
+Clone found (javascript)
+ - scripts/check-docker-build.mjs [77:43 - 83:5] (7 lines, 37 tokens)
+   scripts/check-docker-publish.mjs [116:45 - 121:12]
+Clone found (javascript)
+ - scripts/check-docker-build.mjs [83:3 - 88:4] (6 lines, 33 tokens)
+   scripts/check-docker-publish.mjs [130:3 - 135:4]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [42:29 - 50:38] (9 lines, 53 tokens)
+   tests/checkout-credentials.test.js [37:25 - 45:38]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [42:29 - 49:8] (8 lines, 37 tokens)
+   tests/docker-publish.test.js [13:50 - 19:8]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [42:29 - 50:38] (9 lines, 53 tokens)
+   tests/pipeline-status.test.js [44:23 - 52:38]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [43:67 - 50:38] (8 lines, 31 tokens)
+   tests/ci-timeouts.test.js [28:61 - 35:38]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [43:67 - 50:38] (8 lines, 31 tokens)
+   tests/ci-timeouts.test.js [52:3 - 59:38]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [43:67 - 50:38] (8 lines, 31 tokens)
+   tests/links-workflow.test.js [12:58 - 19:38]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [45:3 - 58:9] (14 lines, 63 tokens)
+   tests/security-workflow.test.js [26:3 - 37:9]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [50:65 - 58:9] (9 lines, 33 tokens)
+   tests/checkout-credentials.test.js [45:67 - 51:9]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [50:65 - 58:9] (9 lines, 33 tokens)
+   tests/ci-timeouts.test.js [59:63 - 71:9]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [50:75 - 59:8] (10 lines, 35 tokens)
+   tests/pipeline-status.test.js [52:77 - 59:8]
+Clone found (javascript)
+ - scripts/check-status-gate-covers-all-jobs.mjs [68:3 - 78:29] (11 lines, 67 tokens)
+   tests/pipeline-status.test.js [59:3 - 69:29]
+Clone found (javascript)
+ - scripts/check-web-archive.mjs [390:19 - 400:19] (11 lines, 55 tokens)
+   scripts/recheck-broken-links.mjs [374:5 - 386:19]
+Clone found (javascript)
+ - scripts/create-github-release.mjs [295:13 - 303:39] (9 lines, 32 tokens)
+   scripts/smoke-test-package.mjs [497:56 - 505:39]
+Clone found (javascript)
+ - scripts/create-manual-changeset.mjs [21:58 - 36:15] (16 lines, 43 tokens)
+   scripts/format-github-release.mjs [21:72 - 38:15]
+Clone found (javascript)
+ - scripts/create-manual-changeset.mjs [27:60 - 45:18] (19 lines, 82 tokens)
+   scripts/instant-version-bump.mjs [39:60 - 57:18]
+Clone found (javascript)
+ - scripts/create-manual-changeset.mjs [45:50 - 53:4] (9 lines, 32 tokens)
+   scripts/format-github-release.mjs [56:72 - 64:4]
+Clone found (javascript)
+ - scripts/create-manual-changeset.mjs [45:50 - 53:4] (9 lines, 32 tokens)
+   scripts/format-release-notes.mjs [68:48 - 76:4]
+Clone found (javascript)
+ - scripts/create-manual-changeset.mjs [45:50 - 53:4] (9 lines, 32 tokens)
+   scripts/instant-version-bump.mjs [57:53 - 65:4]
+Clone found (javascript)
+ - scripts/create-manual-changeset.mjs [45:50 - 53:4] (9 lines, 32 tokens)
+   scripts/publish-to-npm.mjs [55:58 - 63:4]
+Clone found (javascript)
+ - scripts/create-manual-changeset.mjs [45:50 - 53:4] (9 lines, 32 tokens)
+   scripts/version-and-commit.mjs [61:57 - 69:4]
+Clone found (javascript)
+ - scripts/format-github-release.mjs [19:80 - 41:18] (23 lines, 77 tokens)
+   scripts/format-release-notes.mjs [31:44 - 53:18]
+Clone found (javascript)
+ - scripts/format-github-release.mjs [19:80 - 38:15] (20 lines, 59 tokens)
+   scripts/instant-version-bump.mjs [31:24 - 48:15]
+Clone found (javascript)
+ - scripts/format-github-release.mjs [19:80 - 29:20] (11 lines, 35 tokens)
+   scripts/publish-to-npm.mjs [35:29 - 44:40]
+Clone found (javascript)
+ - scripts/format-github-release.mjs [41:49 - 53:15] (13 lines, 56 tokens)
+   scripts/format-release-notes.mjs [58:38 - 70:15]
+Clone found (javascript)
+ - scripts/format-github-release.mjs [58:7 - 66:6] (9 lines, 30 tokens)
+   scripts/format-release-notes.mjs [70:7 - 78:6]
+Clone found (javascript)
+ - scripts/format-github-release.mjs [58:7 - 66:6] (9 lines, 30 tokens)
+   scripts/instant-version-bump.mjs [59:7 - 69:6]
+Clone found (javascript)
+ - scripts/format-github-release.mjs [58:7 - 66:8] (9 lines, 31 tokens)
+   scripts/publish-to-npm.mjs [57:7 - 65:8]
+Clone found (javascript)
+ - scripts/format-github-release.mjs [58:7 - 66:8] (9 lines, 31 tokens)
+   scripts/version-and-commit.mjs [63:7 - 71:8]
+Clone found (javascript)
+ - scripts/instant-version-bump.mjs [72:32 - 78:8] (7 lines, 34 tokens)
+   scripts/publish-to-npm.mjs [65:19 - 71:6]
+Clone found (javascript)
+ - scripts/land-via-pull-request.mjs [160:46 - 166:15] (7 lines, 61 tokens)
+   scripts/land-via-pull-request.mjs [204:76 - 210:15]
+Clone found (javascript)
+ - scripts/merge-changesets.mjs [197:39 - 202:8] (6 lines, 30 tokens)
+   scripts/validate-changeset.mjs [150:39 - 155:8]
+Clone found (javascript)
+ - scripts/publish-to-npm.mjs [121:1 - 126:2] (6 lines, 35 tokens)
+   scripts/version-and-commit.mjs [141:1 - 146:2]
+Clone found (javascript)
+ - scripts/publish-to-npm.mjs [296:3 - 304:8] (9 lines, 37 tokens)
+   scripts/version-and-commit.mjs [300:3 - 308:8]
+Clone found (javascript)
+ - scripts/run-command.mjs [55:5 - 60:23] (6 lines, 30 tokens)
+   tests/detect-code-changes.test.js [354:7 - 359:23]
+Clone found (javascript)
+ - scripts/sanitize-npm-userconfig.mjs [66:1 - 74:22] (9 lines, 43 tokens)
+   scripts/setup-npm.mjs [248:1 - 256:22]
+Clone found (javascript)
+ - scripts/smoke-test-package.mjs [26:291 - 51:10] (26 lines, 140 tokens)
+   scripts/wait-for-npm.mjs [23:163 - 48:10]
+Clone found (javascript)
+ - scripts/smoke-test-package.mjs [505:40 - 517:17] (13 lines, 70 tokens)
+   scripts/wait-for-npm.mjs [309:45 - 321:17]
+Clone found (javascript)
+ - scripts/smoke-test-package.mjs [518:57 - 525:65] (8 lines, 39 tokens)
+   scripts/wait-for-npm.mjs [322:57 - 329:65]
+Clone found (javascript)
+ - src/clean.js [912:3 - 922:8] (11 lines, 72 tokens)
+   src/emergency.js [112:3 - 122:8]
+Clone found (javascript)
+ - src/clean.js [934:7 - 941:8] (8 lines, 69 tokens)
+   src/emergency.js [157:7 - 164:8]
+Clone found (javascript)
+ - src/cli.js [374:5 - 379:16] (6 lines, 51 tokens)
+   src/cli.js [396:5 - 401:16]
+Clone found (javascript)
+ - src/cli.js [379:42 - 384:11] (6 lines, 32 tokens)
+   src/cli.js [401:46 - 406:7]
+Clone found (javascript)
+ - src/docker/writable.js [37:11 - 47:8] (11 lines, 41 tokens)
+   src/docker/writable.js [246:20 - 256:8]
+Clone found (javascript)
+ - src/env/local.js [298:19 - 303:42] (6 lines, 39 tokens)
+   src/env/local.js [369:34 - 374:44]
+Clone found (javascript)
+ - src/env/local.js [323:35 - 335:8] (13 lines, 30 tokens)
+   src/env/shell.js [270:55 - 282:8]
+Clone found (javascript)
+ - src/env/local.js [517:3 - 526:8] (10 lines, 38 tokens)
+   src/env/shell.js [275:3 - 289:8]
+Clone found (javascript)
+ - src/env/policy.js [117:47 - 122:24] (6 lines, 35 tokens)
+   src/env/policy.js [135:75 - 140:24]
+Clone found (javascript)
+ - src/env/scope.js [20:41 - 25:10] (6 lines, 32 tokens)
+   src/env/scope.js [32:23 - 37:10]
+Clone found (javascript)
+ - src/exec.js [83:16 - 94:10] (12 lines, 53 tokens)
+   src/exec.js [229:14 - 240:8]
+Clone found (javascript)
+ - src/health.js [156:25 - 161:11] (6 lines, 42 tokens)
+   src/health.js [178:24 - 183:11]
+Clone found (javascript)
+ - src/rules/versions.js [184:40 - 191:20] (8 lines, 30 tokens)
+   src/rules/versions.js [206:38 - 213:20]
+Clone found (javascript)
+ - src/rules/versions.js [242:48 - 247:20] (6 lines, 30 tokens)
+   src/rules/versions.js [261:50 - 266:20]
+Clone found (javascript)
+ - src/scanners/agents.js [135:6 - 149:22] (15 lines, 43 tokens)
+   src/scanners/versions.js [221:54 - 235:22]
+Clone found (javascript)
+ - tests/agents.test.js [3:33 - 15:19] (13 lines, 32 tokens)
+   tests/health.test.js [24:47 - 35:19]
+Clone found (javascript)
+ - tests/agents.test.js [3:33 - 17:10] (15 lines, 39 tokens)
+   tests/versions.test.js [4:59 - 17:10]
+Clone found (javascript)
+ - tests/agents.test.js [5:38 - 17:10] (13 lines, 32 tokens)
+   tests/bind-mount.test.js [8:59 - 20:10]
+Clone found (javascript)
+ - tests/agents.test.js [5:38 - 15:57] (11 lines, 30 tokens)
+   tests/emergency.test.js [16:29 - 26:57]
+Clone found (javascript)
+ - tests/agents.test.js [5:38 - 15:57] (11 lines, 30 tokens)
+   tests/rust.test.js [17:33 - 27:57]
+Clone found (javascript)
+ - tests/bot-commit-attribution.test.js [31:54 - 39:6] (9 lines, 32 tokens)
+   tests/bot-commit-attribution.test.js [41:55 - 49:6]
+Clone found (javascript)
+ - tests/check-changesets.test.js [10:3 - 19:19] (10 lines, 39 tokens)
+   tests/check-file-line-limits.test.js [5:3 - 14:19]
+Clone found (javascript)
+ - tests/check-changesets.test.js [11:12 - 22:11] (12 lines, 49 tokens)
+   tests/detect-code-changes.test.js [6:14 - 17:11]
+Clone found (javascript)
+ - tests/check-changesets.test.js [12:15 - 19:9] (8 lines, 32 tokens)
+   tests/merge-changesets.test.js [8:14 - 16:9]
+Clone found (javascript)
+ - tests/check-changesets.test.js [15:1 - 22:11] (8 lines, 42 tokens)
+   tests/package-manager.test.js [3:57 - 10:11]
+Clone found (javascript)
+ - tests/check-changesets.test.js [15:1 - 22:11] (8 lines, 42 tokens)
+   tests/status-gate-coverage.test.js [3:59 - 10:11]
+Clone found (javascript)
+ - tests/check-changesets.test.js [39:33 - 45:22] (7 lines, 44 tokens)
+   tests/detect-code-changes.test.js [100:46 - 106:22]
+Clone found (javascript)
+ - tests/check-changesets.test.js [66:9 - 71:41] (6 lines, 35 tokens)
+   tests/check-changesets.test.js [95:9 - 100:41]
+Clone found (javascript)
+ - tests/check-changesets.test.js [66:9 - 79:5] (14 lines, 75 tokens)
+   tests/check-changesets.test.js [124:9 - 137:5]
+Clone found (javascript)
+ - tests/check-changesets.test.js [68:29 - 81:11] (14 lines, 69 tokens)
+   tests/check-changesets.test.js [126:29 - 138:2]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [1:1 - 14:9] (14 lines, 59 tokens)
+   tests/create-github-release.test.js [7:1 - 21:9]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [10:1 - 16:6] (7 lines, 37 tokens)
+   tests/pipeline-status.test.js [3:59 - 9:6]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [10:1 - 17:11] (8 lines, 44 tokens)
+   tests/push-main-with-rebase-retry.test.js [10:1 - 17:11]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [11:19 - 17:11] (7 lines, 36 tokens)
+   tests/required-docs.test.js [4:19 - 10:11]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [74:46 - 81:31] (8 lines, 33 tokens)
+   tests/check-file-line-limits.test.js [209:23 - 216:31]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [75:7 - 81:31] (7 lines, 32 tokens)
+   tests/check-file-line-limits.test.js [242:51 - 248:31]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [78:46 - 84:31] (7 lines, 33 tokens)
+   tests/check-file-line-limits.test.js [313:10 - 319:31]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/check-file-line-limits.test.js [119:62 - 126:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/check-file-line-limits.test.js [146:9 - 153:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/check-file-line-limits.test.js [195:9 - 202:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/check-file-line-limits.test.js [249:66 - 256:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/check-file-line-limits.test.js [270:75 - 277:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/check-file-line-limits.test.js [285:68 - 291:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/pipeline-status.test.js [389:10 - 396:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/required-docs.test.js [134:9 - 141:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/required-docs.test.js [153:70 - 160:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [95:66 - 102:37] (8 lines, 31 tokens)
+   tests/run-with-budget-warning.test.js [175:72 - 182:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [106:34 - 113:41] (8 lines, 35 tokens)
+   tests/check-file-line-limits.test.js [131:31 - 138:41]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [106:28 - 113:41] (8 lines, 37 tokens)
+   tests/check-file-line-limits.test.js [157:23 - 164:41]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [106:34 - 113:41] (8 lines, 35 tokens)
+   tests/check-file-line-limits.test.js [183:23 - 190:41]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [143:9 - 153:37] (11 lines, 43 tokens)
+   tests/check-file-line-limits.test.js [166:9 - 178:37]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [221:64 - 227:5] (7 lines, 36 tokens)
+   tests/check-file-line-limits.test.js [248:61 - 254:5]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [240:67 - 247:36] (8 lines, 55 tokens)
+   tests/check-file-line-limits.test.js [260:77 - 267:36]
+Clone found (javascript)
+ - tests/check-file-line-limits.test.js [262:52 - 268:41] (7 lines, 33 tokens)
+   tests/check-file-line-limits.test.js [279:55 - 285:39]
+Clone found (javascript)
+ - tests/check-release-needed.test.js [2:16 - 12:7] (11 lines, 35 tokens)
+   tests/detect-code-changes.test.js [2:27 - 12:7]
+Clone found (javascript)
+ - tests/check-release-needed.test.js [129:45 - 134:23] (6 lines, 37 tokens)
+   tests/check-release-needed.test.js [137:46 - 142:23]
+Clone found (javascript)
+ - tests/check-staged-formatting.test.js [1:1 - 6:9] (6 lines, 45 tokens)
+   tests/release-metadata.test.js [1:1 - 7:9]
+Clone found (javascript)
+ - tests/check-staged-formatting.test.js [14:2 - 20:4] (7 lines, 47 tokens)
+   tests/release-metadata.test.js [9:56 - 15:4]
+Clone found (javascript)
+ - tests/check-staged-formatting.test.js [27:63 - 33:46] (7 lines, 54 tokens)
+   tests/release-metadata.test.js [23:65 - 29:46]
+Clone found (javascript)
+ - tests/checkout-credentials.test.js [1:1 - 17:9] (17 lines, 78 tokens)
+   tests/workflow-permissions.test.js [1:1 - 17:9]
+Clone found (javascript)
+ - tests/checkout-credentials.test.js [36:21 - 44:8] (9 lines, 47 tokens)
+   tests/docker-build.test.js [11:24 - 18:8]
+Clone found (javascript)
+ - tests/checkout-credentials.test.js [36:1 - 45:38] (10 lines, 65 tokens)
+   tests/release-preflight.test.js [20:1 - 29:38]
+Clone found (javascript)
+ - tests/checkout-credentials.test.js [36:32 - 45:38] (10 lines, 60 tokens)
+   tests/security-workflow.test.js [22:22 - 31:38]
+Clone found (javascript)
+ - tests/checkout-credentials.test.js [40:3 - 51:9] (12 lines, 63 tokens)
+   tests/ci-timeouts.test.js [30:3 - 41:9]
+Clone found (javascript)
+ - tests/checkout-credentials.test.js [40:3 - 51:9] (12 lines, 63 tokens)
+   tests/pipeline-status.test.js [47:3 - 58:9]
+Clone found (javascript)
+ - tests/checkout-credentials.test.js [53:52 - 61:9] (9 lines, 30 tokens)
+   tests/pipeline-status.test.js [35:50 - 43:9]
+Clone found (javascript)
+ - tests/ci-timeouts.test.js [26:44 - 41:9] (16 lines, 92 tokens)
+   tests/workflow-reliability.test.js [57:25 - 72:9]
+Clone found (javascript)
+ - tests/ci-timeouts.test.js [464:95 - 470:37] (7 lines, 32 tokens)
+   tests/ci-timeouts.test.js [540:102 - 546:37]
+Clone found (javascript)
+ - tests/cli.test.js [235:31 - 241:14] (7 lines, 52 tokens)
+   tests/cli.test.js [316:8 - 323:12]
+Clone found (javascript)
+ - tests/create-github-release.test.js [219:23 - 226:23] (8 lines, 38 tokens)
+   tests/create-github-release.test.js [233:49 - 240:23]
+Clone found (javascript)
+ - tests/create-github-release.test.js [390:27 - 396:41] (7 lines, 33 tokens)
+   tests/create-github-release.test.js [423:17 - 426:41]
+Clone found (javascript)
+ - tests/create-github-release.test.js [408:40 - 417:39] (10 lines, 37 tokens)
+   tests/create-github-release.test.js [431:37 - 440:39]
+Clone found (javascript)
+ - tests/create-github-release.test.js [410:10 - 417:39] (8 lines, 31 tokens)
+   tests/create-github-release.test.js [452:65 - 459:39]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [5:3 - 14:19] (10 lines, 39 tokens)
+   tests/push-main-with-rebase-retry.test.js [5:3 - 14:19]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [35:16 - 40:9] (6 lines, 32 tokens)
+   tests/push-main-with-rebase-retry.test.js [46:19 - 51:9]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [41:3 - 47:62] (7 lines, 70 tokens)
+   tests/detect-code-changes.test.js [70:3 - 76:62]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [41:70 - 47:32] (7 lines, 50 tokens)
+   tests/detect-code-changes.test.js [286:75 - 292:32]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [48:32 - 53:27] (6 lines, 43 tokens)
+   tests/detect-code-changes.test.js [294:55 - 298:39]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [56:35 - 62:9] (7 lines, 43 tokens)
+   tests/detect-code-changes.test.js [300:55 - 305:8]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [122:45 - 128:35] (7 lines, 37 tokens)
+   tests/detect-code-changes.test.js [188:58 - 194:37]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [122:45 - 127:39] (6 lines, 30 tokens)
+   tests/detect-code-changes.test.js [245:10 - 250:41]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [122:46 - 128:35] (7 lines, 36 tokens)
+   tests/detect-code-changes.test.js [266:9 - 272:35]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [147:56 - 153:5] (7 lines, 34 tokens)
+   tests/detect-code-changes.test.js [225:61 - 231:9]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [147:56 - 153:5] (7 lines, 34 tokens)
+   tests/detect-code-changes.test.js [272:55 - 278:5]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [162:61 - 170:65] (9 lines, 60 tokens)
+   tests/detect-code-changes.test.js [218:12 - 226:67]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [173:60 - 181:24] (9 lines, 32 tokens)
+   tests/detect-code-changes.test.js [226:65 - 235:24]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [226:27 - 232:6] (7 lines, 30 tokens)
+   tests/detect-code-changes.test.js [273:23 - 279:2]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [243:50 - 250:41] (8 lines, 39 tokens)
+   tests/detect-code-changes.test.js [264:57 - 271:39]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [390:58 - 395:17] (6 lines, 49 tokens)
+   tests/detect-code-changes.test.js [417:69 - 422:17]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [390:58 - 396:10] (7 lines, 55 tokens)
+   tests/detect-code-changes.test.js [493:50 - 499:10]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [393:38 - 398:10] (6 lines, 35 tokens)
+   tests/detect-code-changes.test.js [496:38 - 500:12]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [401:56 - 406:16] (6 lines, 31 tokens)
+   tests/detect-code-changes.test.js [428:56 - 433:16]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [408:10 - 416:23] (9 lines, 37 tokens)
+   tests/detect-code-changes.test.js [434:39 - 442:23]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [408:10 - 416:23] (9 lines, 37 tokens)
+   tests/detect-code-changes.test.js [456:52 - 463:23]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [408:10 - 416:23] (9 lines, 37 tokens)
+   tests/detect-code-changes.test.js [484:9 - 492:23]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [408:9 - 414:5] (7 lines, 33 tokens)
+   tests/detect-code-changes.test.js [518:35 - 524:5]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [426:31 - 432:56] (7 lines, 49 tokens)
+   tests/detect-code-changes.test.js [450:21 - 456:54]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [442:53 - 447:8] (6 lines, 53 tokens)
+   tests/detect-code-changes.test.js [464:66 - 470:10]
+Clone found (javascript)
+ - tests/detect-code-changes.test.js [472:27 - 481:35] (10 lines, 41 tokens)
+   tests/detect-code-changes.test.js [507:28 - 516:35]
+Clone found (javascript)
+ - tests/docker-build.test.js [13:15 - 22:2] (10 lines, 78 tokens)
+   tests/docker-publish.test.js [14:15 - 23:2]
+Clone found (javascript)
+ - tests/docker-build.test.js [18:19 - 24:9] (7 lines, 47 tokens)
+   tests/docker-publish.test.js [19:19 - 25:9]
+Clone found (javascript)
+ - tests/docker-build.test.js [98:62 - 105:18] (8 lines, 30 tokens)
+   tests/docker-publish.test.js [193:7 - 200:18]
+Clone found (javascript)
+ - tests/docker-images.test.js [157:61 - 163:37] (7 lines, 47 tokens)
+   tests/docker-images.test.js [177:53 - 183:37]
+Clone found (javascript)
+ - tests/docker-images.test.js [193:6 - 198:51] (6 lines, 31 tokens)
+   tests/docker-images.test.js [216:8 - 221:63]
+Clone found (javascript)
+ - tests/docker-investigation.test.js [29:47 - 43:16] (15 lines, 33 tokens)
+   tests/issue-14-docker.test.js [10:34 - 19:16]
+Clone found (javascript)
+ - tests/docker-investigation.test.js [168:53 - 177:46] (10 lines, 64 tokens)
+   tests/docker-investigation.test.js [198:63 - 207:46]
+Clone found (javascript)
+ - tests/docker-investigation.test.js [171:52 - 181:12] (11 lines, 59 tokens)
+   tests/docker-investigation.test.js [235:24 - 245:12]
+Clone found (javascript)
+ - tests/docker-investigation.test.js [172:43 - 182:15] (11 lines, 49 tokens)
+   tests/docker-investigation.test.js [236:43 - 246:14]
+Clone found (javascript)
+ - tests/docker-investigation.test.js [172:67 - 179:20] (8 lines, 30 tokens)
+   tests/docker.test.js [454:44 - 461:20]
+Clone found (javascript)
+ - tests/docker-investigation.test.js [189:34 - 197:23] (9 lines, 33 tokens)
+   tests/docker-investigation.test.js [219:34 - 227:23]
+Clone found (javascript)
+ - tests/docker-publish.test.js [47:15 - 58:2] (12 lines, 50 tokens)
+   tests/workflow-reliability.test.js [118:13 - 129:2]
+Clone found (javascript)
+ - tests/docker.test.js [337:7 - 342:64] (6 lines, 36 tokens)
+   tests/docker.test.js [423:7 - 427:63]
+Clone found (javascript)
+ - tests/docker.test.js [407:56 - 413:26] (7 lines, 47 tokens)
+   tests/docker.test.js [427:63 - 432:24]
+Clone found (javascript)
+ - tests/docker.test.js [453:72 - 464:14] (12 lines, 49 tokens)
+   tests/docker.test.js [502:18 - 513:14]
+Clone found (javascript)
+ - tests/docker.test.js [523:61 - 530:5] (8 lines, 36 tokens)
+   tests/docker.test.js [554:50 - 559:5]
+Clone found (javascript)
+ - tests/emergency.test.js [17:1 - 28:6] (12 lines, 30 tokens)
+   tests/rust.test.js [18:1 - 29:6]
+Clone found (javascript)
+ - tests/emergency.test.js [173:37 - 178:23] (6 lines, 35 tokens)
+   tests/emergency.test.js [185:75 - 191:23]
+Clone found (javascript)
+ - tests/env.test.js [22:3 - 27:15] (6 lines, 34 tokens)
+   tests/visible-skips.test.js [80:3 - 85:15]
+Clone found (javascript)
+ - tests/git-safety.test.js [219:66 - 225:31] (7 lines, 33 tokens)
+   tests/git-safety.test.js [237:44 - 243:31]
+Clone found (javascript)
+ - tests/git-safety.test.js [219:66 - 225:31] (7 lines, 33 tokens)
+   tests/git-safety.test.js [255:57 - 261:31]
+Clone found (javascript)
+ - tests/git-safety.test.js [219:66 - 225:31] (7 lines, 33 tokens)
+   tests/git-safety.test.js [279:62 - 285:31]
+Clone found (javascript)
+ - tests/git-safety.test.js [219:66 - 225:31] (7 lines, 33 tokens)
+   tests/scan-projects.test.js [207:18 - 213:31]
+Clone found (javascript)
+ - tests/git-safety.test.js [238:19 - 243:47] (6 lines, 34 tokens)
+   tests/git-safety.test.js [256:19 - 261:47]
+Clone found (javascript)
+ - tests/git-safety.test.js [238:19 - 243:47] (6 lines, 34 tokens)
+   tests/git-safety.test.js [280:19 - 285:47]
+Clone found (javascript)
+ - tests/git-safety.test.js [238:19 - 243:47] (6 lines, 34 tokens)
+   tests/scan-projects.test.js [208:19 - 213:47]
+Clone found (javascript)
+ - tests/git-safety.test.js [277:66 - 285:47] (9 lines, 57 tokens)
+   tests/git-safety.test.js [331:9 - 340:49]
+Clone found (javascript)
+ - tests/health.test.js [25:38 - 37:6] (13 lines, 33 tokens)
+   tests/rust-leaf.test.js [25:61 - 37:6]
+Clone found (javascript)
+ - tests/health.test.js [175:38 - 181:10] (7 lines, 36 tokens)
+   tests/rust-leaf.test.js [149:6 - 155:12]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [1:22 - 13:9] (13 lines, 45 tokens)
+   tests/push-main-with-rebase-retry.test.js [1:18 - 13:9]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [1:1 - 13:9] (13 lines, 50 tokens)
+   tests/run-with-budget-warning.test.js [1:1 - 13:9]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [1:1 - 13:9] (13 lines, 50 tokens)
+   tests/simulate-fresh-merge.test.js [1:1 - 13:9]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [92:55 - 100:72] (9 lines, 64 tokens)
+   tests/install-git-hooks.test.js [155:50 - 162:70]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [92:55 - 100:72] (9 lines, 64 tokens)
+   tests/install-git-hooks.test.js [175:57 - 182:70]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [95:55 - 100:72] (6 lines, 43 tokens)
+   tests/install-git-hooks.test.js [197:54 - 202:70]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [105:37 - 113:37] (9 lines, 46 tokens)
+   tests/install-git-hooks.test.js [127:62 - 135:37]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [105:37 - 113:37] (9 lines, 46 tokens)
+   tests/install-git-hooks.test.js [147:61 - 155:37]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [105:37 - 113:37] (9 lines, 46 tokens)
+   tests/install-git-hooks.test.js [168:58 - 175:37]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [114:51 - 121:72] (8 lines, 52 tokens)
+   tests/install-git-hooks.test.js [136:41 - 143:72]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [163:16 - 175:37] (13 lines, 81 tokens)
+   tests/install-git-hooks.test.js [183:19 - 195:37]
+Clone found (javascript)
+ - tests/install-git-hooks.test.js [163:16 - 173:6] (11 lines, 74 tokens)
+   tests/install-git-hooks.test.js [202:69 - 212:6]
+Clone found (javascript)
+ - tests/issue-14-docker.test.js [116:62 - 121:11] (6 lines, 41 tokens)
+   tests/issue-14-docker.test.js [140:5 - 145:4]
+Clone found (javascript)
+ - tests/issue-14-git.test.js [26:86 - 31:30] (6 lines, 34 tokens)
+   tests/issue-14-git.test.js [92:76 - 97:30]
+Clone found (javascript)
+ - tests/issue-14-git.test.js [45:69 - 51:5] (7 lines, 36 tokens)
+   tests/issue-14-git.test.js [63:29 - 69:5]
+Clone found (javascript)
+ - tests/issue-27-boundaries.test.js [98:57 - 106:14] (9 lines, 68 tokens)
+   tests/issue-27-boundaries.test.js [124:30 - 132:14]
+Clone found (javascript)
+ - tests/issue-27-caches.test.js [43:57 - 49:23] (7 lines, 42 tokens)
+   tests/issue-27-caches.test.js [135:57 - 142:23]
+Clone found (javascript)
+ - tests/issue-27-processes.test.js [93:7 - 98:34] (6 lines, 36 tokens)
+   tests/issue-27-processes.test.js [110:31 - 114:39]
+Clone found (javascript)
+ - tests/issue-27-storage.test.js [60:19 - 66:57] (7 lines, 62 tokens)
+   tests/issue-27-storage.test.js [113:69 - 119:57]
+Clone found (javascript)
+ - tests/issue-27-storage.test.js [60:20 - 69:6] (10 lines, 66 tokens)
+   tests/issue-27-storage.test.js [125:40 - 134:6]
+Clone found (javascript)
+ - tests/issue-33-batching.test.js [49:49 - 57:7] (9 lines, 43 tokens)
+   tests/issue-33-batching.test.js [86:53 - 94:7]
+Clone found (javascript)
+ - tests/issue-33-batching.test.js [68:65 - 76:8] (9 lines, 56 tokens)
+   tests/issue-33-batching.test.js [80:70 - 88:8]
+Clone found (javascript)
+ - tests/issue-36-caches.test.js [33:36 - 38:14] (6 lines, 42 tokens)
+   tests/issue-36-caches.test.js [62:37 - 67:12]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [59:51 - 67:29] (9 lines, 36 tokens)
+   tests/land-via-pull-request.test.js [133:50 - 141:29]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [82:23 - 91:12] (10 lines, 34 tokens)
+   tests/land-via-pull-request.test.js [111:24 - 120:12]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [83:16 - 91:20] (9 lines, 34 tokens)
+   tests/land-via-pull-request.test.js [167:21 - 175:20]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [146:73 - 152:9] (7 lines, 49 tokens)
+   tests/land-via-pull-request.test.js [195:61 - 201:9]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [161:7 - 170:10] (10 lines, 42 tokens)
+   tests/land-via-pull-request.test.js [204:20 - 213:8]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [161:7 - 170:10] (10 lines, 42 tokens)
+   tests/land-via-pull-request.test.js [413:5 - 422:8]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [176:5 - 181:6] (6 lines, 31 tokens)
+   tests/land-via-pull-request.test.js [380:5 - 385:6]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [207:18 - 215:12] (9 lines, 31 tokens)
+   tests/land-via-pull-request.test.js [416:18 - 424:12]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [237:6 - 242:52] (6 lines, 38 tokens)
+   tests/land-via-pull-request.test.js [292:53 - 296:52]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [259:78 - 265:9] (7 lines, 41 tokens)
+   tests/land-via-pull-request.test.js [351:56 - 357:9]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [261:16 - 266:6] (6 lines, 34 tokens)
+   tests/land-via-pull-request.test.js [353:16 - 358:8]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [300:78 - 312:35] (13 lines, 78 tokens)
+   tests/land-via-pull-request.test.js [339:66 - 351:35]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [312:56 - 328:39] (17 lines, 66 tokens)
+   tests/land-via-pull-request.test.js [360:77 - 376:39]
+Clone found (javascript)
+ - tests/land-via-pull-request.test.js [329:66 - 335:6] (7 lines, 38 tokens)
+   tests/land-via-pull-request.test.js [377:70 - 383:6]
+Clone found (javascript)
+ - tests/lint-changed-lines.test.js [43:32 - 52:41] (10 lines, 31 tokens)
+   tests/lint-changed-lines.test.js [61:31 - 70:41]
+Clone found (javascript)
+ - tests/lint-changed-lines.test.js [43:32 - 52:41] (10 lines, 31 tokens)
+   tests/lint-changed-lines.test.js [79:31 - 88:41]
+Clone found (javascript)
+ - tests/lint-changed-lines.test.js [61:33 - 70:44] (10 lines, 32 tokens)
+   tests/lint-changed-lines.test.js [79:33 - 88:44]
+Clone found (javascript)
+ - tests/npm-registry.test.js [9:54 - 20:10] (12 lines, 33 tokens)
+   tests/wait-for-npm.test.js [16:48 - 27:10]
+Clone found (javascript)
+ - tests/package-manager.test.js [62:52 - 68:41] (7 lines, 34 tokens)
+   tests/package-manager.test.js [83:7 - 89:41]
+Clone found (javascript)
+ - tests/package-manager.test.js [62:53 - 68:41] (7 lines, 33 tokens)
+   tests/package-manager.test.js [158:68 - 164:41]
+Clone found (javascript)
+ - tests/package-manager.test.js [117:20 - 124:31] (8 lines, 34 tokens)
+   tests/package-manager.test.js [138:21 - 145:31]
+Clone found (javascript)
+ - tests/package-manager.test.js [125:51 - 131:5] (7 lines, 36 tokens)
+   tests/package-manager.test.js [163:37 - 169:5]
+Clone found (javascript)
+ - tests/pipeline-status.test.js [1:1 - 9:6] (9 lines, 64 tokens)
+   tests/required-docs.test.js [1:1 - 9:6]
+Clone found (javascript)
+ - tests/pipeline-status.test.js [1:1 - 7:19] (7 lines, 56 tokens)
+   tests/status-gate-coverage.test.js [1:1 - 7:19]
+Clone found (javascript)
+ - tests/pipeline-status.test.js [282:54 - 291:39] (10 lines, 38 tokens)
+   tests/pipeline-status.test.js [301:39 - 308:39]
+Clone found (javascript)
+ - tests/pipeline-status.test.js [340:79 - 347:27] (8 lines, 41 tokens)
+   tests/pipeline-status.test.js [397:70 - 404:27]
+Clone found (javascript)
+ - tests/pipeline-status.test.js [376:11 - 384:36] (9 lines, 44 tokens)
+   tests/pipeline-status.test.js [412:73 - 417:36]
+Clone found (javascript)
+ - tests/pr-guards.test.js [74:40 - 79:6] (6 lines, 44 tokens)
+   tests/pr-guards.test.js [121:68 - 128:10]
+Clone found (javascript)
+ - tests/pr-guards.test.js [155:67 - 162:44] (8 lines, 33 tokens)
+   tests/pr-guards.test.js [257:81 - 263:49]
+Clone found (javascript)
+ - tests/pr-guards.test.js [201:46 - 207:5] (7 lines, 31 tokens)
+   tests/pr-guards.test.js [343:67 - 349:5]
+Clone found (javascript)
+ - tests/pr-guards.test.js [343:42 - 349:5] (7 lines, 35 tokens)
+   tests/pr-guards.test.js [384:38 - 390:5]
+Clone found (javascript)
+ - tests/publish-retry.test.js [38:7 - 46:12] (9 lines, 37 tokens)
+   tests/publish-retry.test.js [198:7 - 207:12]
+Clone found (javascript)
+ - tests/publish-retry.test.js [127:77 - 135:26] (9 lines, 56 tokens)
+   tests/publish-retry.test.js [143:71 - 151:26]
+Clone found (javascript)
+ - tests/publish-retry.test.js [127:77 - 132:21] (6 lines, 33 tokens)
+   tests/publish-retry.test.js [181:53 - 186:21]
+Clone found (javascript)
+ - tests/publish-retry.test.js [172:9 - 178:12] (7 lines, 30 tokens)
+   tests/publish-retry.test.js [242:8 - 248:12]
+Clone found (javascript)
+ - tests/publish-retry.test.js [173:31 - 178:44] (6 lines, 32 tokens)
+   tests/publish-retry.test.js [203:8 - 208:44]
+Clone found (javascript)
+ - tests/publish-retry.test.js [212:73 - 217:26] (6 lines, 32 tokens)
+   tests/publish-retry.test.js [269:63 - 275:19]
+Clone found (javascript)
+ - tests/publish-retry.test.js [220:37 - 226:25] (7 lines, 36 tokens)
+   tests/publish-retry.test.js [260:31 - 266:25]
+Clone found (javascript)
+ - tests/publish-retry.test.js [241:64 - 248:28] (8 lines, 38 tokens)
+   tests/publish-retry.test.js [278:9 - 285:28]
+Clone found (javascript)
+ - tests/push-main-with-rebase-retry.test.js [4:12 - 17:11] (14 lines, 55 tokens)
+   tests/run-with-budget-warning.test.js [4:12 - 17:11]
+Clone found (javascript)
+ - tests/push-main-with-rebase-retry.test.js [4:12 - 17:11] (14 lines, 55 tokens)
+   tests/simulate-fresh-merge.test.js [4:12 - 17:11]
+Clone found (javascript)
+ - tests/push-main-with-rebase-retry.test.js [211:9 - 218:37] (8 lines, 31 tokens)
+   tests/push-main-with-rebase-retry.test.js [297:42 - 304:37]
+Clone found (javascript)
+ - tests/recheck-broken-links.test.js [176:63 - 181:21] (6 lines, 32 tokens)
+   tests/recheck-broken-links.test.js [200:66 - 205:21]
+Clone found (javascript)
+ - tests/recheck-broken-links.test.js [318:87 - 323:21] (6 lines, 31 tokens)
+   tests/recheck-broken-links.test.js [359:69 - 364:21]
+Clone found (javascript)
+ - tests/recheck-broken-links.test.js [318:87 - 323:21] (6 lines, 31 tokens)
+   tests/recheck-broken-links.test.js [397:86 - 402:21]
+Clone found (javascript)
+ - tests/recheck-broken-links.test.js [323:30 - 332:29] (10 lines, 43 tokens)
+   tests/recheck-broken-links.test.js [364:22 - 373:29]
+Clone found (javascript)
+ - tests/recheck-broken-links.test.js [326:11 - 332:53] (7 lines, 35 tokens)
+   tests/recheck-broken-links.test.js [405:11 - 411:53]
+Clone found (javascript)
+ - tests/recheck-broken-links.test.js [338:59 - 346:23] (9 lines, 35 tokens)
+   tests/recheck-broken-links.test.js [375:9 - 383:23]
+Clone found (javascript)
+ - tests/recheck-broken-links.test.js [338:59 - 346:23] (9 lines, 35 tokens)
+   tests/recheck-broken-links.test.js [412:50 - 420:23]
+Clone found (javascript)
+ - tests/recheck-broken-links.test.js [347:72 - 358:46] (12 lines, 92 tokens)
+   tests/recheck-broken-links.test.js [384:75 - 395:46]
+Clone found (javascript)
+ - tests/recheck-broken-links.test.js [360:10 - 373:29] (14 lines, 72 tokens)
+   tests/recheck-broken-links.test.js [398:10 - 411:29]
+Clone found (javascript)
+ - tests/release-metadata.test.js [52:21 - 62:45] (11 lines, 46 tokens)
+   tests/release-metadata.test.js [67:29 - 77:45]
+Clone found (javascript)
+ - tests/release-preflight.test.js [172:37 - 178:25] (7 lines, 32 tokens)
+   tests/release-preflight.test.js [347:60 - 353:25]
+Clone found (javascript)
+ - tests/release-preflight.test.js [172:37 - 178:25] (7 lines, 32 tokens)
+   tests/release-preflight.test.js [401:58 - 407:25]
+Clone found (javascript)
+ - tests/release-preflight.test.js [188:66 - 200:5] (13 lines, 65 tokens)
+   tests/release-preflight.test.js [323:66 - 337:5]
+Clone found (javascript)
+ - tests/release-preflight.test.js [192:37 - 198:32] (7 lines, 32 tokens)
+   tests/release-preflight.test.js [248:9 - 254:32]
+Clone found (javascript)
+ - tests/release-preflight.test.js [192:37 - 198:32] (7 lines, 32 tokens)
+   tests/release-preflight.test.js [349:77 - 355:32]
+Clone found (javascript)
+ - tests/release-preflight.test.js [194:7 - 202:12] (9 lines, 35 tokens)
+   tests/release-preflight.test.js [331:7 - 338:2]
+Clone found (javascript)
+ - tests/release-preflight.test.js [207:36 - 213:32] (7 lines, 32 tokens)
+   tests/release-preflight.test.js [267:7 - 273:30]
+Clone found (javascript)
+ - tests/release-preflight.test.js [207:36 - 213:32] (7 lines, 32 tokens)
+   tests/release-preflight.test.js [365:76 - 371:32]
+Clone found (javascript)
+ - tests/release-preflight.test.js [220:55 - 232:25] (13 lines, 46 tokens)
+   tests/release-preflight.test.js [240:55 - 252:25]
+Clone found (javascript)
+ - tests/release-preflight.test.js [220:55 - 232:25] (13 lines, 46 tokens)
+   tests/release-preflight.test.js [279:55 - 293:25]
+Clone found (javascript)
+ - tests/release-preflight.test.js [220:55 - 232:25] (13 lines, 46 tokens)
+   tests/release-preflight.test.js [379:56 - 391:27]
+Clone found (javascript)
+ - tests/release-preflight.test.js [223:36 - 233:32] (11 lines, 39 tokens)
+   tests/release-preflight.test.js [262:33 - 272:30]
+Clone found (javascript)
+ - tests/release-preflight.test.js [238:62 - 243:26] (6 lines, 31 tokens)
+   tests/release-preflight.test.js [258:66 - 262:24]
+Clone found (javascript)
+ - tests/release-preflight.test.js [243:36 - 253:32] (11 lines, 39 tokens)
+   tests/release-preflight.test.js [282:36 - 294:32]
+Clone found (javascript)
+ - tests/release-preflight.test.js [243:36 - 253:22] (11 lines, 37 tokens)
+   tests/release-preflight.test.js [382:38 - 392:24]
+Clone found (javascript)
+ - tests/release-preflight.test.js [247:34 - 254:32] (8 lines, 33 tokens)
+   tests/release-preflight.test.js [309:34 - 316:32]
+Clone found (javascript)
+ - tests/release-preflight.test.js [303:11 - 308:50] (6 lines, 30 tokens)
+   tests/release-preflight.test.js [442:61 - 447:48]
+Clone found (javascript)
+ - tests/release-preflight.test.js [342:73 - 349:26] (8 lines, 31 tokens)
+   tests/release-preflight.test.js [361:74 - 365:26]
+Clone found (javascript)
+ - tests/release-preflight.test.js [347:59 - 354:32] (8 lines, 43 tokens)
+   tests/release-preflight.test.js [429:55 - 436:32]
+Clone found (javascript)
+ - tests/release-preflight.test.js [348:13 - 354:22] (7 lines, 37 tokens)
+   tests/release-preflight.test.js [402:13 - 408:22]
+Clone found (javascript)
+ - tests/release-preflight.test.js [348:28 - 354:14] (7 lines, 30 tokens)
+   tests/release-preflight.test.js [415:18 - 421:12]
+Clone found (javascript)
+ - tests/required-docs.test.js [122:47 - 129:41] (8 lines, 35 tokens)
+   tests/required-docs.test.js [146:40 - 153:41]
+Clone found (javascript)
+ - tests/required-docs.test.js [123:7 - 129:41] (7 lines, 34 tokens)
+   tests/required-docs.test.js [163:60 - 169:41]
+Clone found (javascript)
+ - tests/run-with-budget-warning.test.js [64:65 - 69:39] (6 lines, 31 tokens)
+   tests/run-with-budget-warning.test.js [249:66 - 254:41]
+Clone found (javascript)
+ - tests/rust-leaf.test.js [121:54 - 126:10] (6 lines, 32 tokens)
+   tests/rust.test.js [141:36 - 146:12]
+Clone found (javascript)
+ - tests/rust.test.js [21:13 - 29:32] (9 lines, 31 tokens)
+   tests/scan-app-caches.test.js [16:9 - 24:32]
+Clone found (javascript)
+ - tests/rust.test.js [111:36 - 117:23] (7 lines, 37 tokens)
+   tests/rust.test.js [192:62 - 199:23]
+Clone found (javascript)
+ - tests/rust.test.js [124:46 - 129:13] (6 lines, 37 tokens)
+   tests/rust.test.js [162:46 - 167:17]
+Clone found (javascript)
+ - tests/scan-app-caches.test.js [10:49 - 24:6] (15 lines, 45 tokens)
+   tests/scan-caches.test.js [11:40 - 25:6]
+Clone found (javascript)
+ - tests/scan-projects.test.js [109:66 - 114:23] (6 lines, 34 tokens)
+   tests/scan-projects.test.js [168:28 - 172:26]
+Clone found (javascript)
+ - tests/scan-projects.test.js [109:66 - 114:23] (6 lines, 34 tokens)
+   tests/scan-projects.test.js [245:28 - 249:26]
+Clone found (javascript)
+ - tests/scan-projects.test.js [169:22 - 175:5] (7 lines, 45 tokens)
+   tests/scan-projects.test.js [246:22 - 252:5]
+Clone found (javascript)
+ - tests/scan-projects.test.js [170:70 - 177:23] (8 lines, 30 tokens)
+   tests/scan-projects.test.js [188:9 - 195:23]
+Clone found (javascript)
+ - tests/scripts-use-module-adoption.test.js [41:48 - 47:6] (7 lines, 34 tokens)
+   tests/scripts-use-module-adoption.test.js [50:51 - 56:6]
+Clone found (javascript)
+ - tests/scripts-use-module-adoption.test.js [41:48 - 47:6] (7 lines, 34 tokens)
+   tests/scripts-use-module-adoption.test.js [62:69 - 70:6]
+Clone found (javascript)
+ - tests/status-gate-coverage.test.js [78:19 - 88:36] (11 lines, 33 tokens)
+   tests/status-gate-coverage.test.js [143:27 - 153:34]
+Clone found (javascript)
+ - tests/use-module.test.js [285:48 - 292:12] (8 lines, 30 tokens)
+   tests/use-module.test.js [329:10 - 336:12]
+Clone found (javascript)
+ - tests/use-module.test.js [286:20 - 292:35] (7 lines, 32 tokens)
+   tests/use-module.test.js [353:22 - 359:35]
+Clone found (javascript)
+ - tests/use-module.test.js [382:14 - 389:18] (8 lines, 34 tokens)
+   tests/use-module.test.js [413:45 - 420:18]
+Clone found (javascript)
+ - tests/wait-for-npm.test.js [67:49 - 72:19] (6 lines, 32 tokens)
+   tests/wait-for-npm.test.js [170:44 - 175:19]
+Clone found (javascript)
+ - tests/wait-for-npm.test.js [126:67 - 131:32] (6 lines, 30 tokens)
+   tests/wait-for-npm.test.js [161:62 - 166:32]
+Clone found (javascript)
+ - tests/wait-for-npm.test.js [127:28 - 132:19] (6 lines, 32 tokens)
+   tests/wait-for-npm.test.js [264:23 - 269:19]
+Clone found (javascript)
+ - tests/workflows-lint.test.js [173:20 - 186:45] (14 lines, 57 tokens)
+   tests/workflows-lint.test.js [212:18 - 225:45]
+┌────────────┬────────────────┬─────────────┬──────────────┬──────────────┬──────────────────┬───────────────────┐
+│ Format     │ Files analyzed │ Total lines │ Total tokens │ Clones found │ Duplicated lines │ Duplicated tokens │
+├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤
+│ javascript │ 260            │ 44622       │ 234879       │ 325          │ 2953 (6.62%)     │ 14031 (5.97%)     │
+├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤
+│ Total:     │ 260            │ 44622       │ 234879       │ 325          │ 2953 (6.62%)     │ 14031 (5.97%)     │
+└────────────┴────────────────┴─────────────┴──────────────┴──────────────┴──────────────────┴───────────────────┘
+Found 325 clones.
+HTML report saved to ./reports/jscpd/jscpd-report.html
+time: 112.839ms

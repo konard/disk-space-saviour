@@ -1,0 +1,32 @@
+▶ issue 36 toolchain caches
+  ✔ finds .perl5/build/perl-5/build.o safely and respects its busy tools (545.904967ms)
+  ✔ finds .perl5/dists/perl.tar.gz safely and respects its busy tools (525.931576ms)
+  ✔ finds .sdkman/tmp/java.zip safely and respects its busy tools (667.865164ms)
+  ✔ finds .sdkman/archives/java.zip safely and respects its busy tools (385.042357ms)
+  ✔ finds .nvm/.cache/bin/node.tar.gz safely and respects its busy tools (413.594782ms)
+  ✔ finds .rbenv/versions/3.3/lib/ruby/gems/3.3.0/cache/test.gem safely and respects its busy tools (394.547078ms)
+  ✔ finds .rvm/gems/ruby-3.3/cache/test.gem safely and respects its busy tools (491.383546ms)
+  ✔ finds .local/share/gem/ruby/3.3.0/cache/test.gem safely and respects its busy tools (481.953164ms)
+  ✔ cleans only downloaded gem files, preserving other cache content (878.024316ms)
+  ✔ honors configured cache roots and GOPATH outside the home default (332.14699ms)
+  ✔ reports semver baseline builds at safe tier and blocks an active semver check (439.609432ms)
+  ✖ reloads configured roots when cleanup reconstructs a version adapter (44.786388ms)
+✖ issue 36 toolchain caches (5609.538735ms)
+ℹ tests 12
+ℹ suites 1
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5849.597164
+
+✖ failing tests:
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ reloads configured roots when cleanup reconstructs a version adapter (44.786388ms)
+  Error: Expected "skipped" to be "removed"
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:178:28)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)

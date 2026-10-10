@@ -1,0 +1,3 @@
+$ docker exec -u 1001 -e HOME=/home/box <task> node dss.js scan --no-docker --json --tier safe
+dss: EACCES: permission denied, open '/home/box/.local/state/disk-space-saviour/audit/dss-scan-2026-10-10T10-01-35-916Z-28090.json'
+(exit 1, no JSON on stdout)

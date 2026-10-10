@@ -1,0 +1,25 @@
+Clone found (javascript)
+ - tests/use-module.test.js [382:14 - 389:18] (8 lines, 34 tokens)
+   tests/use-module.test.js [413:45 - 420:18]
+Clone found (javascript)
+ - tests/wait-for-npm.test.js [67:49 - 72:19] (6 lines, 32 tokens)
+   tests/wait-for-npm.test.js [170:44 - 175:19]
+Clone found (javascript)
+ - tests/wait-for-npm.test.js [126:67 - 131:32] (6 lines, 30 tokens)
+   tests/wait-for-npm.test.js [161:62 - 166:32]
+Clone found (javascript)
+ - tests/wait-for-npm.test.js [127:28 - 132:19] (6 lines, 32 tokens)
+   tests/wait-for-npm.test.js [264:23 - 269:19]
+Clone found (javascript)
+ - tests/workflows-lint.test.js [173:20 - 186:45] (14 lines, 57 tokens)
+   tests/workflows-lint.test.js [212:18 - 225:45]
+┌────────────┬────────────────┬─────────────┬──────────────┬──────────────┬──────────────────┬───────────────────┐
+│ Format     │ Files analyzed │ Total lines │ Total tokens │ Clones found │ Duplicated lines │ Duplicated tokens │
+├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤
+│ javascript │ 260            │ 44622       │ 234879       │ 325          │ 2953 (6.62%)     │ 14031 (5.97%)     │
+├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤
+│ Total:     │ 260            │ 44622       │ 234879       │ 325          │ 2953 (6.62%)     │ 14031 (5.97%)     │
+└────────────┴────────────────┴─────────────┴──────────────┴──────────────┴──────────────────┴───────────────────┘
+Found 325 clones.
+HTML report saved to ./reports/jscpd/jscpd-report.html
+time: 112.839ms

@@ -1,0 +1,31 @@
+▶ issue 36 toolchain caches
+  ✔ finds .perl5/build/perl-5/build.o safely and respects its busy tools (932.064577ms)
+  ✔ finds .perl5/dists/perl.tar.gz safely and respects its busy tools (658.286888ms)
+  ✔ finds .sdkman/tmp/java.zip safely and respects its busy tools (1034.206784ms)
+  ✔ finds .sdkman/archives/java.zip safely and respects its busy tools (1473.794014ms)
+  ✔ finds .nvm/.cache/bin/node.tar.gz safely and respects its busy tools (1052.801568ms)
+  ✔ finds .rbenv/versions/3.3/lib/ruby/gems/3.3.0/cache/test.gem safely and respects its busy tools (1310.692489ms)
+  ✔ finds .rvm/gems/ruby-3.3/cache/test.gem safely and respects its busy tools (2176.201572ms)
+  ✔ finds .local/share/gem/ruby/3.3.0/cache/test.gem safely and respects its busy tools (777.627235ms)
+  ✔ cleans only downloaded gem files, preserving other cache content (1362.446364ms)
+  ✖ honors configured cache roots and GOPATH outside the home default (691.619263ms)
+  ✔ reports semver baseline builds at safe tier and blocks an active semver check (456.385694ms)
+✖ issue 36 toolchain caches (11942.535884ms)
+ℹ tests 11
+ℹ suites 1
+ℹ pass 10
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12469.90323
+
+✖ failing tests:
+
+test at node_modules/.deno/test-anywhere@0.8.50/node_modules/test-anywhere/src/index.js:174:12
+✖ honors configured cache roots and GOPATH outside the home default (691.619263ms)
+  Error: Expected true to be false
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/.deno/test-anywhere@0.8.50/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-36-caches.test.js:111:106)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)

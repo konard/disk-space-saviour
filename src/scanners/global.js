@@ -1,3 +1,4 @@
+import { scanItems } from '../env/scope.js';
 /**
  * Global per-user caches (ecosystem download and compilation caches, IDE and
  * browser caches), system package caches, and leftovers in temporary
@@ -9,13 +10,16 @@ import { OTHER_RULES } from '../rules/other.js';
 import { APP_RULES, expandChromiumCaches } from '../rules/apps.js';
 import { compareVersions } from '../rules/versions.js';
 import { block, makeItem } from '../items.js';
-import { expandGlobPaths, expandRulePath } from '../paths.js';
-import { olderThan, scanTimeBusy } from './common.js';
+import { expandGlobPaths, expandRulePath, isWithin } from '../paths.js';
+import { olderThan, scanTimeBusy, resolvePaths } from './common.js';
+import { configuredPattern } from '../env/cache-roots.js';
+import { TOOLCHAIN_CACHE_RULES } from '../rules/toolchains.js';
 
 export const GLOBAL_RULES = [
   ...CACHE_RULES,
   ...expandChromiumCaches(OTHER_RULES),
   ...APP_RULES,
+  ...TOOLCHAIN_CACHE_RULES,
 ];
 
 function scopeBases(rule, homes, tmpDirs) {
@@ -32,15 +36,30 @@ function scopeBases(rule, homes, tmpDirs) {
 function rulePatterns(env, rule, base) {
   const patterns = [];
   for (const pattern of rule.paths) {
+    if (pattern.includes('{GEM_PATH}')) {
+      if (base.home === env.currentHome) {
+        for (const root of (env.vars.GEM_PATH ?? '').split(
+          env.platform === 'win32' ? ';' : ':'
+        )) {
+          if (env.path.isAbsolute(root)) {
+            patterns.push(pattern.replace('{GEM_PATH}', root));
+          }
+        }
+      }
+      continue;
+    }
     const usesVars = /\{(?!TMP\})[A-Z_]+\}/.test(pattern);
     if (usesVars && base.home !== env.currentHome) {
       continue;
     }
-    const expanded = expandRulePath(pattern, {
-      home: base.home ?? '/',
-      vars: { ...env.vars, TMP: base.tmp ?? undefined },
-      pathApi: env.path,
-    });
+    const expanded = expandRulePath(
+      configuredPattern(env, base.home, pattern),
+      {
+        home: base.home ?? '/',
+        vars: { ...env.vars, TMP: base.tmp ?? undefined },
+        pathApi: env.path,
+      }
+    );
     if (expanded) {
       patterns.push(expanded);
     }
@@ -59,15 +78,26 @@ async function nativeAction(context, rule, base, paths) {
   if (!native || options.noNative) {
     return { action: removal, blocker: null };
   }
-  const usable =
-    (rule.scope === 'system' || base.home === env.currentHome) &&
-    (await env.which(native.tool)) &&
-    (!native.root || (await env.isRoot()));
+  const init = native.init
+    ? expandRulePath(configuredPattern(env, base.home, native.init), {
+        home: base.home,
+        pathApi: env.path,
+      })
+    : null;
+  const nativeRoot = native.cacheRoot
+    ? expandRulePath(configuredPattern(env, base.home, native.cacheRoot), {
+        home: base.home,
+        pathApi: env.path,
+      })
+    : null;
+  const usable = await nativeUsable(env, rule, base, paths, nativeRoot, init);
   if (usable) {
     return {
       action: {
         type: 'command',
-        argv: native.argv,
+        argv: init
+          ? [native.tool, '-c', `. "$1" && ${native.command}`, 'dss', init]
+          : native.argv,
         measure: paths,
       },
       blocker: null,
@@ -80,6 +110,16 @@ async function nativeAction(context, rule, base, paths) {
     };
   }
   return { action: removal, blocker: null };
+}
+
+async function nativeUsable(env, rule, base, paths, root, init) {
+  return (
+    (rule.scope === 'system' || base.home === env.currentHome) &&
+    (await env.which(rule.native.tool)) &&
+    (!rule.native.root || (await env.isRoot())) &&
+    (!root || paths.every((target) => isWithin(target, root, env.path))) &&
+    (!init || (await env.exists(init)))
+  );
 }
 
 function ageFilter(context, rule) {
@@ -96,13 +136,13 @@ function ageFilter(context, rule) {
 }
 
 /** Keep the latest installed revision of each browser and platform family. */
-async function olderVersions(env, rule, paths) {
+function olderVersions(env, rule, paths, stats) {
   if (!rule.versionPattern) {
     return paths;
   }
   const groups = new Map();
   for (const target of paths) {
-    if ((await env.stat(target))?.type !== 'dir') {
+    if (stats.get(target)?.type !== 'dir') {
       continue;
     }
     const match = rule.versionPattern.exec(env.path.basename(target));
@@ -201,6 +241,14 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
     env,
     planned.flatMap((entry) => entry.patterns)
   );
+  const typedPaths = planned
+    .filter(
+      ({ rule }) => rule.directoryOnly || rule.fileOnly || rule.versionPattern
+    )
+    .flatMap(({ patterns }) =>
+      patterns.flatMap((pattern) => matches.get(pattern) ?? [])
+    );
+  const stats = await env.statMany([...new Set(typedPaths)]);
   const found = [];
   const seen = new Set();
   for (const { rule, base, patterns } of planned) {
@@ -210,19 +258,23 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
 
     const accepted = [];
     for (const target of candidates) {
-      if (!(await acceptedPath(env, rule, target))) {
+      if (!(await acceptedPath(env, rule, target, stats))) {
         continue;
       }
       accepted.push(target);
       seen.add(target);
     }
-    const paths = await olderVersions(env, rule, accepted);
+    const paths = olderVersions(env, rule, accepted, stats);
     if (paths.length > 0) {
       found.push({ rule, base, paths });
     }
   }
   const usages = await env.usageMany(found.flatMap((entry) => entry.paths));
-  const items = [];
+  await resolvePaths(
+    context,
+    found.flatMap((entry) => entry.paths)
+  );
+  const items = scanItems(context);
   for (const { rule, base, paths } of found) {
     const accept = ageFilter(context, rule);
     const measured = paths
@@ -238,15 +290,15 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
   return items;
 }
 
-async function acceptedPath(env, rule, target) {
+async function acceptedPath(env, rule, target, stats) {
   const name = env.path.basename(target);
   if (rule.excludeNames?.includes(name)) {
     return false;
   }
-  if (rule.directoryOnly && (await env.stat(target))?.type !== 'dir') {
+  if (rule.directoryOnly && stats.get(target)?.type !== 'dir') {
     return false;
   }
-  if (rule.fileOnly && (await env.stat(target))?.type !== 'file') {
+  if (rule.fileOnly && stats.get(target)?.type !== 'file') {
     return false;
   }
   if (

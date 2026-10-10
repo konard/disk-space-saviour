@@ -1,0 +1,25 @@
+Deno 2.9.6 on Linux x86_64 reports `close(null, SIGTERM)` after `ChildProcess.kill('SIGTERM')` even when the child handles SIGTERM and exits explicitly with status 143. Node v26.11.0 reports `close(143, null)`. Sending the same signal through `process.kill(child.pid, 'SIGTERM')` under Deno also correctly reports `close(143, null)`.
+
+Reproduction (finite 3-second child, no dependencies):
+
+```js
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+const child = spawn('node', ['-e', `
+  process.on('SIGTERM', () => { console.error('handled'); process.exit(143); });
+  console.error('ready');
+  setTimeout(() => {}, 3000);
+`]);
+const done = once(child, 'close');
+child.stderr.on('data', data => {
+  console.log(data.toString());
+  if (data.toString().includes('ready')) child.kill('SIGTERM');
+});
+console.log(await done);
+```
+
+Run `node repro.mjs` and `deno run -A repro.mjs`. Both print `handled`, but Deno reports `[null, "SIGTERM"]` while Node reports `[143, null]`. The same divergence occurs for SIGINT. An ordinary child `process.exit(143)` without a sent signal is reported correctly by both runtimes.
+
+Workaround: replace `child.kill('SIGTERM')` with `process.kill(child.pid, 'SIGTERM')` (Unix). Suggested fix: report the actual OS termination status on exit/close rather than treating the last requested kill signal as proof of signal termination. Sending a signal can invoke a handler that exits normally; `killed` records signal delivery, not how the child ended.
+
+Found while verifying partial-report CLI cancellation in https://github.com/link-foundation/disk-space-saviour/pull/41. Full bounded comparison script is being preserved in `experiments/issue-40/runtime-exit-codes.mjs` there.

@@ -1,3 +1,4 @@
+import { scanItems } from '../env/scope.js';
 /**
  * Per-project dependency, build and cache directories (node_modules, target,
  * .venv, ...) found by walking the scan roots.
@@ -261,7 +262,31 @@ const RUST_PARTS = {
  */
 async function rustItems(context, targetItem, rule) {
   const { env, liveness, options, now } = context;
-  const items = [];
+  const items = scanItems(context);
+  const semverPath = env.path.join(targetItem.path, 'semver-checks');
+  const semverUsage = await env.usage(semverPath);
+  if (semverUsage) {
+    const semver = makeItem(env, {
+      rule: 'cargo-semver-checks-cache',
+      kind: 'cache',
+      ecosystem: 'rust',
+      description: 'cargo-semver-checks baseline builds',
+      path: semverPath,
+      bytes: semverUsage.bytes,
+      newestMtimeMs: semverUsage.newestMtimeMs,
+      project: targetItem.project,
+      parentId: targetItem.id,
+      tier: 'safe',
+      reason: 'baseline rustdoc and builds are regenerated on demand',
+      checks: {
+        busy: ['cargo-semver-checks', ...rule.busy],
+        cwd: targetItem.project,
+        mtime: true,
+      },
+    });
+    await addBlockers(context, semver, false);
+    items.push(semver);
+  }
   for (const profile of await findRustProfiles(env, targetItem.path)) {
     const result = await analyzeRustProfile(env, profile, {
       staleAgeMs: options.staleAgeMs,
@@ -315,7 +340,7 @@ export async function scanProjects(context, { rules = PROJECT_RULES } = {}) {
   });
   const usages = await env.usageMany(matches.map((m) => m.candidate.path));
   const globs = [...new Set(rules.flatMap((rule) => rule.names))];
-  const items = [];
+  const items = scanItems(context);
   for (const match of matches) {
     const usage = usages.get(match.candidate.path);
     if (!usage) {

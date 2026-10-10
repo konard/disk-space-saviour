@@ -73,7 +73,12 @@ describe('tier selection', () => {
     expect(totals.safe).toEqual({ items: 2, bytes: 15 });
     expect(totals.moderate).toEqual({ items: 2, bytes: 110 });
     expect(totals.aggressive).toEqual({ items: 3, bytes: 1110 });
-    expect(totals.blocked).toEqual({ items: 1, bytes: 7 });
+    expect(totals.blocked).toEqual({
+      items: 1,
+      bytes: 7,
+      totalBytes: 7,
+      unknownBytes: 0,
+    });
   });
 
   it('counts items that need explicit consent apart from the tiers', () => {

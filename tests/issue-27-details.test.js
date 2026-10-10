@@ -90,8 +90,8 @@ describe('aggregate cleanup details', () => {
         if (argv[0] === 'stat') {
           return ok('directory');
         }
-        if (argv[0] === 'du') {
-          return ok('4\t/storage/upper/cache');
+        if (argv[0] === 'sh' && argv[2].includes('du -skx')) {
+          return ok('\u0001/storage/upper/cache\n4\n');
         }
         throw new Error('unexpected command');
       },

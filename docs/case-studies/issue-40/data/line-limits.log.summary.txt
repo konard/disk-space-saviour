@@ -1,0 +1,25 @@
+tests/scan-caches.test.js: 125 lines
+tests/scan-projects.test.js: 287 lines
+tests/scripts-use-module-adoption.test.js: 77 lines
+tests/security-workflow.test.js: 275 lines
+tests/setup-buildx-resilient.test.js: 175 lines
+tests/setup-npm.test.js: 92 lines
+tests/simulate-fresh-merge.test.js: 123 lines
+tests/smoke-test-package.test.js: 194 lines
+tests/status-gate-coverage.test.js: 198 lines
+tests/tag-prefix.test.js: 42 lines
+tests/transient-links.test.js: 129 lines
+tests/universal-app.test.js: 140 lines
+tests/use-module-integration.test.js: 155 lines
+tests/use-module.test.js: 432 lines
+tests/version-and-commit.test.js: 47 lines
+tests/versions.test.js: 63 lines
+tests/visible-skips.test.js: 165 lines
+tests/wait-for-npm.test.js: 345 lines
+tests/workflow-permissions.test.js: 124 lines
+tests/workflow-reliability.test.js: 662 lines
+tests/workflows-lint.test.js: 283 lines
+
+
+Checked 320 tracked files against a 1500-line limit (warning at 1350).
+All checked files are within the 1500 line limit!

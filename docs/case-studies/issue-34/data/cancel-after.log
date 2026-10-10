@@ -1,0 +1,35 @@
+▶ issue 33 bounded remote round trips
+  ✔ resolves 1000 fingerprint paths in batches rather than individual execs (31.536245ms)
+  ✔ batches exclusion boundary probes as well as usage measurement (27.472223ms)
+✔ issue 33 bounded remote round trips (79.555111ms)
+▶ issue 34 cancellation and scan budgets
+  ✔ terminates a spawned child when the scan signal aborts (87.135324ms)
+  ✖ preserves partial findings after cancellation (171.071288ms)
+  ✖ preserves partial findings after a time budget (108.128288ms)
+✖ issue 34 cancellation and scan budgets (387.520215ms)
+ℹ tests 5
+ℹ suites 2
+ℹ pass 3
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 825.741149
+
+✖ failing tests:
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ preserves partial findings after cancellation (171.071288ms)
+  Error: Expected 0 to be 1
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:31:37)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ preserves partial findings after a time budget (108.128288ms)
+  Error: Expected 0 to be 1
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:31:37)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)

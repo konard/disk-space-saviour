@@ -1,3 +1,4 @@
+import { scanItems } from '../env/scope.js';
 /**
  * Snapshot stores of AI coding agents built on the opencode storage layout
  * (`@link-assistant/agent`, opencode).
@@ -112,7 +113,7 @@ async function appItems(context, app, root) {
       mtimeMs: usages.get(state.entry.path)?.newestMtimeMs ?? 0,
     }))
     .sort((a, b) => b.mtimeMs - a.mtimeMs)[0].state;
-  const items = [];
+  const items = scanItems(context);
   for (const state of states) {
     const usage = usages.get(state.entry.path);
     const verdict =
@@ -148,7 +149,7 @@ async function appItems(context, app, root) {
 export async function scanAgents(context, { apps = AGENT_APPS } = {}) {
   const { env, options } = context;
   const homes = options.homes ?? (await env.homeDirs());
-  const items = [];
+  const items = scanItems(context);
   const seen = new Set();
   for (const home of homes) {
     for (const dataDir of dataDirs(env, home)) {

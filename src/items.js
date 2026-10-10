@@ -100,11 +100,17 @@ export function tierTotals(items) {
       Boolean(item.requiresConfirmation)
     )
   );
+  const blocked = dropNested(items.filter((item) => item.blockers.length > 0));
   totals.blocked = {
     items: items.filter((item) => item.blockers.length > 0).length,
-    bytes: items
-      .filter((item) => item.blockers.length > 0)
-      .reduce((sum, item) => sum + item.bytes, 0),
+    bytes: blocked.reduce((sum, item) => sum + item.bytes, 0),
+    totalBytes: blocked.reduce(
+      (sum, item) => sum + (item.totalBytes ?? item.bytes),
+      0
+    ),
+    unknownBytes: blocked
+      .filter((item) => item.sizeUnknown)
+      .reduce((sum, item) => sum + (item.totalBytes ?? item.bytes), 0),
   };
   return totals;
 }

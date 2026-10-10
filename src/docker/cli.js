@@ -306,12 +306,16 @@ export class DockerCli {
     const stream = this.executor.spawn(
       this.argv(['cp', `${id}:${source}`, '-'])
     );
-    return pipeInto(stream, [
-      'tar',
-      '-x',
-      '-C',
-      destination,
-      ...excludes.map((pattern) => `--exclude=${pattern}`),
-    ]);
+    return pipeInto(
+      stream,
+      [
+        'tar',
+        '-x',
+        '-C',
+        destination,
+        ...excludes.map((pattern) => `--exclude=${pattern}`),
+      ],
+      { signal: this.executor.signal }
+    );
   }
 }
