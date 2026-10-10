@@ -31,6 +31,7 @@ import {
 import { imageNamed } from './docker/images.js';
 import { resolveEnvironment } from './env/resolve.js';
 import { configureScanPolicy } from './env/policy.js';
+import { configureCacheRoots } from './env/cache-roots.js';
 import { environmentScope, signalExecutor } from './env/scope.js';
 import { batches } from './env/batches.js';
 import { GitInspector } from './git.js';
@@ -371,6 +372,10 @@ export class Cleaner {
 
   async #staticBlocker(ctx, item) {
     if (item.recheck?.type === 'version') {
+      if (!ctx.cacheRootsConfigured) {
+        await configureCacheRoots(ctx.env, await ctx.env.homeDirs());
+        ctx.cacheRootsConfigured = true;
+      }
       const rule = VERSION_RULES.find(
         (candidate) => candidate.id === item.rule
       );

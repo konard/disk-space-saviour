@@ -2,7 +2,8 @@ import { describe, it, expect } from 'test-anywhere';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { scan } from '../src/scan.js';
-import { clean } from '../src/clean.js';
+import { clean, Cleaner } from '../src/clean.js';
+import { resolveOptions } from '../src/options.js';
 import {
   age,
   DAY_MS,
@@ -143,6 +144,43 @@ describe('issue 36 toolchain caches', () => {
       report = await scan(options);
       item = report.items.find((i) => i.rule === 'cargo-semver-checks-cache');
       expect(item.blockers.join('\n')).toMatch(/busy.*cargo-semver/);
+    } finally {
+      removeRoot(root);
+    }
+  });
+});
+
+describe('issue 36 configured cleanup roots', () => {
+  it('reloads configured roots when cleanup reconstructs a version adapter', async () => {
+    const root = tempRoot(),
+      home = join(root, 'home'),
+      cache = join(root, 'configured-cache'),
+      old = join(cache, 'copilot/pkg/linux/1.0.0');
+    for (const version of ['1.0.0', '2.0.0']) {
+      writeBlob(join(cache, 'copilot/pkg/linux', version, 'content'), 8192);
+    }
+    age(root, 40 * DAY_MS);
+    const env = fixtureEnv(root);
+    env.currentHome = home;
+    env.variables = async () => ({ XDG_CACHE_HOME: cache });
+    env.which = async () => false;
+    env.processes = async () => [];
+    env.openPaths = async () => new Set();
+    const options = scanInput(env, [], { scanners: ['versions'] });
+    try {
+      const report = await scan(options),
+        item = report.items.find((entry) => entry.path === old);
+      expect(Boolean(item)).toBe(true);
+      // Remote cleanup reconstructs an adapter with empty vars from its chain.
+      env.vars = {};
+      const cleaner = new Cleaner(
+        report,
+        resolveOptions({ ...options, tier: 'moderate', audit: false })
+      );
+      const entry = await cleaner.process(item);
+      expect(entry.status).toBe('removed');
+      expect(existsSync(old)).toBe(false);
+      expect(existsSync(join(cache, 'copilot/pkg/linux/2.0.0'))).toBe(true);
     } finally {
       removeRoot(root);
     }
