@@ -379,7 +379,8 @@ jobs:
           DSS_DEBUG: '1'
         run: |
           deno test -A --parallel > trace-cold.log 2>&1 || true
-          grep -a -E 'took [0-9]+ms|Deno absent|holds its pipes|passed' trace-cold.log || true
+          grep -a -E 'took [0-9]+ms|\[lifetime|Deno absent|passed' trace-cold.log || true
+          sed -n '/ ERRORS /,$p' trace-cold.log | head -80
 
       - name: Run tests (Deno)
         if: matrix.runtime == 'deno'

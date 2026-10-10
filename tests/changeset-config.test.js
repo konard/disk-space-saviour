@@ -95,26 +95,33 @@ describe('Changesets release formatter', () => {
           spawnSync('deno', ['--version'], { env }).error?.code,
           'ENOENT'
         );
+        // DSS_DEBUG=1 logs every Node process of the fixture (changesets,
+        // npx and prettier) to find where a slow run spends its time.
         const debug = Boolean(process.env.DSS_DEBUG);
-        const preload = debug
-          ? ['-r', resolve('tests/helpers/report-lifetime.cjs')]
-          : [];
+        const lifetimeLog = join(cwd, 'lifetime.log');
+        const runEnv = debug
+          ? {
+              ...env,
+              DSS_LIFETIME_LOG: lifetimeLog,
+              NODE_OPTIONS: `${env.NODE_OPTIONS || ''} --require=${resolve(
+                'tests/helpers/report-lifetime.cjs'
+              ).replaceAll('\\', '/')}`.trim(),
+            }
+          : env;
         const run = async (file, args) => {
           // spawnSync could wait for a process another test file started.
-          const spawned = Date.now();
-          const result = await runToExit(
-            'node',
-            [...preload, resolve(file), ...args],
-            { cwd, env, timeout: 20000 }
-          );
+          const result = await runToExit('node', [resolve(file), ...args], {
+            cwd,
+            env: runEnv,
+            timeout: 20000,
+          });
           const took = `${file} took ${result.ms}ms (exit after ${result.exitMs}ms)`;
           if (debug) {
-            const lifetime = result.stderr.match(/started=(\d+) lived=(\d+)ms/);
-            console.error(
-              lifetime
-                ? `${took}: started ${lifetime[1] - spawned}ms after spawn, lived ${lifetime[2]}ms`
-                : took
-            );
+            const lifetime = existsSync(lifetimeLog)
+              ? readFileSync(lifetimeLog, 'utf8')
+              : '';
+            rmSync(lifetimeLog, { force: true });
+            console.error(`${took} since ${result.started}\n${lifetime}`);
           }
           assert.equal(
             result.status,
