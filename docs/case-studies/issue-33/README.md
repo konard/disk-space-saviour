@@ -116,3 +116,7 @@ From [npm/cli#9151](https://github.com/npm/cli/issues/9151):
 - [nodejs/node#62430](https://github.com/nodejs/node/issues/62430) — npm i -g npm@latest fails
 - [npm/cli#9151](https://github.com/npm/cli/issues/9151) — npm fails to install in latest Node 22
 - [link-assistant/web-capture#55](https://github.com/link-assistant/web-capture/pull/55) — Reference implementation with curl fallback
+
+## disk-space-saviour investigation
+
+See the [disk-space-saviour requirement matrix, root causes, alternatives and evidence](disk-space-saviour.md). Earlier sections document the inherited pipeline template.

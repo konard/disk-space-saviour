@@ -1,0 +1,40 @@
+▶ issue 33 bounded remote round trips
+  ✔ analyzes a 1000-fingerprint fixture with fewer than 40 transport calls (175.47577ms)
+  ✔ resolves 1000 fingerprint paths in five transport batches (2.921411ms)
+  ✔ batches exclusion boundary probes as well as usage measurement (7.0217ms)
+✔ issue 33 bounded remote round trips (196.665351ms)
+▶ issue 34 cancellation and scan budgets
+  ✔ terminates a spawned child when the scan signal aborts (65.815891ms)
+  ✔ preserves partial findings after cancellation (184.461794ms)
+  ✔ preserves partial findings after a time budget (2021.422758ms)
+  ✖ writes a partial CLI report and exits 143 on SIGTERM (188.686696ms)
+  ✖ writes a partial CLI report and exits 130 on SIGINT (286.022332ms)
+✖ issue 34 cancellation and scan budgets (2759.863113ms)
+ℹ tests 8
+ℹ suites 2
+ℹ pass 6
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3074.903955
+
+✖ failing tests:
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ writes a partial CLI report and exits 143 on SIGTERM (188.686696ms)
+  Error: Expected 2 to be 143
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:88:26)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ writes a partial CLI report and exits 130 on SIGINT (286.022332ms)
+  Error: Expected 2 to be 130
+      at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/test-anywhere/src/index.js:391:15)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:88:26)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)

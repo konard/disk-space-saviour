@@ -1,0 +1,25 @@
+[1mClone found (javascript)[22m
+ - [1m[32mtests/use-module.test.js[39m[22m [382:14 - 389:18] (8 lines, 34 tokens)
+   tests/use-module.test.js [413:45 - 420:18]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/wait-for-npm.test.js[39m[22m [67:49 - 72:19] (6 lines, 32 tokens)
+   tests/wait-for-npm.test.js [170:44 - 175:19]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/wait-for-npm.test.js[39m[22m [126:67 - 131:32] (6 lines, 30 tokens)
+   tests/wait-for-npm.test.js [161:62 - 166:32]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/wait-for-npm.test.js[39m[22m [127:28 - 132:19] (6 lines, 32 tokens)
+   tests/wait-for-npm.test.js [264:23 - 269:19]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/workflows-lint.test.js[39m[22m [173:20 - 186:45] (14 lines, 57 tokens)
+   tests/workflows-lint.test.js [212:18 - 225:45]
+[90m┌────────────┬────────────────┬─────────────┬──────────────┬──────────────┬──────────────────┬───────────────────┐[39m
+[90m│[39m[31m Format     [39m[90m│[39m[31m Files analyzed [39m[90m│[39m[31m Total lines [39m[90m│[39m[31m Total tokens [39m[90m│[39m[31m Clones found [39m[90m│[39m[31m Duplicated lines [39m[90m│[39m[31m Duplicated tokens [39m[90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m javascript [90m│[39m 260            [90m│[39m 44622       [90m│[39m 234879       [90m│[39m 325          [90m│[39m 2953 (6.62%)     [90m│[39m 14031 (5.97%)     [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m [1mTotal:[22m     [90m│[39m 260            [90m│[39m 44622       [90m│[39m 234879       [90m│[39m 325          [90m│[39m 2953 (6.62%)     [90m│[39m 14031 (5.97%)     [90m│[39m
+[90m└────────────┴────────────────┴─────────────┴──────────────┴──────────────┴──────────────────┴───────────────────┘[39m
+[90mFound 325 clones.[39m
+[32mHTML report saved to ./reports/jscpd/jscpd-report.html[39m
+[90mtime: 112.839ms[39m

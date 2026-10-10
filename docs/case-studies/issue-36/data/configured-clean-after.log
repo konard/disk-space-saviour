@@ -1,0 +1,22 @@
+▶ issue 36 toolchain caches
+  ✔ finds .perl5/build/perl-5/build.o safely and respects its busy tools (652.970418ms)
+  ✔ finds .perl5/dists/perl.tar.gz safely and respects its busy tools (659.428335ms)
+  ✔ finds .sdkman/tmp/java.zip safely and respects its busy tools (538.704776ms)
+  ✔ finds .sdkman/archives/java.zip safely and respects its busy tools (742.460652ms)
+  ✔ finds .nvm/.cache/bin/node.tar.gz safely and respects its busy tools (616.156983ms)
+  ✔ finds .rbenv/versions/3.3/lib/ruby/gems/3.3.0/cache/test.gem safely and respects its busy tools (568.0185ms)
+  ✔ finds .rvm/gems/ruby-3.3/cache/test.gem safely and respects its busy tools (445.574631ms)
+  ✔ finds .local/share/gem/ruby/3.3.0/cache/test.gem safely and respects its busy tools (377.164631ms)
+  ✔ cleans only downloaded gem files, preserving other cache content (689.203732ms)
+  ✔ honors configured cache roots and GOPATH outside the home default (307.024615ms)
+  ✔ reports semver baseline builds at safe tier and blocks an active semver check (362.49776ms)
+  ✔ reloads configured roots when cleanup reconstructs a version adapter (28.144323ms)
+✔ issue 36 toolchain caches (5992.971114ms)
+ℹ tests 12
+ℹ suites 1
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6238.043318

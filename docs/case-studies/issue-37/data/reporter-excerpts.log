@@ -1,0 +1,5 @@
+$ dss clean --no-docker --tier safe -y --exclude /var/lib/containerd --exclude /var/lib/docker …   # as root on the host
+  removed   67.5 MiB  npm-cache  /root/.npm/_cacache  (watched process claude (pid 3141776) exited while cleaning host:npm-cache:/root/.npm/_cacache)
+Task health:
+  host (vmi2955137): STOPPED cleaning: watched process claude (pid 3141776) exited while cleaning host:npm-cache:/root/.npm/_cacache
+Freed 67.5 MiB

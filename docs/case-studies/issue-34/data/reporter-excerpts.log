@@ -1,0 +1,6 @@
+timeout 2400 node bin/dss.js scan --recursive --json > out.json
+
+const controller = new AbortController();
+const abort = () => controller.abort();
+process.once('SIGINT', abort);
+process.once('SIGTERM', abort);

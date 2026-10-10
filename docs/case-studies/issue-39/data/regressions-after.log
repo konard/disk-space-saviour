@@ -1,0 +1,173 @@
+▶ issue 14 missing caches and logs
+  ✔ deletes opam download files without ever invoking opam (779.382429ms)
+  ✔ finds aged isolation logs and sanitized upload staging paths (569.711751ms)
+  ✔ keeps newest and current Claude binaries and Copilot packages (1391.133778ms)
+✔ issue 14 missing caches and logs (2743.78861ms)
+▶ issue 14 reporting and consent
+  ✔ embeds the scan items and blockers in the audit report (1.156206ms)
+  ✔ returns a failure exit code for an incomplete JSON scan (7.252979ms)
+  ✔ lifts investigation holds only past the explicit age and a known end time (8.007106ms)
+✔ issue 14 reporting and consent (17.961254ms)
+▶ issue 14 Docker discovery
+  ✔ does not ask docker ps to compute writable layer sizes (2.751472ms)
+  ✔ preserves containers and images after repeated global size failures (13.046085ms)
+  ✔ shows the image pinned by a small stopped container as potential bytes (9.827552ms)
+  ✔ checks stopped Git work in a plain scan (37.314063ms)
+  ✔ retains one failed container size as unknown and scans the others (4.795205ms)
+  ✔ retains dangling images with unavailable size measurements (2.178955ms)
+✔ issue 14 Docker discovery (73.322532ms)
+▶ issue 14 preserved container work
+  ✔ recognizes modified and untracked files saved together on a remote recovery ref (831.211097ms)
+  ✔ requires deletions to match the saved ref and keeps staged work protected (759.253842ms)
+  ✔ ignores nested Docker layer copies and temporary Codex plugin checkouts (0.867239ms)
+  ✔ accepts a detached upstream commit but protects a new detached commit (591.400879ms)
+✔ issue 14 preserved container work (2187.26472ms)
+▶ issue 14 process matching
+  ✔ does not match tool names in directory components or arguments (4.387182ms)
+  ✔ allows idle download/header caches alongside an npm exec server (1.793836ms)
+  ✔ protects only the npx hash used by an exec child (0.934253ms)
+  ✔ still blocks real npm installs and open cache files (0.509309ms)
+  ✔ recognizes npm process titles and does not waive install activity from a package argument (1.340481ms)
+  ✔ protects an installed script named in a process command after its descriptor closes (0.48194ms)
+✔ issue 14 process matching (12.688278ms)
+▶ issue 14 Docker process inspection
+  ✔ skips zombie metadata while retaining command paths of live processes (27.166926ms)
+  ✔ uses the same read-only fallback when dss runs inside the container (2.288598ms)
+  ✔ retries an incomplete probe as a privileged root read-only exec (3.147632ms)
+  ✔ reports unreadable process names when the fallback is denied (1.30829ms)
+✔ issue 14 Docker process inspection (36.230703ms)
+▶ issue 14 writable-layer usage
+  ✔ counts changed files without walking a changed directory into lower layers (4.956997ms)
+  ✔ reports an unchanged image cache as zero reclaimable bytes (3.007891ms)
+  ✔ includes mounted data and never double counts it as layer data (1.6088ms)
+  ✔ marks failed layer inspection as unknown with zero estimated bytes (0.768424ms)
+  ✔ keeps image-only caches visible in a real scanner report (52.524115ms)
+✔ issue 14 writable-layer usage (65.489921ms)
+▶ issue 24 exclusion boundaries
+  ✔ excludes nested artifacts through /tmp/foo* (3.34062ms)
+  ✔ excludes nested artifacts through /tmp/foo*/** (1.676377ms)
+  ✔ excludes nested artifacts through foo* (0.436454ms)
+  ✔ excludes nested artifacts through /tmp/foo1 (0.353288ms)
+  ✔ prunes a matching tree before listing or measuring it (170.38086ms)
+✔ issue 24 exclusion boundaries (178.61025ms)
+▶ issues 22, 23 and 26 local container boundaries
+  ✔ does not contact Docker with docker:false even when its own ID is known (317.042094ms)
+  ✔ does not list a nested same-device read-only image mount (15.567509ms)
+  ✔ leaves overlay bytes out of safe totals without Docker access (143.487644ms)
+✔ issues 22, 23 and 26 local container boundaries (477.439392ms)
+▶ shell measurement boundaries
+  ✔ prunes zero-depth globstars with real Linux shell tools (70.678559ms)
+  ✔ does not measure a cache containing excluded data (4.960341ms)
+  ✔ does not measure a cache containing mounted data (0.602795ms)
+  ✔ does not measure a cache containing runtime data (0.296864ms)
+✔ shell measurement boundaries (80.048648ms)
+▶ issue 18 cache coverage
+  ✔ rechecks exclusions discovered during the final usage walk before removing its ancestor (1321.703336ms)
+  ✔ finds Telegram cache partitions and preserves its database and media (578.482722ms)
+  ✔ finds application-support Chromium and marker-backed Electron caches (514.185616ms)
+  ✔ keeps MCP profiles while old browser revisions are safe (250.626336ms)
+  ✔ protects excluded descendants from ancestor removal (253.552853ms)
+  ✔ finalizes a partial audit when a callback interrupts cleanup (1274.737872ms)
+✔ issue 18 cache coverage (4203.095248ms)
+▶ aggregate cleanup details
+  ✔ keeps local cache items when the directly supplied host adapter is a container (3.607629ms)
+  ✔ applies no-docker to Docker actions from a previously scanned report (1.318229ms)
+  ✔ accepts unique name prefixes and reports ambiguous and unmatched filters (0.783232ms)
+  ✔ measures the authoritative upperdir without a diff or memory probe (3.29625ms)
+  ✔ preserves readable shell paths while retaining denied PID identity (1.847326ms)
+✔ aggregate cleanup details (13.875213ms)
+▶ aggregate cleanup safety and publishing
+  ✔ reports Full Disk Access when Safari inspection is denied (1.751788ms)
+  ✔ explains a repository transfer in npm publishing diagnostics (0.622951ms)
+  ✔ retains npm E404 diagnostics when publishing rejects with a generic exit error (0.639091ms)
+  ✔ blocks nonignored artifact files while allowing ignored artifacts with dirty source (732.156476ms)
+✔ aggregate cleanup safety and publishing (737.495126ms)
+▶ issue 25 partial process inspection
+  ✔ retains readable paths when a root daemon denies inspection (25.842665ms)
+  ✔ protects a package path passed to node even with no open descriptor (2.275156ms)
+  ✔ protects the current installation independently from process probes (0.520532ms)
+✔ issue 25 partial process inspection (31.504457ms)
+▶ new application and runner rule families
+  ✔ discovers and safely cleans an idle telegram-caches fixture (1223.545038ms)
+  ✔ discovers and safely cleans an idle telegram-downloaded-media fixture (2031.040789ms)
+  ✔ discovers and safely cleans an idle safari-webkit-caches fixture (1253.186711ms)
+  ✔ discovers and safely cleans an idle electron-profile-caches fixture (1262.967678ms)
+  ✔ discovers and safely cleans an idle agent-scratch-sessions fixture (1459.609714ms)
+  ✔ discovers and safely cleans an idle agent-scratch-files fixture (1366.37084ms)
+  ✔ discovers and safely cleans an idle bunx-cache fixture (1107.063793ms)
+  ✔ discovers and safely cleans an idle pnpm-dlx-cache fixture (970.263252ms)
+  ✔ discovers and safely cleans an idle yarn-dlx-cache fixture (744.874533ms)
+  ✔ protects an Electron cache while its app runs (335.435876ms)
+  ✔ finalizes an audit when cancellation arrives during its last item (833.15628ms)
+✔ new application and runner rule families (12593.81177ms)
+▶ explicit mount roots
+  ✔ allows an explicitly selected subdirectory on an ordinary mount, while pruning runtime and overlay roots (3.988429ms)
+✔ explicit mount roots (4.293459ms)
+▶ issue 21 bounded storage snapshots
+  ✔ omits paths that disappeared during the raw usage walk (5.406446ms)
+  ✔ honors a tighter cgroup memory limit than host MemAvailable (1.209025ms)
+  ✔ uses metadata already inspected during discovery (0.798511ms)
+  ✔ refreshes Git discovery before removal if a new repository was copied into a stopped container (55.542377ms)
+  ✔ diffs and inspects only once across repeated and concurrent measurements (4.940815ms)
+  ✔ shares snapshots by executor and container, without sharing different daemons (0.4661ms)
+  ✔ skips a diff with insufficient host headroom (0.542341ms)
+  ✔ skips a diff before contacting the daemon when the candidate change budget is excessive (1.736769ms)
+  ✔ drops deleted paths and cached stats without another diff (1.488527ms)
+  ✔ serializes snapshots even for different executors (29.285908ms)
+✔ issue 21 bounded storage snapshots (106.17286ms)
+▶ issue 33 bounded remote round trips
+  ✔ analyzes a 1000-fingerprint fixture with fewer than 40 transport calls (112.090599ms)
+  ✔ resolves 1000 fingerprint paths in five transport batches (2.349331ms)
+  ✔ batches exclusion boundary probes as well as usage measurement (3.140036ms)
+✔ issue 33 bounded remote round trips (120.058411ms)
+▶ issue 34 cancellation and scan budgets
+  ✔ cancels a streaming executor command as well as captured commands (44.340561ms)
+  ✔ terminates a spawned child when the scan signal aborts (31.53905ms)
+  ✔ preserves partial findings after cancellation (244.561461ms)
+  ✔ preserves partial findings after a time budget (2012.929837ms)
+  ✔ writes a partial CLI report and exits 143 on SIGTERM (1662.599791ms)
+  ✔ writes a partial CLI report and exits 130 on SIGINT (1670.884444ms)
+✔ issue 34 cancellation and scan budgets (5675.349269ms)
+▶ issue 35 containerd writable storage
+  ✔ finds the authoritative root upperdir when GraphDriver is null (57.070998ms)
+✔ issue 35 containerd writable storage (60.018616ms)
+▶ issue 35 containerd cleanup
+  ✔ batches idle writable paths, preserves open paths and measures reclaimed blocks (200.717959ms)
+  ✔ never deletes an image-only cache with a containerd upperdir (26.969108ms)
+✔ issue 35 containerd cleanup (229.267525ms)
+▶ issue 36 toolchain caches
+  ✔ finds .perl5/build/perl-5/build.o safely and respects its busy tools (690.573651ms)
+  ✔ finds .perl5/dists/perl.tar.gz safely and respects its busy tools (1323.866124ms)
+  ✔ finds .sdkman/tmp/java.zip safely and respects its busy tools (896.554258ms)
+  ✔ finds .sdkman/archives/java.zip safely and respects its busy tools (642.071038ms)
+  ✔ finds .nvm/.cache/bin/node.tar.gz safely and respects its busy tools (781.761268ms)
+  ✔ finds .rbenv/versions/3.3/lib/ruby/gems/3.3.0/cache/test.gem safely and respects its busy tools (655.012999ms)
+  ✔ finds .rvm/gems/ruby-3.3/cache/test.gem safely and respects its busy tools (325.46132ms)
+  ✔ finds .local/share/gem/ruby/3.3.0/cache/test.gem safely and respects its busy tools (332.226869ms)
+  ✔ cleans only downloaded gem files, preserving other cache content (491.669136ms)
+  ✔ honors configured cache roots and GOPATH outside the home default (195.13216ms)
+  ✔ reports semver baseline builds at safe tier and blocks an active semver check (326.233331ms)
+✔ issue 36 toolchain caches (6665.994744ms)
+▶ issue 37 task health namespace boundaries
+  ✔ ignores an agent in a container namespace but still watches host builds (4.327502ms)
+  ✔ keeps agents watched when namespace metadata is unavailable or cleaning a container (1.615103ms)
+✔ issue 37 task health namespace boundaries (9.47775ms)
+▶ issue 38 permission-aware activity
+  ✔ retries denied processes under their UID/GID without waiving remaining failures (3.964765ms)
+  ✔ preserves initial readable evidence when privileged Docker inspection fails (5.105774ms)
+  ✔ scopes unreadable root Docker daemons to their storage and runtime paths (2.448707ms)
+  ✔ returns owners and permissions for remote stat, including single paths (0.878628ms)
+  ✔ shows blocked known and unknown sizes without counting nested data twice (3.877282ms)
+✔ issue 38 permission-aware activity (20.610956ms)
+▶ issue 39 scan audit failures
+  ✔ prints the JSON report and a warning when the audit directory is unusable (17.977995ms)
+  ✔ keeps destructive cleanup audit writes strict (5.200901ms)
+✔ issue 39 scan audit failures (26.077985ms)
+ℹ tests 115
+ℹ suites 25
+ℹ pass 115
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14265.827912

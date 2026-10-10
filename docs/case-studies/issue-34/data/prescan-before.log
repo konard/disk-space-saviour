@@ -1,0 +1,54 @@
+▶ issue 34 cancellation and scan budgets
+  ✔ cancels a streaming executor command as well as captured commands (19.536363ms)
+  ✔ terminates a spawned child when the scan signal aborts (31.587865ms)
+  ✔ preserves partial findings after cancellation (313.192035ms)
+  ✔ preserves partial findings after a time budget (2011.616507ms)
+  ✔ writes a partial scan pre-scan report and exits 143 on SIGTERM (1497.234236ms)
+  ✔ writes a partial scan pre-scan report and exits 130 on SIGINT (1276.484774ms)
+  ✖ writes a partial clean pre-scan report and exits 143 on SIGTERM (1360.962593ms)
+  ✖ writes a partial clean pre-scan report and exits 130 on SIGINT (1317.001578ms)
+  ✖ writes a partial emergency pre-scan report and exits 143 on SIGTERM (1414.796095ms)
+  ✖ writes a partial emergency pre-scan report and exits 130 on SIGINT (1345.167079ms)
+✖ issue 34 cancellation and scan budgets (10593.955561ms)
+ℹ tests 10
+ℹ suites 1
+ℹ pass 6
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10798.562891
+
+✖ failing tests:
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ writes a partial clean pre-scan report and exits 143 on SIGTERM (1360.962593ms)
+  TypeError [Error]: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:128:31)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ writes a partial clean pre-scan report and exits 130 on SIGINT (1317.001578ms)
+  TypeError [Error]: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:128:31)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ writes a partial emergency pre-scan report and exits 143 on SIGTERM (1414.796095ms)
+  TypeError [Error]: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:128:31)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at node_modules/test-anywhere/src/index.js:174:12
+✖ writes a partial emergency pre-scan report and exits 130 on SIGINT (1345.167079ms)
+  TypeError [Error]: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:128:31)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)

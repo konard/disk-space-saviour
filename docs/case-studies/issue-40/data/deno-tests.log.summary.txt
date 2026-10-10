@@ -1,0 +1,25 @@
+
+writes a partial CLI report and exits 143 on SIGTERM => ./tests/issue-34-cancellation.test.js:89:34
+error: Error: Expected null to be 143
+        throw new Error(message || defaultMessage);
+              ^
+    at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/.deno/test-anywhere@0.8.50/node_modules/test-anywhere/src/index.js:391:15)
+    at file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:122:28
+    at async file:///tmp/gh-issue-solver-1791629994547/node_modules/.deno/test-anywhere@0.8.50/node_modules/test-anywhere/src/index.js:155:9
+
+writes a partial CLI report and exits 130 on SIGINT => ./tests/issue-34-cancellation.test.js:89:34
+error: Error: Expected null to be 130
+        throw new Error(message || defaultMessage);
+              ^
+    at Object.toBe (file:///tmp/gh-issue-solver-1791629994547/node_modules/.deno/test-anywhere@0.8.50/node_modules/test-anywhere/src/index.js:391:15)
+    at file:///tmp/gh-issue-solver-1791629994547/tests/issue-34-cancellation.test.js:122:28
+    at async file:///tmp/gh-issue-solver-1791629994547/node_modules/.deno/test-anywhere@0.8.50/node_modules/test-anywhere/src/index.js:155:9
+
+ FAILURES
+
+writes a partial CLI report and exits 143 on SIGTERM => ./tests/issue-34-cancellation.test.js:89:34
+writes a partial CLI report and exits 130 on SIGINT => ./tests/issue-34-cancellation.test.js:89:34
+
+FAILED | 1263 passed | 2 failed | 3 ignored (1m0s)
+
+error: Test failed

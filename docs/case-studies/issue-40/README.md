@@ -165,3 +165,7 @@ Expected behavior covered by tests:
 - [Rust template](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template)
 - [shields.io static badge documentation](https://shields.io/badges/static-badge)
 - [shields.io npm version badge documentation](https://shields.io/badges/npm-version)
+
+## disk-space-saviour investigation
+
+See the [disk-space-saviour requirement matrix, root causes, alternatives and evidence](disk-space-saviour.md). Earlier sections document the inherited pipeline template.

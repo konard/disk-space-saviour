@@ -1,0 +1,40 @@
+▶ process start times
+  ✔ reads the state and start time after a name with spaces and parens (6.20752ms)
+  ✔ lists container processes with their start times (1488.197542ms)
+✔ process start times (1498.867216ms)
+▶ health watch
+  ✔ watches PID 1, agents and build tools (1.906256ms)
+  ✔ reports exited processes and reused PIDs (0.609647ms)
+  ✔ stops only the environment that lost a process (1.277673ms)
+  ✔ stops when the processes can no longer be listed (0.546099ms)
+✔ health watch (5.150178ms)
+▶ clean with a health check
+  ✔ records the watched processes that survived (1604.175977ms)
+  ✔ stops cleaning the environment when an agent disappears (399.40357ms)
+✔ clean with a health check (2006.973697ms)
+▶ issue 14 process matching
+  ✔ does not match tool names in directory components or arguments (9.31047ms)
+  ✔ allows idle download/header caches alongside an npm exec server (5.827973ms)
+  ✔ protects only the npx hash used by an exec child (3.17816ms)
+  ✔ still blocks real npm installs and open cache files (0.54711ms)
+  ✔ recognizes npm process titles and does not waive install activity from a package argument (1.95158ms)
+  ✔ protects an installed script named in a process command after its descriptor closes (0.595812ms)
+✔ issue 14 process matching (31.157315ms)
+▶ issue 14 Docker process inspection
+  ✔ skips zombie metadata while retaining command paths of live processes (66.483988ms)
+  ✔ uses the same read-only fallback when dss runs inside the container (11.704725ms)
+  ✔ retries an incomplete probe as a privileged root read-only exec (2.170019ms)
+  ✔ reports unreadable process names when the fallback is denied (1.00728ms)
+✔ issue 14 Docker process inspection (91.385213ms)
+▶ issue 37 task health namespace boundaries
+  ✔ ignores an agent in a container namespace but still watches host builds (6.523901ms)
+  ✔ keeps agents watched when namespace metadata is unavailable or cleaning a container (0.827023ms)
+✔ issue 37 task health namespace boundaries (10.0021ms)
+ℹ tests 20
+ℹ suites 6
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3867.848529

@@ -1,0 +1,8 @@
+./tests/issue-34-cancellation.test.js => preserves partial findings after cancellation ... ok (824ms)
+./tests/issue-34-cancellation.test.js => preserves partial findings after a time budget ... ok (2s)
+./tests/issue-34-cancellation.test.js => writes a partial scan pre-scan report and exits 143 on SIGTERM ... ok (1s)
+./tests/issue-34-cancellation.test.js => writes a partial scan pre-scan report and exits 130 on SIGINT ... ok (1s)
+./tests/issue-34-cancellation.test.js => writes a partial clean pre-scan report and exits 143 on SIGTERM ... ok (1s)
+./tests/issue-34-cancellation.test.js => writes a partial clean pre-scan report and exits 130 on SIGINT ... ok (1s)
+./tests/issue-34-cancellation.test.js => writes a partial emergency pre-scan report and exits 143 on SIGTERM ... ok (2s)
+./tests/issue-34-cancellation.test.js => writes a partial emergency pre-scan report and exits 130 on SIGINT ... ok (3s)

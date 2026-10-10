@@ -1,0 +1,25 @@
+(pass) pipeline status supersede detection > errors when main is at the run commit (a genuine overrun) [136.96ms]
+(pass) pipeline status supersede detection > warns only when a moved branch could cancel that exact job [413.26ms]
+(pass) pipeline status supersede detection > does not excuse a non-cancellable job after the branch moves [426.38ms]
+(pass) pipeline status supersede detection > fails closed when cancel-in-progress is an expression [423.51ms]
+(pass) pipeline status supersede detection > errors when the branch head cannot be resolved [229.15ms]
+(pass) pipeline status supersede detection > errors without a network call when RUN_SHA is missing [235.27ms]
+(pass) effective job cancellation policy reader > distinguishes literal, inherited, absent, missing, and expression values [358.54ms]
+(pass) effective job cancellation policy reader > reports none when neither job nor workflow declares concurrency [275.78ms]
+
+tests/items.test.js:
+(pass) tier selection > ranks tiers and rejects unknown ones [0.23ms]
+(pass) tier selection > includes lower tiers and never blocked items [1.24ms]
+(pass) tier selection > finds parents of paths with long runs of separators quickly [12.30ms]
+(pass) tier selection > drops items inside another item of the same environment [0.50ms]
+(pass) tier selection > counts nested items once in cumulative totals [0.27ms]
+(pass) tier selection > counts items that need explicit consent apart from the tiers [0.27ms]
+(pass) tier selection > adds each blocker once [0.07ms]
+(pass) units > parses binary sizes [0.17ms]
+(pass) units > parses durations and percentages [0.34ms]
+(pass) units > rejects long runs of spaces quickly [1.27ms]
+(pass) units > formats bytes and durations [0.17ms]
+
+ 1273 pass
+ 0 fail
+Ran 1273 tests across 102 files. [114.41s]

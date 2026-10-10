@@ -1,0 +1,5 @@
+DSS_DEBUG=1 dss scan --recursive --json      # as root on the host
+
+[dss] exec ["docker","exec","230afff1…","readlink","-f","--","/tmp/gh-issue-solver-1791515915848/target/debug/.fingerprint/zstd-safe-7018b99d35aa…"]
+[dss] exit 0 after 125ms
+[dss] exec ["docker","exec","230afff1…","find","/tmp/gh-issue-solver-resume-…/target/debug/deps/cli_contract_test-eb6d2284a80cd634.d","-xdev","-mindepth","1",…]

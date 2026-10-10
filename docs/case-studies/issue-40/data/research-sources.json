@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-10-10",
+  "sources": [
+    {
+      "url": "https://docs.docker.com/engine/storage/containerd/",
+      "purpose": "Snapshotters and Docker 29 fresh-install default"
+    },
+    {
+      "url": "https://www.kernel.org/doc/html/latest/filesystems/overlayfs.html",
+      "purpose": "Merged views, whiteouts, upper/lower storage"
+    },
+    {
+      "url": "https://nodejs.org/api/child_process.html",
+      "purpose": "Signals, subprocess termination and exit semantics"
+    },
+    {
+      "url": "https://github.com/sindresorhus/execa/blob/main/docs/termination.md",
+      "purpose": "Alternative cancellation/escalation component"
+    },
+    {
+      "url": "https://github.com/apocas/dockerode",
+      "purpose": "Alternative Docker API/stream transport"
+    },
+    {
+      "url": "https://man7.org/linux/man-pages/man7/namespaces.7.html",
+      "purpose": "Namespace link identity"
+    },
+    {
+      "url": "https://www.man7.org/linux/man-pages/man5/proc_pid_cwd.5.html",
+      "purpose": "PTRACE_MODE_READ_FSCREDS link checks"
+    },
+    {
+      "url": "https://github.com/util-linux/util-linux/blob/master/sys-utils/setpriv.1.adoc",
+      "purpose": "Owner/group switching helper"
+    },
+    {
+      "url": "https://go.dev/ref/mod",
+      "purpose": "Configurable module storage"
+    },
+    {
+      "url": "https://docs.npmjs.com/cli/v8/using-npm/config/",
+      "purpose": "npm configured cache"
+    },
+    {
+      "url": "https://pip.pypa.io/en/stable/topics/caching/",
+      "purpose": "pip configured cache"
+    },
+    {
+      "url": "https://metacpan.org/pod/perlbrew",
+      "purpose": "Standard Perlbrew root and native cleanup"
+    },
+    {
+      "url": "https://github.com/nvm-sh/nvm/blob/master/nvm.sh",
+      "purpose": "nvm shell function and cache cleanup"
+    },
+    {
+      "url": "https://sdkman.io/usage/",
+      "purpose": "Supported cache operations"
+    },
+    {
+      "url": "https://github.com/sdkman/sdkman-cli/blob/master/src/main/bash/sdkman-flush.sh",
+      "purpose": "No archives flush case in current implementation"
+    },
+    {
+      "url": "https://github.com/obi1kenobi/cargo-semver-checks",
+      "purpose": "Semver baseline generator"
+    },
+    {
+      "url": "https://nodejs.org/api/fs.html",
+      "purpose": "mkdtemp, write errors and file modes"
+    },
+    {
+      "url": "https://nodejs.org/api/os.html#ostmpdir",
+      "purpose": "Platform temporary directory"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+▶ issue 14 process matching
+  ✔ does not match tool names in directory components or arguments (3.233913ms)
+  ✔ allows idle download/header caches alongside an npm exec server (2.21388ms)
+  ✔ protects only the npx hash used by an exec child (1.338427ms)
+  ✔ still blocks real npm installs and open cache files (0.571056ms)
+  ✔ recognizes npm process titles and does not waive install activity from a package argument (0.966864ms)
+  ✔ protects an installed script named in a process command after its descriptor closes (0.63213ms)
+✔ issue 14 process matching (11.802649ms)
+▶ issue 14 Docker process inspection
+  ✔ skips zombie metadata while retaining command paths of live processes (27.232185ms)
+  ✔ uses the same read-only fallback when dss runs inside the container (2.887867ms)
+  ✔ retries an incomplete probe as a privileged root read-only exec (2.849437ms)
+  ✔ reports unreadable process names when the fallback is denied (0.994976ms)
+✔ issue 14 Docker process inspection (35.072313ms)
+▶ issue 24 exclusion boundaries
+  ✔ excludes nested artifacts through /tmp/foo* (3.927427ms)
+  ✔ excludes nested artifacts through /tmp/foo*/** (0.639894ms)
+  ✔ excludes nested artifacts through foo* (0.593848ms)
+  ✔ excludes nested artifacts through /tmp/foo1 (0.633191ms)
+  ✔ prunes a matching tree before listing or measuring it (214.99162ms)
+✔ issue 24 exclusion boundaries (224.943346ms)
+▶ issues 22, 23 and 26 local container boundaries
+  ✔ does not contact Docker with docker:false even when its own ID is known (185.95132ms)
+  ✔ does not list a nested same-device read-only image mount (6.77541ms)
+  ✔ leaves overlay bytes out of safe totals without Docker access (159.109232ms)
+✔ issues 22, 23 and 26 local container boundaries (353.620943ms)
+▶ shell measurement boundaries
+  ✔ prunes zero-depth globstars with real Linux shell tools (56.180383ms)
+  ✔ does not measure a cache containing excluded data (1.818513ms)
+  ✔ does not measure a cache containing mounted data (0.614077ms)
+  ✔ does not measure a cache containing runtime data (0.295531ms)
+✔ shell measurement boundaries (59.599101ms)
+▶ issue 25 partial process inspection
+  ✔ retains readable paths when a root daemon denies inspection (18.709786ms)
+  ✔ protects a package path passed to node even with no open descriptor (2.124003ms)
+  ✔ protects the current installation independently from process probes (1.832149ms)
+✔ issue 25 partial process inspection (25.4869ms)
+▶ issue 38 permission-aware activity
+  ✔ scopes unreadable root Docker daemons to their storage and runtime paths (2.555647ms)
+  ✔ returns owners and permissions for remote stat, including single paths (0.973956ms)
+  ✔ shows blocked known and unknown sizes without counting nested data twice (2.11181ms)
+✔ issue 38 permission-aware activity (7.976491ms)
+▶ process aliases
+  ✔ uses executable and argv[0] base names (1.802693ms)
+  ✔ reads working directories from lsof field output on macOS (0.459207ms)
+✔ process aliases (4.509654ms)
+▶ LivenessProbe
+  ✔ lets an idle directory go (3.161538ms)
+  ✔ reports writes inside the activity window (3.56976ms)
+  ✔ finds Node.js by executable when its thread is renamed (1.038848ms)
+  ✔ recognizes a browser launcher named in process arguments (0.69206ms)
+  ✔ ignores the tool when it runs in another project (0.447586ms)
+  ✔ matches truncated 15-character kernel names (1.948124ms)
+  ✔ reports files held open inside the directory (0.728759ms)
+  ✔ blocks deletion when Linux process inspection is incomplete (0.727346ms)
+✔ LivenessProbe (14.131285ms)
+ℹ tests 38
+ℹ suites 9
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 892.481329

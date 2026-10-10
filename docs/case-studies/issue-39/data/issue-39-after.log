@@ -1,0 +1,33 @@
+▶ argument parsing
+  ✔ turns `docker scan` into one command (4.319729ms)
+  ✔ maps flags to library options (3.352104ms)
+  ✔ prints usage and rejects bad input with exit code 2 (4.129355ms)
+✔ argument parsing (14.176459ms)
+▶ consent
+  ✔ only plans without --yes when nobody can answer (2.110698ms)
+  ✔ deletes with --yes and never with --dry-run (1.436721ms)
+  ✔ asks on a terminal and keeps everything on no (4.176923ms)
+  ✔ deletes after a yes and confirms risky items one by one (1.235515ms)
+✔ consent (9.715396ms)
+▶ exit codes
+  ✔ returns 1 when a deletion failed (2.738199ms)
+  ✔ returns 3 when the emergency goal is not met (4.476752ms)
+  ✔ returns 1 when an emergency action fails even if the goal is met (0.635645ms)
+  ✔ limits docker commands to Docker (0.491306ms)
+✔ exit codes (8.952653ms)
+▶ dss on real files
+  ✔ rescans a saved report before executing edited paths (548.963593ms)
+  ✔ scans, plans and cleans with an audit log for every run (610.101719ms)
+✔ dss on real files (1160.081077ms)
+▶ issue 39 scan audit failures
+  ✔ prints the JSON report and a warning when the audit directory is unusable (19.014286ms)
+  ✔ keeps destructive cleanup audit writes strict (4.484466ms)
+✔ issue 39 scan audit failures (26.161108ms)
+ℹ tests 15
+ℹ suites 5
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1603.638972

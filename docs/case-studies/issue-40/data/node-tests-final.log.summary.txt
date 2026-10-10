@@ -1,0 +1,25 @@
+  ✔ triggers on changes to every file its jobs audit or run (2.933742ms)
+  ✔ bounds every job with a timeout backstop (0.768974ms)
+✔ workflow linting job (21.081777ms)
+▶ shell blocks under shellcheck
+  ✔ builds the manifest digest list as an array (2.61018ms)
+  ✔ reports the packaging attempt number (0.321009ms)
+✔ shell blocks under shellcheck (3.38738ms)
+▶ third-party actions
+  ✔ pins actions outside the trusted publishers to a commit hash (3.500761ms)
+  ✔ pins every container image reference to a digest (2.211546ms)
+✔ third-party actions (5.988481ms)
+▶ reproducible workflow tooling and runner policy
+  ✔ keeps both zizmor passes and the reproduction comment on the action-supported version (0.698203ms)
+  ✔ pins both secretlint packages to the same exact version (0.459517ms)
+  ✔ pins every hosted OS image in every workflow (2.077646ms)
+  ✔ runs a workflow policy guard in CI (0.327501ms)
+✔ reproducible workflow tooling and runner policy (3.993801ms)
+ℹ tests 1273
+ℹ suites 213
+ℹ pass 1273
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 50685.169507
