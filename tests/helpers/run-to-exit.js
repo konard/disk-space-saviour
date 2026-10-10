@@ -19,7 +19,7 @@ const OUTPUT_GRACE_MS = 1000;
  * @param {string} command program to run
  * @param {string[]} args its arguments
  * @param {object} options spawn options plus `timeout` in milliseconds
- * @returns {Promise<{status: number|null, signal: string|null, error: Error|null, stdout: string, stderr: string, ms: number}>}
+ * @returns {Promise<{status: number|null, signal: string|null, error: Error|null, stdout: string, stderr: string, ms: number, exitMs: number|null}>}
  */
 export function runToExit(command, args, { timeout, ...options } = {}) {
   const started = Date.now();
@@ -31,6 +31,7 @@ export function runToExit(command, args, { timeout, ...options } = {}) {
       stdout: '',
       stderr: '',
       ms: 0,
+      exitMs: null,
     };
     let timer;
     let settled = false;
@@ -64,6 +65,7 @@ export function runToExit(command, args, { timeout, ...options } = {}) {
     child.on('exit', (status, signal) => {
       result.status = status;
       result.signal = signal;
+      result.exitMs = Date.now() - started;
       clearTimeout(timer);
       timer = setTimeout(finish, OUTPUT_GRACE_MS);
     });

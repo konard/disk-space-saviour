@@ -382,6 +382,20 @@ jobs:
         # 35s locally).
         run: bash scripts/run-with-budget-warning.sh 200 "Deno test suite" deno test -A --parallel
 
+      # TEMPORARY diagnostic for the Windows Deno changeset fixture timing.
+      - name: Trace changeset fixture timing under load (temporary)
+        if: always() && matrix.runtime == 'deno'
+        shell: bash
+        timeout-minutes: 8
+        env:
+          DSS_DEBUG: '1'
+        run: |
+          for i in 1 2; do
+            deno test -A --parallel > "trace-$i.log" 2>&1 || true
+            grep -a -E 'took [0-9]+ms|Deno absent|holds its pipes' "trace-$i.log" || true
+            grep -a -E '^(ok|FAILED) \|' "trace-$i.log" || true
+          done
+
   # === DOCKER IMAGE BUILD CHECK (pull requests) ===
   # Builds the Dockerfile without pushing so a broken image fails the pull
   # request instead of surfacing only after publish (issue #106).

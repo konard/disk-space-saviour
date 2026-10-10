@@ -95,16 +95,26 @@ describe('Changesets release formatter', () => {
           spawnSync('deno', ['--version'], { env }).error?.code,
           'ENOENT'
         );
+        const debug = Boolean(process.env.DSS_DEBUG);
+        const preload = debug
+          ? ['-r', resolve('tests/helpers/report-lifetime.cjs')]
+          : [];
         const run = async (file, args) => {
           // spawnSync could wait for a process another test file started.
-          const result = await runToExit('node', [resolve(file), ...args], {
-            cwd,
-            env,
-            timeout: 20000,
-          });
-          const took = `${file} took ${result.ms}ms`;
-          if (process.env.DSS_DEBUG) {
-            console.error(took);
+          const spawned = Date.now();
+          const result = await runToExit(
+            'node',
+            [...preload, resolve(file), ...args],
+            { cwd, env, timeout: 20000 }
+          );
+          const took = `${file} took ${result.ms}ms (exit after ${result.exitMs}ms)`;
+          if (debug) {
+            const lifetime = result.stderr.match(/started=(\d+) lived=(\d+)ms/);
+            console.error(
+              lifetime
+                ? `${took}: started ${lifetime[1] - spawned}ms after spawn, lived ${lifetime[2]}ms`
+                : took
+            );
           }
           assert.equal(
             result.status,

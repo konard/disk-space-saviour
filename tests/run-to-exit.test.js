@@ -4,11 +4,13 @@ import { runToExit } from './helpers/run-to-exit.js';
 import { itUnless, sandboxed } from './helpers/skip.js';
 
 // A child that exits while a process it started keeps the child's stdout
-// open, which is what an inherited pipe looks like on every platform.
+// open, which is what an inherited pipe looks like on every platform. The
+// process is detached because Node on Windows kills its other children when
+// it exits (libuv's job object with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE).
 const HOLD_MS = 4000;
 const leavesPipeOpen = [
   '-e',
-  `require('node:child_process').spawn(process.execPath, ['-e', 'setTimeout(() => {}, ${HOLD_MS})'], { stdio: 'inherit' }).unref(); console.log('child done');`,
+  `require('node:child_process').spawn(process.execPath, ['-e', 'setTimeout(() => {}, ${HOLD_MS})'], { stdio: 'inherit', detached: true }).unref(); console.log('child done');`,
 ];
 
 describe('runToExit', () => {
