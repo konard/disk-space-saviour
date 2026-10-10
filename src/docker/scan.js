@@ -22,6 +22,7 @@
 
 import { backupDirectory } from '../audit.js';
 import { ShellEnv } from '../env/shell.js';
+import { checkSignal, signalExecutor } from '../env/scope.js';
 import { containerExecutor, trace } from '../exec.js';
 import { block, makeItem } from '../items.js';
 import { DockerCli, parseDockerSize } from './cli.js';
@@ -380,6 +381,7 @@ class DockerScan {
   }
 
   async daemon(record, depth, inherited) {
+    checkSignal(this.options.signal);
     const docker = new DockerCli(record.executor);
     const info = await docker.info();
     if (!info) {
@@ -443,6 +445,7 @@ class DockerScan {
       })),
     };
     for (const ps of all) {
+      checkSignal(this.options.signal);
       ps.sizes = await this.bestEffort(
         record.env.id,
         () => docker.containerSize(ps.ID),
@@ -544,6 +547,7 @@ class DockerScan {
       }))
     );
     for (const ps of all) {
+      checkSignal(this.options.signal);
       const selected = selection.ids.has(ps.ID);
       if (!selected) {
         continue;
@@ -597,7 +601,10 @@ class DockerScan {
 
   async running(record, depth, ps, entry, inspected) {
     const label = `${record.env.label}/${entry.name}`;
-    const executor = containerExecutor(record.executor, ps.ID, { label });
+    const executor = signalExecutor(
+      containerExecutor(record.executor, ps.ID, { label }),
+      this.options.signal
+    );
     const env = new ShellEnv(executor, {
       id: `${record.env.id}/${entry.name}`,
       label,
@@ -614,14 +621,20 @@ class DockerScan {
     entry.env = env.id;
     entry.scanned = true;
     const chain = [...record.chain, { containerId: ps.ID, name: entry.name }];
-    this.result.environments.push({
+    const descriptor = {
       id: env.id,
       label,
       kind: 'container',
       depth,
       chain,
-    });
+    };
+    this.result.environments.push(descriptor);
     this.result.items.push(...(await this.scanEnvironment(env)));
+    Object.assign(descriptor, {
+      scanStatus: env.scanStatus,
+      hint: env.probeHint ?? null,
+      layerSource: env.writableLayer?.source ?? null,
+    });
     if (await env.which('docker')) {
       try {
         await this.daemon({ env, executor, chain }, depth, true);
@@ -650,6 +663,14 @@ export async function scanDocker(hostRecord, options, scanEnvironment) {
   if (!(await hostRecord.env.which('docker'))) {
     return scan.result;
   }
-  await scan.daemon(hostRecord, 0, false);
+  try {
+    await scan.daemon(hostRecord, 0, false);
+  } catch (error) {
+    scan.result.errors.push({
+      env: hostRecord.env.id,
+      scanner: 'docker',
+      message: error.message,
+    });
+  }
   return scan.result;
 }

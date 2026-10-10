@@ -37,6 +37,7 @@ Scope:
   --recursive                docker: recurse into nested daemons
   --container ID|NAME        limit Docker work to these containers (repeat)
   --max-depth N              directory depth for project search (default 6)
+  --scan-budget AGE          time budget per filesystem environment (2m)
   --only NAME                only these ecosystems, rules or kinds (repeat)
   --exclude PATH|GLOB        never touch matching paths (repeat)
   --scanner NAME             projects, global, versions, agents, system
@@ -80,6 +81,7 @@ const OPTIONS = {
   recursive: { type: 'boolean' },
   container: { type: 'string', multiple: true },
   'max-depth': { type: 'string' },
+  'scan-budget': { type: 'string' },
   only: { type: 'string', multiple: true },
   exclude: { type: 'string', multiple: true },
   scanner: { type: 'string', multiple: true },
@@ -158,6 +160,7 @@ export function toOptions(values, paths = []) {
     dockerDepth: integer(values.depth, '--depth'),
     containers: values.container,
     maxDepth: integer(values['max-depth'], '--max-depth'),
+    scanBudget: values['scan-budget'],
     only: values.only,
     exclude: values.exclude,
     scanners: values.scanner,
@@ -310,7 +313,7 @@ class Cli {
         'Run `dss clean --tier safe` to see the plan, add --yes to delete.',
       ].join('\n')
     );
-    return report.errors.length > 0 ? 1 : 0;
+    return report.aborted ? 130 : report.errors.length > 0 ? 1 : 0;
   }
 
   async loadReport(options, values) {
@@ -446,6 +449,10 @@ export async function runCli(argv, deps = {}) {
     if (deps.signal) {
       options.signal = deps.signal;
     }
+    options.onScanProgress = (progress) =>
+      io.stderr(
+        `[scan] ${progress.env}: ${progress.scanner}, ${Math.round(progress.elapsedMs / 1000)}s, ${progress.items} items (${progress.status})`
+      );
     return await dispatch(
       new Cli(io, deps.api ?? API),
       command,

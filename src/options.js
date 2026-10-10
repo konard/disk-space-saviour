@@ -32,6 +32,7 @@ export const DEFAULTS = {
   yes: false,
   backupDir: null,
   auditDir: null,
+  scanBudget: '2m',
 };
 
 function toBytes(value) {
@@ -70,6 +71,10 @@ export function resolveOptions(input = {}) {
     }
   }
   const staleAge = input.olderThan ?? merged.staleAge;
+  const scanBudgetMs = toMs(merged.scanBudget);
+  if (!Number.isFinite(scanBudgetMs) || scanBudgetMs <= 0) {
+    throw new Error('scanBudget must be a positive finite duration');
+  }
   const roots = toList(merged.roots);
   return {
     ...merged,
@@ -83,6 +88,7 @@ export function resolveOptions(input = {}) {
         ? null
         : toMs(merged.investigationMaxAge),
     minSizeBytes: toBytes(merged.minSize),
+    scanBudgetMs,
     journalKeepBytes: toBytes(merged.journalKeep),
     containerFilter: toList(merged.containers),
     allowDirtyContainers: toList(merged.allowDirtyContainers),

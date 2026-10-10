@@ -1,3 +1,4 @@
+import { scanItems } from '../env/scope.js';
 /**
  * Per-project dependency, build and cache directories (node_modules, target,
  * .venv, ...) found by walking the scan roots.
@@ -261,7 +262,7 @@ const RUST_PARTS = {
  */
 async function rustItems(context, targetItem, rule) {
   const { env, liveness, options, now } = context;
-  const items = [];
+  const items = scanItems(context);
   const semverPath = env.path.join(targetItem.path, 'semver-checks');
   const semverUsage = await env.usage(semverPath);
   if (semverUsage) {
@@ -339,7 +340,7 @@ export async function scanProjects(context, { rules = PROJECT_RULES } = {}) {
   });
   const usages = await env.usageMany(matches.map((m) => m.candidate.path));
   const globs = [...new Set(rules.flatMap((rule) => rule.names))];
-  const items = [];
+  const items = scanItems(context);
   for (const match of matches) {
     const usage = usages.get(match.candidate.path);
     if (!usage) {

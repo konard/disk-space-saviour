@@ -20,6 +20,46 @@ import { formatDuration } from './units.js';
 
 const PROC_COMM_LIMIT = 15;
 
+function uncertaintyRoots(proc) {
+  const roots = processArgs(proc).flatMap((arg) => {
+    const value = arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : arg;
+    return value.startsWith('/') ? [value] : [];
+  });
+  if (proc.name === 'dockerd') {
+    roots.push('/var/lib/docker', '/run');
+  }
+  if (proc.name === 'containerd') {
+    roots.push('/var/lib/containerd', '/run/containerd');
+  }
+  return roots;
+}
+
+function couldAccess(proc, stat) {
+  return (
+    proc.uid === 0 ||
+    typeof proc.uid !== 'number' ||
+    !stat ||
+    stat.uid === undefined ||
+    stat.uid === proc.uid ||
+    stat.mode === undefined ||
+    (stat.mode & 0o007) !== 0 ||
+    // Group bits can also be an ACL mask granting another named identity.
+    (stat.mode & 0o070) !== 0
+  );
+}
+
+function ancestors(target, pathApi) {
+  const result = [];
+  for (
+    let dir = pathApi.dirname(target);
+    dir !== pathApi.dirname(dir);
+    dir = pathApi.dirname(dir)
+  ) {
+    result.push(dir);
+  }
+  return result;
+}
+
 function nameMatches(name, candidate) {
   return (
     name === candidate ||
@@ -131,6 +171,7 @@ export class LivenessProbe {
     this.probeError = false;
     this.realPaths = new Map();
     this.pathOwners = new Map();
+    this.pathStats = new Map();
   }
 
   async refresh(force = false) {
@@ -145,6 +186,9 @@ export class LivenessProbe {
       (processes === null || this.openPaths === null) &&
       (this.env.platform === 'linux' || this.env.platform === 'darwin');
     this.refreshedAt = this.now();
+    this.realPaths.clear();
+    this.pathStats.clear();
+    this.pathOwners.clear();
   }
 
   /** Processes of the last refresh, or null when they could not be listed. */
@@ -159,18 +203,46 @@ export class LivenessProbe {
    * @param {string[]} paths
    */
   async resolve(paths) {
-    if (this.env.unreadableProcesses?.length && this.env.stat) {
-      for (const target of paths) {
-        this.pathOwners.set(target, (await this.env.stat(target))?.uid);
+    if (this.env.unreadableProcesses?.length) {
+      const missing = [
+        ...new Set(
+          paths.flatMap((target) => [
+            target,
+            ...ancestors(target, this.env.path),
+          ])
+        ),
+      ].filter((target) => !this.pathStats.has(target));
+      const stats = this.env.statMany
+        ? await this.env.statMany(missing)
+        : new Map(
+            await Promise.all(
+              missing.map(async (target) => [
+                target,
+                await this.env.stat?.(target),
+              ])
+            )
+          );
+      for (const target of missing) {
+        this.pathStats.set(target, stats.get(target));
+        this.pathOwners.set(target, stats.get(target)?.uid);
       }
     }
-    if (typeof this.env.realPath !== 'function') {
+    if (!this.env.realPath && !this.env.realPathMany) {
       return;
     }
-    for (const target of paths) {
-      if (!this.realPaths.has(target)) {
-        this.realPaths.set(target, await this.env.realPath(target));
-      }
+    const missing = paths.filter((target) => !this.realPaths.has(target));
+    const resolved = this.env.realPathMany
+      ? await this.env.realPathMany(missing)
+      : new Map(
+          await Promise.all(
+            missing.map(async (target) => [
+              target,
+              await this.env.realPath(target),
+            ])
+          )
+        );
+    for (const target of missing) {
+      this.realPaths.set(target, resolved.get(target) ?? null);
     }
   }
 
@@ -271,34 +343,49 @@ export class LivenessProbe {
   uncertainUsage(paths) {
     for (const proc of this.env.unreadableProcesses ?? []) {
       const args = processArgs(proc);
-      const roots = args.flatMap((arg) => {
-        const value = arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : arg;
-        return value.startsWith('/') ? [value] : [];
-      });
-      if (proc.name === 'dockerd') {
-        roots.push('/var/lib/docker', '/run');
-      }
-      if (proc.name === 'containerd') {
-        roots.push('/var/lib/containerd', '/run/containerd');
-      }
+      const roots = uncertaintyRoots(proc);
+      const scopedDaemon =
+        proc.uid === 0 &&
+        ['dockerd', 'containerd'].includes(proc.name) &&
+        args.length > 0;
       for (const target of paths) {
         const intersects = roots.some(
           (root) =>
             isWithin(root, target, this.env.path) ||
             isWithin(target, root, this.env.path)
         );
-        const owner = this.pathOwners.get(target);
-        if (
-          intersects ||
-          proc.uid === null ||
-          owner === undefined ||
-          owner === proc.uid
-        ) {
+        if (scopedDaemon && !intersects) {
+          continue;
+        }
+        if (!intersects && this.inaccessible(proc, target)) {
+          continue;
+        }
+        const stat = this.pathStats.get(target);
+        if (intersects || couldAccess(proc, stat)) {
           return `unreadable process ${proc.name || 'unknown'} (pid ${proc.pid}, uid ${proc.uid ?? 'unknown'}) may use ${target}`;
         }
       }
     }
     return null;
+  }
+
+  inaccessible(proc, target) {
+    if (proc.uid === 0 || typeof proc.uid !== 'number') {
+      return false;
+    }
+    return ancestors(target, this.env.path).some((dir) => {
+      const stat = this.pathStats.get(dir);
+      if (
+        !stat ||
+        stat.mode === undefined ||
+        stat.uid === proc.uid ||
+        stat.mode & 0o001
+      ) {
+        return false;
+      }
+      const groupAccess = stat.mode & 0o010;
+      return !groupAccess;
+    });
   }
 
   /**

@@ -42,6 +42,18 @@ const ROOTS = [
   ['~/.local/share/pnpm/store', 'PNPM_STORE_DIR'],
   ['~/go/pkg/mod', 'GOMODCACHE'],
   ['~/.cache/go-build', 'GOCACHE'],
+  ['~/Library/Caches/go-build', 'GOCACHE'],
+  ['{LOCALAPPDATA}/go-build', 'GOCACHE'],
+  ['~/Library/Caches/deno', 'DENO_DIR'],
+  ['{LOCALAPPDATA}/deno', 'DENO_DIR'],
+  ['{LOCALAPPDATA}/npm-cache', 'npm_config_cache', 'NPM_CONFIG_CACHE'],
+  ['~/Library/Caches/pip', 'PIP_CACHE_DIR'],
+  ['{LOCALAPPDATA}/pip/Cache', 'PIP_CACHE_DIR'],
+  ['~/Library/Caches/Yarn', 'YARN_CACHE_FOLDER'],
+  ['{LOCALAPPDATA}/Yarn/Cache', 'YARN_CACHE_FOLDER'],
+  ['~/Library/pnpm/store', 'PNPM_STORE_DIR'],
+  ['~/.pnpm-store', 'PNPM_STORE_DIR'],
+  ['{LOCALAPPDATA}/pnpm/store', 'PNPM_STORE_DIR'],
   ['~/.cache', 'XDG_CACHE_HOME'],
 ];
 

@@ -118,6 +118,7 @@ is needed. Agent scratch cleanup requires inactivity and Git safety checks.
   macOS) are skipped. So are projects with a running `cargo`, `gradle`,
   `npm`, `node` or similar tool, and anything modified within
   `--older-than` (1h).
+  Container paths are checked individually before each bounded deletion batch.
 - **Rust builds are pruned in two parts.** `cargo-superseded` removes
   older hashes of a unit (`.rlib`, `.rmeta`, `.so`/`.dylib`/`.a`,
   `build/*`, `.fingerprint`) that a newer build replaced, but never while
@@ -135,6 +136,9 @@ is needed. Agent scratch cleanup requires inactivity and Git safety checks.
   environment stops at once, and the audit log and summary say which
   process was lost. A build that simply finishes during the cleanup also
   stops it: an exit cannot be told apart from a crash.
+  Host cleanup watches processes in its own mount namespace; each container
+  watches its own tasks. Processes with unknown namespace membership remain
+  watched.
 - **Git awareness.** Whole projects and containers are protected while they
   have unsaved changes, unpushed commits or stashes. Ignored dependency and
   build outputs can be cleaned despite unrelated source changes; tracked or
@@ -152,6 +156,9 @@ is needed. Agent scratch cleanup requires inactivity and Git safety checks.
   and left per environment, and disk usage before and after. Scan audits
   include every candidate and its blockers; blocked candidates do not
   contribute to reclaimable tier totals.
+  If a read-only scan cannot save its audit, it warns and still prints the
+  report. Root scans with another user's `HOME` use a private temporary audit
+  directory. Set `--audit-dir` to choose a persistent writable location.
 
 Long-lived `npm exec`/`npx` servers allow idle npm download and node-gyp
 header caches to be cleaned. Active npx hashes remain protected through
@@ -164,6 +171,21 @@ their readable identity; uncertain activity blocks relevant paths and owners
 and produces one environment hint. Old isolation logs and sanitized upload staging
 are moderate-tier candidates. Opam download cleanup removes its cache
 directory directly and does not invoke `opam clean` or migrate the root.
+
+Scans have a two-minute budget per filesystem environment, configurable with
+`--scan-budget 5m` (library: `scanBudget`). Progress goes to stderr, leaving
+JSON stdout clean. SIGINT and SIGTERM stop new work, cancel subprocesses and
+print completed findings marked `aborted`; incomplete findings remain blocked.
+The CLI exits 130 or 143 respectively. A second signal exits immediately.
+Library callers can pass an `AbortSignal` and an `onScanProgress` callback.
+
+Cache discovery honors tool configuration before default paths, including
+`GOMODCACHE`, `GOPATH`, `GOCACHE`, `CARGO_HOME`, `RUSTUP_HOME`,
+`GRADLE_USER_HOME`, `DENO_DIR`, `BUN_INSTALL_CACHE_DIR` and `XDG_CACHE_HOME`.
+Go, npm, pip, Yarn and pnpm cache queries are bounded and cached per environment.
+Safe rules also cover perlbrew build/download trees, SDKMAN tmp/archive contents,
+nvm downloads, idle `target/semver-checks`, and downloaded Ruby `.gem` files.
+SDKMAN parent directories and installed gems are preserved.
 
 ## Docker
 
@@ -188,6 +210,11 @@ three kinds of Docker data:
   this is denied or incomplete, cleanup stays blocked and names the
   unreadable processes. This also applies when dss runs inside a container
   with access to its Docker daemon.
+  Root probes also retry unreadable processes as their owning UID/GID with
+  `setpriv` when available. Readable evidence is retained after failed retries;
+  unresolved inspection produces one environment hint. Blocked totals show
+  measured bytes and separately identify visible bytes whose freeable size is
+  unknown.
 - **Stopped containers** are listed with their size, image, command, owner
   session (`HIVE_MIND_PARENT_SESSION_ID` and other session labels or
   environment variables, else a session id in the container name), task
@@ -223,6 +250,13 @@ memory headroom, and skips excessive candidate counts. Fresh Git checks before
 stopped-container removal still inspect new work. Verbose mode reports storage
 measurement progress. Host scans prune runtime, nested overlay, read-only and
 unselected mount points; explicitly selected ordinary mount roots are allowed.
+For containerd-backed running containers, the daemon-side init process's
+`/proc/<pid>/mountinfo` supplies the overlay upperdir when `GraphDriver` is absent.
+JSON environments and the text summary show the storage source. Paths are
+measured on the daemon host and removed inside the container so overlay
+whiteouts are respected; cleanup reports the measured change in allocated
+upperdir blocks when available. Remote filesystem operations use bounded
+POSIX-shell batches and do not require Node inside the target container.
 
 Docker discovery uses a size-free container listing and measures each
 container independently. Failed size queries are retried once; objects

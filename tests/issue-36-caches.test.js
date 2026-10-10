@@ -100,6 +100,7 @@ describe('issue 36 toolchain caches', () => {
     for (const [, dir] of expected) {
       writeBlob(join(dir, 'blob'), 8192);
     }
+    writeBlob(join(home, 'Library/pnpm/store/default-blob'), 8192);
     age(root, 40 * DAY_MS);
     const env = fixtureEnv(root);
     env.vars = vars;
@@ -107,6 +108,12 @@ describe('issue 36 toolchain caches', () => {
     env.which = async () => false;
     try {
       const report = await scan(scanInput(env, [], { scanners: ['global'] }));
+      expect(
+        report.items.some(
+          (i) =>
+            i.rule === 'pnpm-store' && i.path.includes('Library/pnpm/store')
+        )
+      ).toBe(false);
       for (const [rule, path] of expected) {
         expect(
           report.items.some((i) => i.rule === rule && i.path === path)

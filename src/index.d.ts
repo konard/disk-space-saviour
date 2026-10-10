@@ -11,6 +11,16 @@ export interface ScanOptions {
   roots?: string[] | string | null;
   /** Directory depth for project search. */
   maxDepth?: number;
+  /** Time budget per filesystem environment (`2m`); incomplete findings are kept. */
+  scanBudget?: Duration;
+  signal?: AbortSignal;
+  onScanProgress?: (progress: {
+    env: string;
+    scanner: string;
+    elapsedMs: number;
+    items: number;
+    status: string;
+  }) => void;
   /** Activity window: newer files are kept (`1h`). */
   staleAge?: Duration;
   /** Alias of `staleAge`. */
@@ -65,7 +75,6 @@ export interface CleanOptions extends ScanOptions {
   confirm?: (item: Item) => boolean | Promise<boolean>;
   /** `false` skips writing the audit log file. */
   audit?: boolean;
-  signal?: AbortSignal;
   onEntry?: (entry: AuditEntry, item: Item) => void;
 }
 
@@ -145,11 +154,22 @@ export interface EnvironmentDescriptor {
   chain: Array<{ containerId: string; name: string }>;
   hint?: string | null;
   disk?: Disk | null;
+  scanStatus?:
+    | 'scanning'
+    | 'complete'
+    | 'aborted'
+    | 'budget-exceeded'
+    | 'error'
+    | null;
+  layerSource?: string | null;
 }
 
 export interface TierTotal {
   items: number;
   bytes: number;
+  /** Visible blocked bytes, including data whose writable size is unknown. */
+  totalBytes?: number;
+  unknownBytes?: number;
 }
 
 export interface Report {
@@ -157,6 +177,8 @@ export interface Report {
   tool: 'disk-space-saviour';
   createdAt: string;
   durationMs: number;
+  aborted?: boolean;
+  audit?: { file: string | null; error: string; code?: string };
   host: { env: string; label: string; platform: string };
   options: Record<string, unknown>;
   environments: EnvironmentDescriptor[];

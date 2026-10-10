@@ -1,3 +1,5 @@
+import { checkSignal } from './scope.js';
+import { retryProcessOwners, inspectionHint } from './inspection.js';
 /**
  * Base names of a process's executable and `argv[0]`, without duplicates
  * and without the ` (deleted)` suffix of replaced binaries.
@@ -252,21 +254,26 @@ export class LocalEnv {
       mtimeMs: stats.mtimeMs,
       inode: `${stats.dev}:${stats.ino}`,
       uid: stats.uid,
+      gid: stats.gid,
+      mode: stats.mode,
       device: stats.dev,
     };
   }
 
   async readText(target, maxBytes = 1024 * 1024) {
+    checkSignal(this.signal);
     try {
       const handle = await fsp.open(target, 'r');
       try {
         const buffer = Buffer.alloc(maxBytes);
         const { bytesRead } = await handle.read(buffer, 0, maxBytes, 0);
+        checkSignal(this.signal);
         return buffer.subarray(0, bytesRead).toString('utf8');
       } finally {
         await handle.close();
       }
     } catch {
+      checkSignal(this.signal);
       return null;
     }
   }
@@ -395,6 +402,7 @@ export class LocalEnv {
     };
     let frontier = root.isDirectory() ? [target] : [];
     while (frontier.length > 0) {
+      checkSignal(this.signal);
       const next = [];
       for (let index = 0; index < frontier.length; index += WALK_BATCH) {
         const found = await Promise.all(
@@ -476,6 +484,7 @@ export class LocalEnv {
       roots.map(async (root) => [root, 0, await this.deviceId(root)])
     );
     while (queue.length > 0) {
+      checkSignal(this.signal);
       const [dir, depth, device] = queue.shift();
       if (visited.has(dir)) {
         continue;
@@ -622,6 +631,7 @@ export class LocalEnv {
     );
     const processes = [];
     for (const pid of pids) {
+      checkSignal(this.signal);
       const base = `/proc/${pid}`;
       const stat = parseProcStat(
         await io.readFile(`${base}/stat`, 'utf8').catch(() => '')
@@ -663,29 +673,8 @@ export class LocalEnv {
   async openPaths({ strict = true } = {}) {
     try {
       let paths = await this.rawOpenPaths({ strict });
-      if (strict && this.unreadableProcesses?.length && this.processInspector) {
-        const privileged = await this.processInspector.openPaths();
-        if (privileged) {
-          this.unreadableProcesses =
-            this.processInspector.unreadableProcesses ?? [];
-          paths = privileged;
-        }
-      }
-      if (strict && this.unreadableProcesses?.length) {
-        const { OPEN_PATHS_SCRIPT } = await import('./shell.js');
-        const elevated = await this.run([
-          'sudo',
-          '-n',
-          'sh',
-          '-c',
-          OPEN_PATHS_SCRIPT,
-        ]);
-        if (elevated.code === 0) {
-          paths = new Set(
-            elevated.stdout.split('\n').filter((line) => line.startsWith('/'))
-          );
-          this.unreadableProcesses = [];
-        }
+      if (strict) {
+        paths = await this.#completeInspection(paths);
       }
       this.#processHint();
       return paths;
@@ -693,6 +682,9 @@ export class LocalEnv {
       if (this.processInspector) {
         const paths = await this.processInspector.openPaths();
         this.probeDiagnostic = this.processInspector.probeDiagnostic;
+        this.unreadableProcesses =
+          this.processInspector.unreadableProcesses ?? [];
+        this.#processHint();
         return paths;
       }
       this.probeDiagnostic = error.message;
@@ -700,16 +692,56 @@ export class LocalEnv {
     }
   }
 
+  async #completeInspection(paths) {
+    paths = await this.#inspectOwners(paths);
+    if (this.unreadableProcesses?.length && this.processInspector) {
+      const privileged = await this.processInspector.openPaths();
+      if (privileged) {
+        this.unreadableProcesses =
+          this.processInspector.unreadableProcesses ?? [];
+        paths = new Set([...(paths ?? []), ...privileged]);
+      }
+    }
+    if (this.unreadableProcesses?.length) {
+      const { OPEN_PATHS_SCRIPT } = await import('./shell.js');
+      const elevated = await this.run([
+        'sudo',
+        '-n',
+        'sh',
+        '-c',
+        OPEN_PATHS_SCRIPT,
+      ]);
+      if (elevated.code === 0) {
+        paths = new Set(
+          elevated.stdout.split('\n').filter((line) => line.startsWith('/'))
+        );
+        this.unreadableProcesses = [];
+      }
+    }
+    return paths;
+  }
+
   #processHint() {
-    this.probeHint = this.unreadableProcesses?.length
-      ? `${this.unreadableProcesses.length} processes are unreadable; uncertainty is scoped to their paths and UID. Re-run as root for complete inspection (docker exec -u 0 -e HOME=<user-home> <container> dss scan).`
-      : null;
+    this.probeHint = inspectionHint(this.unreadableProcesses ?? []);
+  }
+
+  async #inspectOwners(paths) {
+    if (!this.unreadableProcesses?.length || !(await this.isRoot())) {
+      return paths;
+    }
+    const evidence = await retryProcessOwners(this.executor, {
+      paths,
+      unreadable: this.unreadableProcesses,
+    });
+    this.unreadableProcesses = evidence.unreadable;
+    return evidence.paths;
   }
 
   async rawOpenPaths({ strict = true } = {}) {
     if (this.platform === 'linux') {
       const { paths, unreadable } = await procOpenPaths(
-        this.options.procFs ?? fsp
+        this.options.procFs ?? fsp,
+        this.signal
       );
       this.unreadableProcesses = strict ? unreadable : [];
       return paths;

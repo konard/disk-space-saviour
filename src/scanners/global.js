@@ -1,3 +1,4 @@
+import { scanItems } from '../env/scope.js';
 /**
  * Global per-user caches (ecosystem download and compilation caches, IDE and
  * browser caches), system package caches, and leftovers in temporary
@@ -10,7 +11,7 @@ import { APP_RULES, expandChromiumCaches } from '../rules/apps.js';
 import { compareVersions } from '../rules/versions.js';
 import { block, makeItem } from '../items.js';
 import { expandGlobPaths, expandRulePath, isWithin } from '../paths.js';
-import { olderThan, scanTimeBusy } from './common.js';
+import { olderThan, scanTimeBusy, resolvePaths } from './common.js';
 import { configuredPattern } from '../env/cache-roots.js';
 import { TOOLCHAIN_CACHE_RULES } from '../rules/toolchains.js';
 
@@ -135,13 +136,13 @@ function ageFilter(context, rule) {
 }
 
 /** Keep the latest installed revision of each browser and platform family. */
-async function olderVersions(env, rule, paths) {
+function olderVersions(env, rule, paths, stats) {
   if (!rule.versionPattern) {
     return paths;
   }
   const groups = new Map();
   for (const target of paths) {
-    if ((await env.stat(target))?.type !== 'dir') {
+    if (stats.get(target)?.type !== 'dir') {
       continue;
     }
     const match = rule.versionPattern.exec(env.path.basename(target));
@@ -240,6 +241,14 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
     env,
     planned.flatMap((entry) => entry.patterns)
   );
+  const typedPaths = planned
+    .filter(
+      ({ rule }) => rule.directoryOnly || rule.fileOnly || rule.versionPattern
+    )
+    .flatMap(({ patterns }) =>
+      patterns.flatMap((pattern) => matches.get(pattern) ?? [])
+    );
+  const stats = await env.statMany([...new Set(typedPaths)]);
   const found = [];
   const seen = new Set();
   for (const { rule, base, patterns } of planned) {
@@ -249,19 +258,23 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
 
     const accepted = [];
     for (const target of candidates) {
-      if (!(await acceptedPath(env, rule, target))) {
+      if (!(await acceptedPath(env, rule, target, stats))) {
         continue;
       }
       accepted.push(target);
       seen.add(target);
     }
-    const paths = await olderVersions(env, rule, accepted);
+    const paths = olderVersions(env, rule, accepted, stats);
     if (paths.length > 0) {
       found.push({ rule, base, paths });
     }
   }
   const usages = await env.usageMany(found.flatMap((entry) => entry.paths));
-  const items = [];
+  await resolvePaths(
+    context,
+    found.flatMap((entry) => entry.paths)
+  );
+  const items = scanItems(context);
   for (const { rule, base, paths } of found) {
     const accept = ageFilter(context, rule);
     const measured = paths
@@ -277,15 +290,15 @@ export async function scanGlobal(context, { rules = GLOBAL_RULES } = {}) {
   return items;
 }
 
-async function acceptedPath(env, rule, target) {
+async function acceptedPath(env, rule, target, stats) {
   const name = env.path.basename(target);
   if (rule.excludeNames?.includes(name)) {
     return false;
   }
-  if (rule.directoryOnly && (await env.stat(target))?.type !== 'dir') {
+  if (rule.directoryOnly && stats.get(target)?.type !== 'dir') {
     return false;
   }
-  if (rule.fileOnly && (await env.stat(target))?.type !== 'file') {
+  if (rule.fileOnly && stats.get(target)?.type !== 'file') {
     return false;
   }
   if (

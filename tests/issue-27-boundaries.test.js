@@ -165,9 +165,13 @@ describe('shell measurement boundaries', () => {
             []
           );
           let measured = false;
-          env.sh = async () => {
-            measured = true;
-            throw new Error('measurement crossed an exclusion');
+          const sh = env.sh.bind(env);
+          env.sh = (script, args, options) => {
+            if (script.includes('du -skx')) {
+              measured = true;
+              throw new Error('measurement crossed an exclusion');
+            }
+            return sh(script, args, options);
           };
           expect((await env.rawUsageMany([cache])).size).toBe(0);
           expect(measured).toBe(false);
@@ -189,7 +193,8 @@ describe('shell measurement boundaries', () => {
           calls.push(argv);
           return {
             code: 0,
-            stdout: argv[0] === 'find' ? `${child}\n` : '',
+            stdout:
+              argv[0] === 'sh' && argv[2].includes('find ') ? `${child}\n` : '',
             stderr: '',
           };
         },
@@ -205,7 +210,9 @@ describe('shell measurement boundaries', () => {
           : []
       );
       expect((await env.rawUsageMany([target])).size).toBe(0);
-      expect(calls.some((argv) => argv[0] === 'sh')).toBe(false);
+      expect(
+        calls.some((argv) => argv[0] === 'sh' && argv[2].includes('du -skx'))
+      ).toBe(false);
       expect(env.scanPolicy.removalReason(target) !== null).toBe(true);
     });
   }

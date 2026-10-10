@@ -1,3 +1,10 @@
+import { OPEN_PATHS_SCRIPT } from './process-scripts.js';
+import {
+  parseProcessProbe,
+  retryProcessOwners,
+  inspectionHint,
+} from './inspection.js';
+export { OPEN_PATHS_SCRIPT } from './process-scripts.js';
 /**
  * Environment adapter for a filesystem reached through an executor, usually
  * a running container via `docker exec`.
@@ -12,9 +19,10 @@ import { sharedWritableLayer } from '../docker/writable.js';
 
 import { containerExecutor, shellQuote, trace } from '../exec.js';
 import { DEFAULT_SKIP_NAMES, parseDf, processAliases } from './local.js';
+import { batches } from './batches.js';
+import { signalExecutor } from './scope.js';
 
 const STAT_FORMAT = '%F|%s|%b|%B|%Y|%n';
-const ARG_BATCH = 200;
 const RECORD = '\u0001';
 
 const LIST_SCRIPT = `for d in "$@"; do
@@ -49,27 +57,6 @@ for p in /proc/[0-9]*; do
   t=$(sed 's/.*) //' "$p/stat" 2>/dev/null | cut -d' ' -f1,20)
   printf '%s|%s|%s|%s|%s|%s|%s\\n' "\${p#/proc/}" "$t" "$c" "$e" "$a" "$w" "$q"
 done`;
-
-export const OPEN_PATHS_SCRIPT = `failed=0
-for p in /proc/[0-9]*; do
-  [ -d "$p" ] || continue
-  state=$(sed 's/.*) //' "$p/stat" 2>/dev/null | cut -d' ' -f1)
-  [ "$state" = Z ] && continue
-  unreadable=0
-  ls "$p/fd" >/dev/null 2>&1 || unreadable=1
-  for l in "$p/cwd" "$p/exe" "$p"/fd/*; do
-    [ -L "$l" ] || continue
-    readlink "$l" 2>/dev/null || { [ -L "$l" ] && unreadable=1; }
-  done
-  if [ "$unreadable" = 1 ] && [ -d "$p" ]; then
-    printf 'unreadable pid %s (%s)\\n' "\${p#/proc/}" "$(cat "$p/comm" 2>/dev/null)" >&2
-    uid=$(awk '/^Uid:/{print $2}' "$p/status" 2>/dev/null)
-    command=$(tr '\\000' ' ' < "$p/cmdline" 2>/dev/null)
-    printf 'DSS_UNREADABLE|%s|%s|%s|%s\\n' "\${p#/proc/}" "$uid" "$(cat "$p/comm" 2>/dev/null)" "$command" >&2
-    failed=1
-  fi
-done
-exit "$failed"`;
 
 const REMOVE_SCRIPT = `rm -rf -- "$@" 2>/dev/null && exit 0
 chmod -R u+w -- "$@" 2>/dev/null
@@ -144,14 +131,6 @@ function parseUsage(body) {
     errors: Number.isFinite(bytes) ? 0 : 1,
     newestMtimeMs: Number.isFinite(newestSeconds) ? newestSeconds * 1000 : 0,
   };
-}
-
-function batches(items, size = ARG_BATCH) {
-  const result = [];
-  for (let index = 0; index < items.length; index += size) {
-    result.push(items.slice(index, index + size));
-  }
-  return result;
 }
 
 function findNameExpression(names) {
@@ -238,26 +217,7 @@ export class ShellEnv {
   }
 
   async stat(target) {
-    const result = await this.executor.run([
-      'stat',
-      '-c',
-      STAT_FORMAT,
-      '--',
-      target,
-    ]);
-    if (result.code !== 0) {
-      return null;
-    }
-    const parsed = parseStatLine(result.stdout.trim());
-    if (!parsed) {
-      return null;
-    }
-    return {
-      type: parsed.type,
-      size: parsed.size,
-      bytes: parsed.bytes,
-      mtimeMs: parsed.mtimeMs,
-    };
+    return (await this.statMany([target])).get(target) ?? null;
   }
 
   async readText(target, maxBytes = 1024 * 1024) {
@@ -332,7 +292,7 @@ export class ShellEnv {
       const result = await this.executor.run([
         'stat',
         '-c',
-        `${STAT_FORMAT}|%d:%i:%u`,
+        `${STAT_FORMAT}|%d:%i:%u:%g:%f`,
         '--',
         ...batch,
       ]);
@@ -345,6 +305,11 @@ export class ShellEnv {
             ...stat,
             inode: identity.slice(0, 2).join(':'),
             uid: identity.length > 2 ? Number(identity[2]) : undefined,
+            gid: identity.length > 3 ? Number(identity[3]) : undefined,
+            mode:
+              identity.length > 4
+                ? Number.parseInt(identity[4], 16)
+                : undefined,
           });
         }
       }
@@ -357,31 +322,24 @@ export class ShellEnv {
     const policy = this.scanPolicy;
     if (policy) {
       targets = targets.filter((target) => !policy.removalReason(target));
-      for (const target of targets) {
-        const expression = this.#boundaryPatterns().flatMap(
-          (pattern, index) => [
-            ...(index ? ['-o'] : []),
-            /[/\\]/.test(pattern) ? '-path' : '-name',
-            pattern.replaceAll('\\', '/'),
-          ]
-        );
-        const found = await this.executor.run([
-          'find',
-          target,
-          '-xdev',
-          '-mindepth',
-          '1',
-          '(',
-          ...expression,
-          ')',
-          '-print',
-          '-quit',
-        ]);
+      const expression = this.#boundaryPatterns().flatMap((pattern, index) => [
+        ...(index ? ['-o'] : []),
+        /[/\\]/.test(pattern) ? '-path' : '-name',
+        pattern.replaceAll('\\', '/'),
+      ]);
+      const script = `for t in "$@"; do
+        [ -e "$t" ] || [ -L "$t" ] || continue
+        find "$t" -xdev -mindepth 1 '(' ${expression.map(shellQuote).join(' ')} ')' -print -quit || printf '%s\\n' "$t"
+      done`;
+      for (const batch of batches(targets)) {
+        const found = await this.sh(script, batch);
         for (const line of found.stdout.split('\n').filter(Boolean)) {
           policy.excludedPaths.add(line);
         }
         if (found.code !== 0) {
-          policy.excludedPaths.add(target);
+          for (const target of batch) {
+            policy.excludedPaths.add(target);
+          }
         }
       }
       // du cannot prune same-device mounts or excluded children. Skip their
@@ -403,8 +361,21 @@ export class ShellEnv {
   }
 
   async realPath(target) {
-    const result = await this.executor.run(['readlink', '-f', '--', target]);
-    return result.code === 0 ? result.stdout.trim() || null : null;
+    return (await this.realPathMany([target])).get(target) ?? null;
+  }
+
+  async realPathMany(targets) {
+    const resolved = new Map();
+    for (const batch of batches(targets)) {
+      const result = await this.sh(
+        `for t do printf '${RECORD}%s\\n' "$t"; readlink -f -- "$t"; done`,
+        batch
+      );
+      for (const [target, body] of splitRecords(result.stdout)) {
+        resolved.set(target, body.trim() || null);
+      }
+    }
+    return resolved;
   }
 
   async isRoot() {
@@ -559,6 +530,29 @@ export class ShellEnv {
       OPEN_PATHS_SCRIPT,
     ]);
     this.probeDiagnostic = null;
+    const probe = await this.#privilegedProbe(result);
+    result = probe.result;
+    let evidence = probe.evidence;
+    if (
+      evidence.unreadable.length &&
+      (this.probeExecutor || (await this.isRoot()))
+    ) {
+      evidence = await retryProcessOwners(
+        this.probeExecutor ?? this.executor,
+        evidence
+      );
+    }
+    this.unreadableProcesses = evidence.unreadable;
+    this.probeHint = inspectionHint(this.unreadableProcesses);
+    if (result.code !== 0) {
+      this.probeDiagnostic ??= result.stderr.trim();
+    }
+    return probe.coverageKnown ? evidence.paths : null;
+  }
+
+  async #privilegedProbe(result) {
+    const evidence = parseProcessProbe(result);
+    let coverageKnown = result.code === 0 || evidence.unreadable.length > 0;
     if (
       result.code !== 0 &&
       this.executor.parent &&
@@ -570,44 +564,33 @@ export class ShellEnv {
         this.id,
         diagnostic
       );
-      const inspector = containerExecutor(
-        this.executor.parent,
-        this.executor.containerId,
-        { user: '0', privileged: true }
+      const inspector = signalExecutor(
+        containerExecutor(
+          this.executor.parent.unscoped ?? this.executor.parent,
+          this.executor.containerId,
+          { user: '0', privileged: true }
+        ),
+        this.signal,
+        this.deadline
       );
-      result = await inspector.run(['sh', '-c', OPEN_PATHS_SCRIPT]);
-      if (result.code !== 0) {
-        this.probeDiagnostic = `${diagnostic}; privileged inspection failed: ${result.stderr.trim()}`;
+      const retried = await inspector.run(['sh', '-c', OPEN_PATHS_SCRIPT]);
+      const next = parseProcessProbe(retried);
+      for (const target of next.paths) {
+        evidence.paths.add(target);
+      }
+      if (retried.code === 0 || next.unreadable.length) {
+        coverageKnown = true;
+        evidence.unreadable = next.unreadable;
+        result = retried;
+        this.probeExecutor = inspector;
+      }
+      if (retried.code !== 0) {
+        this.probeDiagnostic = `${diagnostic}; privileged inspection failed: ${retried.stderr.trim()}`;
       } else {
         this.probeExecutor = inspector;
       }
     }
-    this.unreadableProcesses = result.stderr
-      .split('\n')
-      .filter((line) => line.startsWith('DSS_UNREADABLE|'))
-      .map((line) => {
-        const [, pid, uid, name, ...command] = line.split('|');
-        return {
-          pid: Number(pid),
-          uid: uid ? Number(uid) : null,
-          name,
-          command: command.join('|'),
-        };
-      });
-    if (result.code !== 0) {
-      this.probeDiagnostic ??= result.stderr.trim();
-      if (!this.unreadableProcesses.length) {
-        return null;
-      }
-      this.probeHint =
-        'some processes could not be inspected; run as root for full verification';
-    }
-    return new Set(
-      result.stdout
-        .split('\n')
-        .filter((line) => line.startsWith('/'))
-        .map((line) => line.replace(/ \(deleted\)$/, ''))
-    );
+    return { result, evidence, coverageKnown };
   }
 
   run(argv, options) {

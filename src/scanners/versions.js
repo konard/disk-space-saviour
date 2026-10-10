@@ -1,3 +1,4 @@
+import { scanItems } from '../env/scope.js';
 /**
  * Toolchain versions installed by version managers (nvm, pyenv, rbenv,
  * SDKMAN!, rustup, elan, ghcup, opam, swiftly, VS Code Server).
@@ -15,7 +16,7 @@ import {
 } from '../rules/versions.js';
 import { block, makeItem } from '../items.js';
 import { expandGlobPath, expandRulePath } from '../paths.js';
-import { scanTimeBusy } from './common.js';
+import { scanTimeBusy, resolvePaths } from './common.js';
 import { configuredPattern } from '../env/cache-roots.js';
 
 async function installDirs(env, rule, home) {
@@ -25,15 +26,15 @@ async function installDirs(env, rule, home) {
       home,
       pathApi: env.path,
     });
-    for (const candidate of await expandGlobPath(env, expanded)) {
+    const candidates = await expandGlobPath(env, expanded);
+    const stats = await env.statMany(candidates);
+    for (const candidate of candidates) {
       const name = env.path.basename(candidate);
       if ((rule.exclude ?? []).includes(name)) {
         continue;
       }
       if (
-        !(rule.installTypes ?? ['dir']).includes(
-          (await env.stat(candidate))?.type
-        )
+        !(rule.installTypes ?? ['dir']).includes(stats.get(candidate)?.type)
       ) {
         continue;
       }
@@ -190,9 +191,10 @@ async function ruleItems(context, rule, home, pins) {
   }
   const refs = [...(await managerRefs(env, rule, home, installs)), ...pins];
   const usages = await env.usageMany(installs);
+  await resolvePaths(context, installs);
   const newest = newestInstalls(env, rule, installs, usages);
   const versionOf = rule.versionOf ?? ((dir) => env.path.basename(dir));
-  const items = [];
+  const items = scanItems(context);
   for (const dir of installs) {
     const version = versionOf(dir);
     if (newest.has(dir) || refs.some((ref) => versionMatches(version, ref))) {
@@ -239,7 +241,7 @@ export async function scanVersions(context, { rules = VERSION_RULES } = {}) {
     rules,
     options.maxDepth ?? 6
   );
-  const items = [];
+  const items = scanItems(context);
   for (const rule of rules) {
     for (const home of homes) {
       items.push(...(await ruleItems(context, rule, home, pins.get(rule.id))));

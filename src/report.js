@@ -52,7 +52,7 @@ function itemLine(item, showEnv) {
     ? `  (needs ${consentFlag(item)})`
     : '';
   const storage = item.sizeUnknown
-    ? '  (may be in an image layer; freeable bytes unknown, excluded from totals)'
+    ? `  (${formatBytes(item.totalBytes ?? 0)} visible; may be in an image layer; freeable bytes unknown, excluded from totals)`
     : item.imageBytes
       ? `  (${formatBytes(item.imageBytes)} in image${item.imageRef ? ` ${item.imageRef}` : ''}; 0 B of that data freeable now; remove the stopped container and unused image after the task completes)`
       : '';
@@ -102,7 +102,7 @@ function blockedSection(report, options) {
   }
   return [
     '',
-    `BLOCKED  ${plural(items.length, 'item')} (kept)`,
+    `BLOCKED  ${plural(items.length, 'item')} (kept), ${formatBytes(report.totals.blocked.bytes)} known writable, ${formatBytes(report.totals.blocked.totalBytes ?? report.totals.blocked.bytes)} visible${report.totals.blocked.unknownBytes ? ` (${formatBytes(report.totals.blocked.unknownBytes)} with unknown writable size)` : ''}`,
     ...limited(lines, options.limit * 2),
   ];
 }
@@ -322,6 +322,12 @@ export function formatReport(report, options = {}) {
     lines.push(...tierSection(report, tier, { limit }));
   }
   for (const env of report.environments) {
+    if (env.layerSource) {
+      lines.push(`  ${env.label}: layer source ${env.layerSource}`);
+    }
+    if (env.scanStatus && env.scanStatus !== 'complete') {
+      lines.push(`  ${env.label}: scan incomplete (${env.scanStatus})`);
+    }
     if (env.hint) {
       lines.push(`  ${env.label}: ${env.hint}`);
     }
