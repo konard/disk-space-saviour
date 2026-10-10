@@ -190,7 +190,7 @@ Other projects:
 - Local, with E9's fix: `npm run lint`, `npm run format:check` and `npm run check:duplication` pass. `npm test`: 1215 tests, 1215 passed, 0 skipped. `bun test --timeout 30000`: 1215 pass, 0 fail. `deno test -A --parallel`: 1212 passed, 0 failed, 3 ignored, 68s. The 3 ignored tests are the ones listed under remaining limits, and 1212 + 3 = 1215 matches Node and Bun. The new tests are `tests/env.test.js` (97) and `tests/pull-pinned.test.js` (6).
 - E9 could not be reproduced locally, where `changeset version` takes about 2s. The cold Windows runs above are its measurements, and CI on the final commit is its test.
 - E4 reproduced locally with `CI=true GITHUB_ACTIONS=true deno test -A` on the affected files: 7 failed before the fix (the 3 CI failures plus 4 guard failures), 0 after.
-- CI on this branch: VERIFY_CI
+- CI on this branch: every workflow passed on `6fdbbfb`, the last code change ("Checks and release" [38010120216](https://github.com/link-foundation/disk-space-saviour/actions/runs/38010120216), all nine test legs). Deno reported 1212 passed and 3 ignored on Linux, 1205 and 10 on macOS, and 1145 and 70 on Windows; the extra skips are platform gates, listed by name in each summary. The cold Windows Deno run of the changeset fixture took 14s. `3bb765b` (this analysis) passed every workflow as well.
 
 ## Remaining limits
 
