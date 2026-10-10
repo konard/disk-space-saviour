@@ -13,7 +13,6 @@ import {
 import { tmpdir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
 import { describe, it, expect } from 'test-anywhere';
-import { runToExit } from './helpers/run-to-exit.js';
 import { itUnless, sandboxed } from './helpers/skip.js';
 
 const config = JSON.parse(readFileSync('.changeset/config.json', 'utf8'));
@@ -44,7 +43,7 @@ describe('Changesets release formatter', () => {
 
   itUnless(sandboxed)(
     'versions and formats the real package with Deno absent from PATH',
-    async () => {
+    () => {
       const cwd = mkdtempSync(join(tmpdir(), 'changeset-version-'));
       try {
         for (const file of [
@@ -108,20 +107,25 @@ describe('Changesets release formatter', () => {
               ).replaceAll('\\', '/')}`.trim(),
             }
           : env;
-        const run = async (file, args) => {
-          // spawnSync could wait for a process another test file started.
-          const result = await runToExit('node', [resolve(file), ...args], {
+        const run = (file, args) => {
+          const started = Date.now();
+          const result = spawnSync('node', [resolve(file), ...args], {
             cwd,
             env: runEnv,
-            timeout: 20000,
+            encoding: 'utf8',
+            // Changesets runs `npx prettier`, five more processes on Windows.
+            // The first `deno test --parallel` on a Windows runner took 17-21s
+            // for this step, against 2s once warm and 3-9s for the whole test
+            // under Node and Bun, which stop each test at 30s anyway.
+            timeout: 60000,
           });
-          const took = `${file} took ${result.ms}ms (exit after ${result.exitMs}ms)`;
+          const took = `${file} took ${Date.now() - started}ms`;
           if (debug) {
             const lifetime = existsSync(lifetimeLog)
               ? readFileSync(lifetimeLog, 'utf8')
               : '';
             rmSync(lifetimeLog, { force: true });
-            console.error(`${took} since ${result.started}\n${lifetime}`);
+            console.error(`${took} since ${started}\n${lifetime}`);
           }
           assert.equal(
             result.status,
@@ -129,7 +133,7 @@ describe('Changesets release formatter', () => {
             `${took}: ${result.error || ''}\n${result.stdout}\n${result.stderr}`
           );
         };
-        await run('node_modules/@changesets/cli/bin.js', ['version']);
+        run('node_modules/@changesets/cli/bin.js', ['version']);
         const versionParts = pkg.version.split('.').map(Number);
         versionParts[2] += 1;
         expect(
@@ -141,7 +145,7 @@ describe('Changesets release formatter', () => {
         expect(readFileSync(join(cwd, 'CHANGELOG.md'), 'utf8')).toContain(
           'Check release versioning.'
         );
-        await run('node_modules/prettier/bin/prettier.cjs', [
+        run('node_modules/prettier/bin/prettier.cjs', [
           '--check',
           'package.json',
           'CHANGELOG.md',

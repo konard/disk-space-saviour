@@ -6,8 +6,11 @@
 // or PROC_THREAD_ATTRIBUTE_HANDLE_LIST lets a process started on another
 // thread at that moment keep the pipe open, so spawnSync sees EOF only when
 // that process exits. `deno test --parallel` runs test files on threads of
-// one process, which is how tests/changeset-config.test.js waited 20s for a
-// child that had finished in 1.4s.
+// one process. libuv (Node) has the same unlocked pattern; Rust std holds
+// CREATE_PROCESS_LOCK around it. On windows-2025 with Deno 2.9.7, 3 of 150
+// calls waited about 3s for a sleeper; Node v22 worker threads, macOS and
+// Linux had none. The Windows Deno changeset-config timeout turned out to be
+// a slow cold run, not this (dev/log/issues/31/pulls/32/README.md, E9).
 //
 // A worker thread keeps starting 3-second sleepers while the main thread
 // times quick spawnSync calls. Any call near 3s waited for a sleeper.
