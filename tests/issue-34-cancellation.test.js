@@ -82,57 +82,60 @@ describe('issue 34 cancellation and scan budgets', () => {
       }
     );
   }
-  for (const [signal, code] of [
-    ['SIGTERM', 143],
-    ['SIGINT', 130],
-  ]) {
-    itUnless(sandboxed, notLinux)(
-      `writes a partial CLI report and exits ${code} on ${signal}`,
-      async () => {
-        const root = tempRoot(),
-          output = [],
-          diagnostics = [];
-        let signalledAt;
-        const child = spawn('node', [
-          '--import',
-          './experiments/issue-40/slow-scanner.mjs',
-          'bin/dss.js',
-          'scan',
-          '--no-docker',
-          '--scanner',
-          'global',
-          root,
-          '--min-size',
-          '0',
-          '--audit-dir',
-          join(root, 'audit'),
-          '--json',
-        ]);
-        const done = once(child, 'close');
-        child.stdout.on('data', (data) => output.push(data));
-        child.stderr.on('data', (data) => {
-          diagnostics.push(data);
-          if (data.toString().includes('fixture ready')) {
-            signalledAt = Date.now();
-            process.kill(child.pid, signal);
+  for (const command of ['scan', 'clean', 'emergency']) {
+    for (const [signal, code] of [
+      ['SIGTERM', 143],
+      ['SIGINT', 130],
+    ]) {
+      itUnless(sandboxed, notLinux)(
+        `writes a partial ${command} pre-scan report and exits ${code} on ${signal}`,
+        async () => {
+          const root = tempRoot(),
+            output = [],
+            diagnostics = [];
+          let signalledAt;
+          const child = spawn('node', [
+            '--import',
+            './experiments/issue-40/slow-scanner.mjs',
+            'bin/dss.js',
+            command,
+            ...(command === 'emergency' ? ['--free', '1G'] : []),
+            '--no-docker',
+            '--scanner',
+            'global',
+            root,
+            '--min-size',
+            '0',
+            '--audit-dir',
+            join(root, 'audit'),
+            '--json',
+          ]);
+          const done = once(child, 'close');
+          child.stdout.on('data', (data) => output.push(data));
+          child.stderr.on('data', (data) => {
+            diagnostics.push(data);
+            if (data.toString().includes('fixture ready')) {
+              signalledAt = Date.now();
+              process.kill(child.pid, signal);
+            }
+          });
+          try {
+            const [exitCode] = await done;
+            expect(exitCode).toBe(code);
+            expect(Date.now() - signalledAt < 5000).toBe(true);
+            const report = JSON.parse(Buffer.concat(output).toString());
+            expect(report.aborted).toBe(true);
+            expect(report.items.length).toBe(1);
+            expect(report.environments[0].scanStatus).toBe('aborted');
+            expect(Buffer.concat(diagnostics).toString()).toContain(
+              'fixture ready'
+            );
+          } finally {
+            child.kill('SIGKILL');
+            removeRoot(root);
           }
-        });
-        try {
-          const [exitCode] = await done;
-          expect(exitCode).toBe(code);
-          expect(Date.now() - signalledAt < 5000).toBe(true);
-          const report = JSON.parse(Buffer.concat(output).toString());
-          expect(report.aborted).toBe(true);
-          expect(report.items.length).toBe(1);
-          expect(report.environments[0].scanStatus).toBe('aborted');
-          expect(Buffer.concat(diagnostics).toString()).toContain(
-            'fixture ready'
-          );
-        } finally {
-          child.kill('SIGKILL');
-          removeRoot(root);
         }
-      }
-    );
+      );
+    }
   }
 });

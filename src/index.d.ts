@@ -210,6 +210,8 @@ export interface AuditEntry {
   reason: string | null;
   plannedBytes: number;
   freedBytes: number;
+  /** True when authoritative before/after allocation could not be measured. */
+  freedEstimated?: boolean;
   durationMs: number;
   backup?: string;
   [key: string]: unknown;

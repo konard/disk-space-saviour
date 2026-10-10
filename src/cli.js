@@ -297,6 +297,10 @@ class Cli {
 
   async scan(options, values) {
     const report = await this.api.scan(options);
+    return this.printScan(report, options, values);
+  }
+
+  async printScan(report, options, values) {
     const audit = scanAudit(report);
     if (options.audit !== false) {
       try {
@@ -368,6 +372,9 @@ class Cli {
 
   async clean(options, values) {
     const report = await this.loadReport(options, values);
+    if (report.aborted) {
+      return this.printScan(report, options, values);
+    }
     const audit = await this.consent(values, (extra) =>
       this.api.clean(report, { ...options, ...extra })
     );
@@ -387,6 +394,9 @@ class Cli {
       throw new UsageError(error.message);
     }
     const report = await this.loadReport(options, values);
+    if (report.aborted) {
+      return this.printScan(report, options, values);
+    }
     const audit = await this.consent(values, (extra) =>
       this.api.emergency({ ...options, report, ...extra })
     );
