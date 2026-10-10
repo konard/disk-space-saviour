@@ -37,7 +37,13 @@ const HASHED = /^(.+)-([0-9a-f]{16})(\..*)?$/;
 const INCREMENTAL = /^(.+)-([0-9a-z]{8,20})$/;
 const LIB_PREFIXED = new Set(['.rlib', '.rmeta', '.so', '.dylib', '.a']);
 const KIND_ORDER = ['lib', 'dylib', 'staticlib', 'bin', 'rmeta', 'other'];
-const NON_PROFILES = new Set(['doc', 'package', 'tmp', 'flycheck0']);
+const NON_PROFILES = new Set([
+  'doc',
+  'package',
+  'tmp',
+  'flycheck0',
+  'semver-checks',
+]);
 const EXECUTABLE = new Set(['', '.exe']);
 export const DEFAULT_GENERATION_MS = 10 * 60 * 1000;
 export const DEFAULT_LEAF_IDLE_MS = 3 * 60 * 60 * 1000;

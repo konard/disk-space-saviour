@@ -201,6 +201,21 @@ export class ShellEnv {
     return Promise.resolve(this.options.tmpDirs ?? ['/tmp']);
   }
 
+  async variables(names) {
+    const result = await this.sh(
+      'for n do printf "%s\\0" "$n"; printenv "$n" | tr -d "\\n"; printf "\\0"; done',
+      names
+    );
+    const fields = result.stdout.split('\0');
+    const vars = {};
+    for (let index = 0; index + 1 < fields.length; index += 2) {
+      if (fields[index + 1]) {
+        vars[fields[index]] = fields[index + 1];
+      }
+    }
+    return vars;
+  }
+
   async exists(target) {
     const result = await this.sh('[ -e "$1" ] || [ -L "$1" ]', [target]);
     return result.code === 0;

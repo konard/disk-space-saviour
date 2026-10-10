@@ -16,11 +16,15 @@ import {
 import { block, makeItem } from '../items.js';
 import { expandGlobPath, expandRulePath } from '../paths.js';
 import { scanTimeBusy } from './common.js';
+import { configuredPattern } from '../env/cache-roots.js';
 
 async function installDirs(env, rule, home) {
   const dirs = [];
   for (const pattern of rule.dirs) {
-    const expanded = expandRulePath(pattern, { home, pathApi: env.path });
+    const expanded = expandRulePath(configuredPattern(env, home, pattern), {
+      home,
+      pathApi: env.path,
+    });
     for (const candidate of await expandGlobPath(env, expanded)) {
       const name = env.path.basename(candidate);
       if ((rule.exclude ?? []).includes(name)) {
@@ -80,7 +84,10 @@ function linkRefs(target) {
  */
 async function managerRefs(env, rule, home, installs) {
   const expand = (pattern) =>
-    expandRulePath(pattern, { home, pathApi: env.path });
+    expandRulePath(configuredPattern(env, home, pattern), {
+      home,
+      pathApi: env.path,
+    });
   const refs = [];
   for (const source of rule.defaults ?? []) {
     const text = await env.readText(expand(source.path), 65536);

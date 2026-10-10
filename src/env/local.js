@@ -58,6 +58,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { URL, fileURLToPath } from 'node:url';
 import { procIdentity, procOpenPaths } from './proc.js';
+import { CACHE_VARIABLES } from './cache-roots.js';
 
 import { hostExecutor } from '../exec.js';
 import { matchesGlob } from '../paths.js';
@@ -189,11 +190,11 @@ export class LocalEnv {
     this.protectedPaths = [fileURLToPath(new URL('../../', import.meta.url))];
     this.currentHome = os.homedir();
     this.skipNames = new Set(options.skipNames ?? DEFAULT_SKIP_NAMES);
-    this.vars = options.vars ?? {
-      LOCALAPPDATA: process.env.LOCALAPPDATA,
-      APPDATA: process.env.APPDATA,
-      TMPDIR: process.env.TMPDIR,
-    };
+    this.vars =
+      options.vars ??
+      Object.fromEntries(
+        CACHE_VARIABLES.map((name) => [name, process.env[name]])
+      );
   }
 
   recordAccessError(target, error) {
@@ -613,6 +614,9 @@ export class LocalEnv {
 
   async #linuxProcesses() {
     const io = this.options.procFs ?? fsp;
+    this.mountNamespace = await io
+      .readlink('/proc/self/ns/mnt')
+      .catch(() => null);
     const pids = (await io.readdir('/proc')).filter((name) =>
       /^\d+$/.test(name)
     );
@@ -641,6 +645,7 @@ export class LocalEnv {
         ...(await procIdentity(base, io)),
         name,
         startTime: stat.startTime,
+        mountNamespace: await io.readlink(`${base}/ns/mnt`).catch(() => null),
         cwd,
         aliases: processAliases(exe, cmdline.split('\0')[0]),
         command: cmdline.replaceAll('\0', ' '),

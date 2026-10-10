@@ -1,0 +1,66 @@
+/** Download leftovers of language version managers; installed runtimes are kept. */
+export const TOOLCHAIN_CACHE_RULES = [
+  {
+    id: 'perlbrew-build',
+    ecosystem: 'scripting',
+    description: 'perlbrew build trees and source archives',
+    paths: [
+      '~/perl5/perlbrew/build',
+      '~/perl5/perlbrew/dists',
+      '~/.perl5/build',
+      '~/.perl5/dists',
+    ],
+    aggregate: true,
+    busy: ['perlbrew', 'perl', 'make'],
+    native: {
+      tool: 'perlbrew',
+      argv: ['perlbrew', 'clean'],
+      cacheRoot: '~/perl5/perlbrew',
+    },
+  },
+  {
+    id: 'sdkman-tmp',
+    ecosystem: 'jvm',
+    description: 'SDKMAN download leftovers',
+    paths: ['~/.sdkman/tmp/*'],
+    aggregate: true,
+    busy: ['sdk', 'sdkman', 'java', 'curl', 'unzip'],
+    native: {
+      tool: 'bash',
+      init: '~/.sdkman/bin/sdkman-init.sh',
+      command: 'sdk flush tmp',
+    },
+  },
+  {
+    id: 'sdkman-archives',
+    ecosystem: 'jvm',
+    description: 'SDKMAN downloaded archives',
+    paths: ['~/.sdkman/archives/*'],
+    aggregate: true,
+    busy: ['sdk', 'sdkman', 'java', 'curl', 'unzip'],
+  },
+  {
+    id: 'nvm-cache',
+    ecosystem: 'javascript',
+    description: 'nvm downloaded Node archives',
+    paths: ['~/.nvm/.cache'],
+    busy: ['nvm', 'node', 'curl'],
+    native: { tool: 'sh', init: '~/.nvm/nvm.sh', command: 'nvm cache clear' },
+  },
+  {
+    id: 'ruby-gem-cache',
+    ecosystem: 'ruby',
+    description: 'downloaded Ruby gem archives',
+    paths: [
+      '~/.rbenv/versions/*/lib/ruby/gems/*/cache/*.gem',
+      '~/.rvm/gems/*/cache/*.gem',
+      '~/.local/share/gem/ruby/*/cache/*.gem',
+      '~/.gem/ruby/*/cache/*.gem',
+      '{GEM_HOME}/cache/*.gem',
+      '{GEM_PATH}/cache/*.gem',
+    ],
+    aggregate: true,
+    fileOnly: true,
+    busy: ['gem', 'bundle', 'ruby'],
+  },
+];

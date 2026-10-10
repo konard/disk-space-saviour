@@ -262,6 +262,30 @@ const RUST_PARTS = {
 async function rustItems(context, targetItem, rule) {
   const { env, liveness, options, now } = context;
   const items = [];
+  const semverPath = env.path.join(targetItem.path, 'semver-checks');
+  const semverUsage = await env.usage(semverPath);
+  if (semverUsage) {
+    const semver = makeItem(env, {
+      rule: 'cargo-semver-checks-cache',
+      kind: 'cache',
+      ecosystem: 'rust',
+      description: 'cargo-semver-checks baseline builds',
+      path: semverPath,
+      bytes: semverUsage.bytes,
+      newestMtimeMs: semverUsage.newestMtimeMs,
+      project: targetItem.project,
+      parentId: targetItem.id,
+      tier: 'safe',
+      reason: 'baseline rustdoc and builds are regenerated on demand',
+      checks: {
+        busy: ['cargo-semver-checks', ...rule.busy],
+        cwd: targetItem.project,
+        mtime: true,
+      },
+    });
+    await addBlockers(context, semver, false);
+    items.push(semver);
+  }
   for (const profile of await findRustProfiles(env, targetItem.path)) {
     const result = await analyzeRustProfile(env, profile, {
       staleAgeMs: options.staleAgeMs,

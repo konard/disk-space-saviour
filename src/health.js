@@ -52,8 +52,14 @@ function identity(proc) {
  * Processes worth watching: PID 1 and every agent or build tool.
  * @param {object[]} processes output of `env.processes()`
  */
-export function watchedProcesses(processes) {
+export function watchedProcesses(processes, mountNamespace = null) {
   return processes
+    .filter(
+      (proc) =>
+        !mountNamespace ||
+        !proc.mountNamespace ||
+        proc.mountNamespace === mountNamespace
+    )
     .filter((proc) => proc.pid === 1 || matchingName(proc, WATCHED_NAMES))
     .map(identity);
 }
@@ -118,7 +124,12 @@ export class HealthWatch {
       env: item.env,
       envLabel: item.envLabel,
       checks: 0,
-      watched: processes ? watchedProcesses(processes) : [],
+      watched: processes
+        ? watchedProcesses(
+            processes,
+            env.kind === 'host' ? env.mountNamespace : null
+          )
+        : [],
       available: Boolean(processes),
       lost: [],
       stopped: null,

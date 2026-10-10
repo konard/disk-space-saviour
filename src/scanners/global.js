@@ -9,13 +9,16 @@ import { OTHER_RULES } from '../rules/other.js';
 import { APP_RULES, expandChromiumCaches } from '../rules/apps.js';
 import { compareVersions } from '../rules/versions.js';
 import { block, makeItem } from '../items.js';
-import { expandGlobPaths, expandRulePath } from '../paths.js';
+import { expandGlobPaths, expandRulePath, isWithin } from '../paths.js';
 import { olderThan, scanTimeBusy } from './common.js';
+import { configuredPattern } from '../env/cache-roots.js';
+import { TOOLCHAIN_CACHE_RULES } from '../rules/toolchains.js';
 
 export const GLOBAL_RULES = [
   ...CACHE_RULES,
   ...expandChromiumCaches(OTHER_RULES),
   ...APP_RULES,
+  ...TOOLCHAIN_CACHE_RULES,
 ];
 
 function scopeBases(rule, homes, tmpDirs) {
@@ -32,15 +35,30 @@ function scopeBases(rule, homes, tmpDirs) {
 function rulePatterns(env, rule, base) {
   const patterns = [];
   for (const pattern of rule.paths) {
+    if (pattern.includes('{GEM_PATH}')) {
+      if (base.home === env.currentHome) {
+        for (const root of (env.vars.GEM_PATH ?? '').split(
+          env.platform === 'win32' ? ';' : ':'
+        )) {
+          if (env.path.isAbsolute(root)) {
+            patterns.push(pattern.replace('{GEM_PATH}', root));
+          }
+        }
+      }
+      continue;
+    }
     const usesVars = /\{(?!TMP\})[A-Z_]+\}/.test(pattern);
     if (usesVars && base.home !== env.currentHome) {
       continue;
     }
-    const expanded = expandRulePath(pattern, {
-      home: base.home ?? '/',
-      vars: { ...env.vars, TMP: base.tmp ?? undefined },
-      pathApi: env.path,
-    });
+    const expanded = expandRulePath(
+      configuredPattern(env, base.home, pattern),
+      {
+        home: base.home ?? '/',
+        vars: { ...env.vars, TMP: base.tmp ?? undefined },
+        pathApi: env.path,
+      }
+    );
     if (expanded) {
       patterns.push(expanded);
     }
@@ -59,15 +77,26 @@ async function nativeAction(context, rule, base, paths) {
   if (!native || options.noNative) {
     return { action: removal, blocker: null };
   }
-  const usable =
-    (rule.scope === 'system' || base.home === env.currentHome) &&
-    (await env.which(native.tool)) &&
-    (!native.root || (await env.isRoot()));
+  const init = native.init
+    ? expandRulePath(configuredPattern(env, base.home, native.init), {
+        home: base.home,
+        pathApi: env.path,
+      })
+    : null;
+  const nativeRoot = native.cacheRoot
+    ? expandRulePath(configuredPattern(env, base.home, native.cacheRoot), {
+        home: base.home,
+        pathApi: env.path,
+      })
+    : null;
+  const usable = await nativeUsable(env, rule, base, paths, nativeRoot, init);
   if (usable) {
     return {
       action: {
         type: 'command',
-        argv: native.argv,
+        argv: init
+          ? [native.tool, '-c', `. "$1" && ${native.command}`, 'dss', init]
+          : native.argv,
         measure: paths,
       },
       blocker: null,
@@ -80,6 +109,16 @@ async function nativeAction(context, rule, base, paths) {
     };
   }
   return { action: removal, blocker: null };
+}
+
+async function nativeUsable(env, rule, base, paths, root, init) {
+  return (
+    (rule.scope === 'system' || base.home === env.currentHome) &&
+    (await env.which(rule.native.tool)) &&
+    (!rule.native.root || (await env.isRoot())) &&
+    (!root || paths.every((target) => isWithin(target, root, env.path))) &&
+    (!init || (await env.exists(init)))
+  );
 }
 
 function ageFilter(context, rule) {

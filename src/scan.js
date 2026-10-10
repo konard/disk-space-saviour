@@ -10,6 +10,7 @@ import {
 import { scanDocker } from './docker/scan.js';
 import { LocalEnv } from './env/local.js';
 import { configureScanPolicy } from './env/policy.js';
+import { configureCacheRoots } from './env/cache-roots.js';
 import { block, tierTotals } from './items.js';
 import { hostExecutor, trace } from './exec.js';
 import { GitInspector } from './git.js';
@@ -133,6 +134,7 @@ export async function environmentContext(env, options, overrides = {}) {
   });
   await liveness.refresh(true);
   const homes = await env.homeDirs();
+  await configureCacheRoots(env, homes);
   const tmpDirs = await env.tmpDirs();
   const roots = overrides.roots ?? (await defaultRoots(env, homes, tmpDirs));
   return {
